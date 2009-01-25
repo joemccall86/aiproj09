@@ -3,24 +3,20 @@ import direct.directbase.DirectStart
 
 class Character(Actor):
     
+    __turnRate = 5
+    
     def __init__(self, modelStanding, modelRunning):
         Actor.__init__(self, modelStanding, {"run":modelRunning})
     
-    def turnLeft(self, task, prevTime):
-        elapsed = task.time - prevTime
-        
-        self.setH(self.getH() + (elapsed*300))
+    def turnLeft(self):
+        self.setH(self.getH() + self.__turnRate)
         return
     
-    def turnRight(self, task, prevTime):
-        elapsed = task.time - prevTime
-        
-        self.setH(self.getH() - (elapsed*300))
+    def turnRight(self):
+        self.setH(self.getH() - self.__turnRate)
         return
     
     def moveForward(self):
-        elapsed = task.time - prevTime
-        
         # Gets the net transform from render as a matrix, and get the second
         # row, which represents the transform on the y-axis
         backward = self.getNetTransform().getMat().getRow3(1)
@@ -29,14 +25,13 @@ class Character(Actor):
         backward.normalize()
         
         # Now move our character forward
-        self.setPos(self.getPos() - backward*(elapsed*5))
+        self.setPos(self.getPos() - backward)
         return
     
     def moveBackward(self):
-        elapsed = task.time - prevTime
         backward = self.getNetTransform().getMat().getRow3(1)
         backward.normalize()
-        self.setPos(self.getPos() + backward*(elapsed*5))
+        self.setPos(self.getPos() + backward)
         return
 
 
