@@ -3,7 +3,7 @@ import direct.directbase.DirectStart
 
 class Character(Actor):
     
-    __turnRate = 5
+    __turnRate = 1
     
     def __init__(self, modelStanding, modelRunning):
         Actor.__init__(self, modelStanding, {"run":modelRunning})
