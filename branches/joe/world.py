@@ -22,7 +22,8 @@ class World(DirectObject):
         # Make it visible
         env.reparentTo(render)
         
-        texture = loader.loadTexture("textures/Stones.jpg")
+        texture = loader.loadTexture("textures/ground.png")
+        
         # This is so the textures can look better from a distance
 ##        texture.setMinfilter(Texture.FTLinearMipmapNearest)
         texture.setMinfilter(Texture.FTLinearMipmapLinear)
