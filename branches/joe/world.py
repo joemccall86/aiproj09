@@ -10,9 +10,9 @@ class World(DirectObject):
     __model = "models/misc/gridBack"
         
     # Now to make our first agent
-    modelStanding = "models/ralph"
-    modelRunning = "models/ralph-run"
-    ralph = NPC(modelStanding, modelRunning)
+    __modelStanding = "models/ralph"
+    __modelRunning = "models/ralph-run"
+    __ralph = NPC(__modelStanding, __modelRunning)
     
     def __init__(self):
         DirectObject.__init__(self)
@@ -36,24 +36,24 @@ class World(DirectObject):
         env.setScale(100)
         
         # Make it visible
-        self.ralph.reparentTo(render)
-        self.ralph.setScale(0.2)
+        self.__ralph.reparentTo(render)
+        self.__ralph.setScale(0.2)
         
 ##        base.oobeCull()
         base.disableMouse()
-        base.camera.reparentTo(self.ralph)
+        base.camera.reparentTo(self.__ralph)
         base.camera.setPos(0, 20, 10)
-        base.camera.lookAt(self.ralph)
+        base.camera.lookAt(self.__ralph)
         base.camera.setP(base.camera.getP() + 15)
         
         self.__setKeys()
         
     def __setKeys(self):
         self.accept("escape", sys.exit)
-        self.accept("arrow_left", self.ralph.turnLeft)
-        self.accept("arrow_right", self.ralph.turnRight)
-        self.accept("arrow_up", self.ralph.moveForward)
-        self.accept("arrow_down", self.ralph.moveBackward)
+        self.accept("arrow_left", self.__ralph.turnLeft)
+        self.accept("arrow_right", self.__ralph.turnRight)
+        self.accept("arrow_up", self.__ralph.moveForward)
+        self.accept("arrow_down", self.__ralph.moveBackward)
     
 if __name__ == "__main__":
     w = World()
