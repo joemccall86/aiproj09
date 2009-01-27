@@ -3,7 +3,7 @@ import direct.directbase.DirectStart
 
 class Character(Actor):
     
-    __turnRate = 5
+    __turnRate = 0.5
     
     def __init__(self, modelStanding, modelRunning):
         Actor.__init__(self, modelStanding, {"run":modelRunning})
@@ -25,7 +25,7 @@ class Character(Actor):
         backward.normalize()
         
         # Now move our character forward
-        self.setPos(self.getPos() - backward)
+        self.setPos(self.getPos() - backward * 0.05)
         return
     
     def moveBackward(self):
