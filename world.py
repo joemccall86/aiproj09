@@ -13,8 +13,7 @@ class World(DirectObject):
     # Now to make our first agent
     modelStanding = "models/ralph"
     modelRunning = "models/ralph-run"
-    ralph = NPC(modelStanding, modelRunning)
-    
+    ralph = NPC(modelStanding, modelRunning, turnRate = 150, speed = 5)
     
     # Key map dictionary; These represent the keys pressed
     __keyMap = {"left":False, "right":False, "up":False, "down":False}
@@ -70,14 +69,21 @@ class World(DirectObject):
         self.accept("arrow_down-up", self.__setKey, ["down", False])
 
     def __processKey(self, task):
+        elapsedTime = task.time - self.__previousTime
+        turnAngle = self.ralph.turnRate * elapsedTime
+        distance = self.ralph.speed * elapsedTime
+        
         if self.__keyMap["left"]:
-            self.ralph.turnLeft()
+            self.ralph.turnLeft(turnAngle)
         if self.__keyMap["right"]:
-            self.ralph.turnRight()
+            self.ralph.turnRight(turnAngle)
         if self.__keyMap["up"]:
-            self.ralph.moveForward()
+            self.ralph.moveForward(distance)
         if self.__keyMap["down"]:
-            self.ralph.moveBackward()
+            self.ralph.moveBackward(distance)
+        
+        # Store the previous time and continue
+        self.__previousTime = task.time
         return Task.cont
     
     def __setKey(self, key, value):
