@@ -1,0 +1,10 @@
+#summary SWIG: The way we could glue C++ and Python together.
+
+= Introduction =
+
+We should use the SWIG project to incorporate any AI that would take really long into our python project. http://www.swig.org/
+
+
+= Details =
+
+More details to follow.
