@@ -1,20 +1,28 @@
 from direct.actor.Actor import Actor
 import direct.directbase.DirectStart
+from direct.task import Task
 
 class Character(Actor):
     
-    def __init__(self, modelStanding, modelRunning, turnRate, speed):
-        Actor.__init__(self, modelStanding, {"run":modelRunning})
+    def __init__(self, modelStanding, modelRunning, modelWalking, turnRate, speed):
+        Actor.__init__(self, modelStanding, {"run":modelRunning, "walk":modelWalking})
         self.turnRate = turnRate
         self.speed = speed
+        
+##        self.maxFrames = self.getNumFrames(animName="run")
+##        self.currentFrameIndex = 0
+##        
+##    def step(self, animationName):
+##        self.currentFrameIndex += 1
+##        if self.currentFrameIndex > self.maxFrames:
+##            self.currentFrameIndex = 0
+##        self.pose(animationName, self.currentFrameIndex)
     
     def turnLeft(self, angle):
         self.setH(self.getH() + angle)
-        return
     
     def turnRight(self, angle):
         self.setH(self.getH() - angle)
-        return
     
     def moveForward(self, distance):
         # Gets the net transform from render as a matrix, and get the second
@@ -26,13 +34,11 @@ class Character(Actor):
         
         # Now move our character forward
         self.setPos(self.getPos() - backward * distance)
-        return
     
     def moveBackward(self, distance):
         backward = self.getNetTransform().getMat().getRow3(1)
         backward.normalize()
         self.setPos(self.getPos() + backward * distance)
-        return
 
 
 if __name__ == "__main__":
