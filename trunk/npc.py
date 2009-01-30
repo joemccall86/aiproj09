@@ -1,22 +1,22 @@
-from character import Character
+from agent import Agent
 from pandac.PandaModules import CollisionRay
 from pandac.PandaModules import Vec3
 
-class NPC(Character):
+class NPC(Agent):
 
     def __init__(self, modelStanding, modelRunning, turnRate, speed):
-        Character.__init__(self, modelStanding, modelRunning, turnRate, speed)
+        Agent.__init__(self, modelStanding, modelRunning, turnRate, speed)
         self.rangeFinderCount = 5
         self.rangeFinders = []
         for i in range(self.rangeFinderCount):
             self.rangeFinders.append(CollisionRay())
             
         index = 0
-        for rangeFinder in self.rangeFinders:
-            angle = 180 / self.rangeFinderCount
-            index += 1
-            angle *= index
-            rangeFinder.setDirection(Vec3.unitY*angle)
+##        for rangeFinder in self.rangeFinders:
+##            angle = 180 / self.rangeFinderCount
+##            index += 1
+##            angle *= index
+##            rangeFinder.setDirection(Vec3.unitY*angle)
         
     def sense(self):
         return
