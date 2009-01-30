@@ -1,7 +1,7 @@
 from direct.actor.Actor import Actor
 import direct.directbase.DirectStart
 
-class Character(Actor):
+class Agent(Actor):
     
     def __init__(self, modelStanding, modelRunning, turnRate, speed):
         Actor.__init__(self, modelStanding, {"run":modelRunning})
@@ -24,7 +24,7 @@ class Character(Actor):
         # Normalize the vector
         backward.normalize()
         
-        # Now move our character forward
+        # Now move our  forward
         self.setPos(self.getPos() - backward * distance)
         return
     
@@ -36,5 +36,5 @@ class Character(Actor):
 
 
 if __name__ == "__main__":
-    C = Character("models/ralph", "models/ralph-run", turnRate = 300, speed = 5)
-    print("character compiled correctly")
+    A = Agent("models/ralph", "models/ralph-run", turnRate = 300, speed = 5)
+    print(" compiled correctly")
