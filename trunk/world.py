@@ -36,6 +36,7 @@ class World(DirectObject):
         texture.setMinfilter(Texture.FTLinearMipmapLinear)
         
         env.setTexGen(TextureStage.getDefault(), TexGenAttrib.MWorldPosition) 
+        env.setTexScale(TextureStage.getDefault(), 0.1, 0.1)
         env.setTexture(texture, 1)
         
         # Make it so that it's big enough to walk on
@@ -49,7 +50,7 @@ class World(DirectObject):
 ##        base.oobeCull()
         base.disableMouse()
         base.camera.reparentTo(self.ralph)
-        base.camera.setPos(0, 20, 10)
+        base.camera.setPos(0, 30, 10)
         base.camera.lookAt(self.ralph)
         base.camera.setP(base.camera.getP() + 15)
         
