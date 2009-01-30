@@ -7,4 +7,6 @@ We should use the SWIG project to incorporate any AI that would take really long
 
 = Details =
 
+We need the decide() step inside of NPC.py to be written in C because of performance considerations. WEe may try to write it in python at first to get the general idea down and then try to transfer it to C. We can then use SWIG (or somd other toolkit) to make a python module out of a C/C++ file.
+
 More details to follow.
