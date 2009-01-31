@@ -12,7 +12,10 @@ class World(DirectObject):
     # Now to make our first agent
     modelStanding = "models/ralph"
     modelRunning = "models/ralph-run"
-    ralph = NPC(modelStanding, modelRunning, turnRate = 150, speed = 5)
+    ralph = NPC(modelStanding, 
+                {"run":modelRunning, "walk":"models/ralph-walk"},
+                turnRate = 150, 
+                speed = 5)
     
     # Key map dictionary; These represent the keys pressed
     __keyMap = {"left":False, "right":False, "up":False, "down":False}
@@ -52,12 +55,19 @@ class World(DirectObject):
         #Add some wallz
         wallModel = "models/box"
         wall = loader.loadModel(wallModel)
-        wall.reparentTo(render)
-        wall.setPos(10, 0, 0)
-        wall.setScale(10, 1, 1)
+        wall.setPos(0, 0, 0)
+        wall.setScale(1, 10, 1)
+        wall.setTexture(texture, 1)
+        
+        # One's not enough, let's make 10!
+        # Instance this wall several times
+        for i in range(10):
+            tempWall = render.attachNewNode("wall")
+            tempWall.setPos(i*2, -10, 0)
+            wall.instanceTo(tempWall)
         
         
-        base.oobeCull()
+##        base.oobeCull()
         base.disableMouse()
         base.camera.reparentTo(self.ralph)
         base.camera.setPos(0, 30, 10)
@@ -66,6 +76,10 @@ class World(DirectObject):
         
         self.__setKeymap()
         taskMgr.add(self.__processKey, "processKey")
+        
+        self.isMoving = False
+        
+        base.setBackgroundColor(r=0, g=0, b=.1, a=1)
         
     def __setKeymap(self):
         self.accept("escape", sys.exit)
@@ -92,6 +106,18 @@ class World(DirectObject):
             self.ralph.moveForward(distance)
         if self.__keyMap["down"]:
             self.ralph.moveBackward(distance)
+            
+        if self.__keyMap["left"] or \
+            self.__keyMap["right"] or \
+            self.__keyMap["up"] or \
+            self.__keyMap["down"]:
+            if not self.isMoving:
+                self.ralph.loop("run")
+                self.isMoving = True
+        else:
+            self.ralph.stop()
+            self.ralph.pose("walk", frame = 5)
+            self.isMoving = False
         
         # Store the previous time and continue
         self.__previousTime = task.time

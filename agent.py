@@ -3,8 +3,8 @@ import direct.directbase.DirectStart
 
 class Agent(Actor):
     
-    def __init__(self, modelStanding, modelRunning, turnRate, speed):
-        Actor.__init__(self, modelStanding, {"run":modelRunning})
+    def __init__(self, modelStanding, modelAnimationDict, turnRate, speed):
+        Actor.__init__(self, modelStanding, modelAnimationDict)
         self.turnRate = turnRate
         self.speed = speed
     
@@ -36,5 +36,5 @@ class Agent(Actor):
 
 
 if __name__ == "__main__":
-    A = Agent("models/ralph", "models/ralph-run", turnRate = 300, speed = 5)
+    A = Agent("models/ralph", {"run":"models/ralph-run"}, turnRate = 300, speed = 5)
     print(" compiled correctly")
