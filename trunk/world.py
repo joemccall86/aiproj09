@@ -8,7 +8,6 @@ import sys
 from direct.task import Task
 
 class World(DirectObject):
-    __model = "models/misc/gridBack"
         
     # Now to make our first agent
     modelStanding = "models/ralph"
@@ -22,8 +21,10 @@ class World(DirectObject):
     __previousTime = 0
     
     def __init__(self):
+        groundModel = "models/gridBack"
+        
         DirectObject.__init__(self)
-        env = loader.loadModel(self.__model)
+        env = loader.loadModel(groundModel)
         
         
         # Make it visible
@@ -47,7 +48,16 @@ class World(DirectObject):
         self.ralph.reparentTo(render)
         self.ralph.setScale(0.2)
         
-##        base.oobeCull()
+        
+        #Add some wallz
+        wallModel = "models/box"
+        wall = loader.loadModel(wallModel)
+        wall.reparentTo(render)
+        wall.setPos(10, 0, 0)
+        wall.setScale(10, 1, 1)
+        
+        
+        base.oobeCull()
         base.disableMouse()
         base.camera.reparentTo(self.ralph)
         base.camera.setPos(0, 30, 10)
