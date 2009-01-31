@@ -6,48 +6,31 @@ import math
 
 class NPC(Agent):
 
-    def __init__(self, modelStanding, modelRunning, turnRate, speed):
-        Agent.__init__(self, modelStanding, modelRunning, turnRate, speed)
-        self.rangeFinderCount = 5
+    def __init__(self, modelStanding, modelAnimationDict, turnRate, speed):
+        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed)
+        self.rangeFinderCount = 30
         self.rangeFinders = []
         for i in range(self.rangeFinderCount):
             self.rangeFinders.append(CollisionRay())
             
         # Set up the range finders
-        deviation = 180 / self.rangeFinderCount
+                                    
+        rangeFinderCollisionNode = CollisionNode("rangeFinders")
+        deviation = 180 / (self.rangeFinderCount-1)
         angle = 0
         for rangeFinder in self.rangeFinders:
-            rangeFinder.setOrigin(self.getX(), self.getY(), self.getZ() + 5)
-            rangeFinder.setDirection(self.getX() + math.cos(self.getH()+deviation),
-                                    self.getY() + math.sin(self.getH()+deviation),
+            rangeFinder.setOrigin(self.getX(), self.getY(), self.getZ() + 3.5)
+            
+            rangeFinder.setDirection(math.cos(math.radians(angle)),
+                                    -math.sin(math.radians(angle)),
                                     0)
-                                    
-            rangeFinderCollision = CollisionNode("rangeFinder")
-            rangeFinderCollision.addSolid(rangeFinder)
-##            rangeFinderColision.setFromCollideMask(BitMask32.bit(0))
-##            rangeFinderColision.setIntoCollideMask(BitMask32.allOff())
-                                    
-##            rangeFinderCollisionNodePointer = self.attachNewNode(rangeFinderCollision) 
-##            rangeFinderCollisionNodePointer.show()
             
+            rangeFinderCollisionNode.addSolid(rangeFinder)
             angle += deviation
-        
-        self.rangeFinderCollisions = []
-        for i in range(self.rangeFinderCount):
-            self.rangeFinderCollisions.append(CollisionNode("rangeFinder" + str(i)))
-            self.rangeFinderCollisions[i].addSolid(self.rangeFinders[i])
             
+        rangeFinderCollisionNodePath = self.attachNewNode(rangeFinderCollisionNode)
+        rangeFinderCollisionNodePath.show()
         
-        self.rangeFinderCollisionNodePointers = []
-        for i in range(self.rangeFinderCount):
-            
-            pointer = self.attachNewNode(self.rangeFinderCollisions[i])
-            self.rangeFinderCollisionNodePointers.append(pointer)
-            self.rangeFinderCollisionNodePointers[i].show()
-            
-        
-        
-        rangeFinderCollision
     def sense(self):
         return
     
@@ -58,8 +41,8 @@ class NPC(Agent):
         return
 
 if __name__ == "__main__":
-    N = NPC(modelStanding = "models/ralph",
-            modelRunning = "models/ralph-run",
+    N = NPC("models/ralph",
+            {"run":"models/ralph-run"}, \
             turnRate = 5,
             speed = 100)
     print ("compiled good")
