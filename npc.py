@@ -9,7 +9,8 @@ from direct.task import Task
 import math
 
 class NPC(Agent):
-
+    collisionCount = 0
+    
     def __init__(self, modelStanding, modelAnimationDict, turnRate, speed):
         Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed)
         
@@ -49,9 +50,10 @@ class NPC(Agent):
         self.traverser.addCollider(rangeFinderCollisionNodePath, self.queue)
 
     def sense(self, task):
+        self.traverser.traverse(render)
         for i in range(self.queue.getNumEntries()):
-            entry = self.queue.getEntry(i)
-            print(entry)
+            self.collisionCount += 1
+            print("collision" + str(self.collisionCount))
         return Task.cont
     
     def think(self):
