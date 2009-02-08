@@ -70,7 +70,9 @@ class World(DirectObject):
             tempWall = render.attachNewNode("wall")
             tempWall.setPos(i*2, -10, 0)
             wall.instanceTo(tempWall)
-        
+
+            tempWallCollideNodePath = tempWall.find("**/wall_collide")
+            tempWallCollideNodePath.node().setIntoCollideMask(BitMask32.bit(20))
         
 ##        base.oobeCull()
         base.disableMouse()
