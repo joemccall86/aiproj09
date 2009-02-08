@@ -56,23 +56,25 @@ class World(DirectObject):
         stoneTexture.setMinfilter(Texture.FTLinearMipmapLinear)
         
         #Add some wallz
-        wallModel = "models/box"
+        wallModel = "models/box.egg"
         wall = loader.loadModel(wallModel)
-        wall.setPos(0, 0, 0)
+        wall.setPos(0, -10, 0)
         wall.setScale(1, 10, 10)
         wall.setTexture(stoneTexture, 1)
         
-        # TODO: Add a collision polygon to each wall.
+        # Add collision stuff to the wall
+        tempWallCollideNodePath = wall.find("/Box")
+        tempWallCollideNodePath.node().setIntoCollideMask(BitMask32.bit(0))
+        tempWallCollideNodePath.node().setFromCollideMask(BitMask32.bit(1))
+        
+        wall.reparentTo(render)
         
         # One's not enough, let's make 10!
         # Instance this wall several times
-        for i in range(2):
-            tempWall = render.attachNewNode("wall")
-            tempWall.setPos(i*2, -10, 0)
-            wall.instanceTo(tempWall)
-
-            tempWallCollideNodePath = tempWall.find("**/wall_collide")
-            tempWallCollideNodePath.node().setIntoCollideMask(BitMask32.bit(20))
+##        for i in range(2):
+##            tempWall = render.attachNewNode("wall")
+##            tempWall.setPos(i*2, -10, 0)
+##            wall.instanceTo(tempWall)
         
 ##        base.oobeCull()
         base.disableMouse()
