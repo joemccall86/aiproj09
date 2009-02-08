@@ -56,7 +56,7 @@ class World(DirectObject):
         stoneTexture.setMinfilter(Texture.FTLinearMipmapLinear)
         
         #Add some wallz
-        wallModel = "models/box.egg"
+        wallModel = "models/box.egg.pz"
         wall = loader.loadModel(wallModel)
         wall.setPos(0, -10, 0)
         wall.setScale(1, 10, 10)
