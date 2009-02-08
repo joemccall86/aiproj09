@@ -4,6 +4,7 @@ from pandac.PandaModules import CollisionNode
 from pandac.PandaModules import CollisionTraverser
 from pandac.PandaModules import CollisionHandlerQueue
 from pandac.PandaModules import Vec3
+from pandac.PandaModules import BitMask32
 from direct.task import Task
 import math
 
@@ -28,6 +29,11 @@ class NPC(Agent):
             
             # This is purely to make them visible
             rangeFinderCollisionNode.addSolid(rangeFinder)
+
+            # Set the Collision mask
+            rangeFinderCollisionNode.setFromCollideMask(BitMask32.bit(0))
+            rangeFinderCollisionNode.setIntoCollideMask(BitMask32.bit(0))
+            
             angle += deviation
             
         rangeFinderCollisionNodePath = self.attachNewNode(rangeFinderCollisionNode)
@@ -39,15 +45,10 @@ class NPC(Agent):
         # Create the CollisionTraverser and the CollisionHandlerQueue
         self.traverser = CollisionTraverser()
         self.queue = CollisionHandlerQueue()
+        
+        self.traverser.addCollider(rangeFinderCollisionNodePath, self.queue)
 
     def sense(self, task):
-##        index = 0
-##        for rangeFinder in self.rangeFinders:
-##            # since rangeFinder is relative to our agent, we don't need to subtract the origins
-##            transform = rangeFinder.getCollisionOrigin()
-##            self.persistentRangeFinderData[index] = transform.length()
-##            index += 1
-        # Try to create a collision handler queue, and parse through it.
         for i in range(self.queue.getNumEntries()):
             entry = self.queue.getEntry(i)
             print(entry)
