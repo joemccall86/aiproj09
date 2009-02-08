@@ -18,7 +18,7 @@ class Agent(Actor):
     
     def moveForward(self, distance):
         # Gets the net transform from render as a matrix, and get the second
-        # row, which represents the transform on the y-axis
+        # row, which represents the transform on the y-axis (in front of us)
         backward = self.getNetTransform().getMat().getRow3(1)
         
         # Normalize the vector
