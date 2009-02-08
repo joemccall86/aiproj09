@@ -12,8 +12,9 @@ class World(DirectObject):
     # Now to make our first agent
     modelStanding = "models/ralph"
     modelRunning = "models/ralph-run"
+    modelWalking = "models/ralph-walk"
     ralph = NPC(modelStanding, 
-                {"run":modelRunning, "walk":"models/ralph-walk"},
+                {"run":modelRunning, "walk":modelWalking},
                 turnRate = 150, 
                 speed = 5)
     
@@ -51,17 +52,21 @@ class World(DirectObject):
         self.ralph.reparentTo(render)
         self.ralph.setScale(0.2)
         
+        stoneTexture = loader.loadTexture("textures/Stones.jpg")
+        stoneTexture.setMinfilter(Texture.FTLinearMipmapLinear)
         
         #Add some wallz
         wallModel = "models/box"
         wall = loader.loadModel(wallModel)
         wall.setPos(0, 0, 0)
-        wall.setScale(1, 10, 1)
-        wall.setTexture(texture, 1)
+        wall.setScale(1, 10, 10)
+        wall.setTexture(stoneTexture, 1)
+        
+        # TODO: Add a collision polygon to each wall.
         
         # One's not enough, let's make 10!
         # Instance this wall several times
-        for i in range(10):
+        for i in range(2):
             tempWall = render.attachNewNode("wall")
             tempWall.setPos(i*2, -10, 0)
             wall.instanceTo(tempWall)
@@ -76,6 +81,9 @@ class World(DirectObject):
         
         self.__setKeymap()
         taskMgr.add(self.__processKey, "processKey")
+        
+        # now add the sense loop
+        taskMgr.add(self.ralph.sense, "sense")
         
         self.isMoving = False
         
