@@ -23,7 +23,7 @@ class World(DirectObject):
                 agentList = globalAgentList,
                 collisionMask = BitMask32.bit(0),
                 adjacencySensorThreshold = 5,
-                radarSlices = 4)
+                radarSlices = 5)
 
                 
     # Key map dictionary; These represent the keys pressed
@@ -45,7 +45,6 @@ class World(DirectObject):
         texture = loader.loadTexture("textures/ground.png")
         
         # This is so the textures can look better from a distance
-##        texture.setMinfilter(Texture.FTLinearMipmapNearest)
         texture.setMinfilter(Texture.FTLinearMipmapLinear)
         
         env.setTexGen(TextureStage.getDefault(), TexGenAttrib.MWorldPosition) 
@@ -95,9 +94,9 @@ class World(DirectObject):
         
         # One's not enough, let's make 10!
         # Instance this wall several times
-        for i in range(10):
+        for i in range(2):
             tempWall = render.attachNewNode("wall")
-            tempWall.setPos(i*2, -10, 0)
+            tempWall.setPos(i*10, -10, 0)
             wall.instanceTo(tempWall)
     
 ##        base.oobeCull()
