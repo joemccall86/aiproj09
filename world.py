@@ -6,6 +6,7 @@ from pandac.PandaModules import *
 from npc import NPC
 import sys
 from direct.task import Task
+from direct.gui.OnscreenText import OnscreenText
 
 class World(DirectObject):
         
@@ -22,7 +23,7 @@ class World(DirectObject):
                 agentList = globalAgentList,
                 collisionMask = BitMask32.bit(0),
                 adjacencySensorThreshold = 5,
-                radarSlices = 7)
+                radarSlices = 4)
 
                 
     # Key map dictionary; These represent the keys pressed
