@@ -13,10 +13,13 @@ class World(DirectObject):
     modelStanding = "models/ralph"
     modelRunning = "models/ralph-run"
     modelWalking = "models/ralph-walk"
+    
+    globalPositionDictionary = {}
     ralph = NPC(modelStanding, 
                 {"run":modelRunning, "walk":modelWalking},
                 turnRate = 150, 
-                speed = 5)
+                speed = 5,
+                positionDictionary = globalPositionDictionary)
     
     # Key map dictionary; These represent the keys pressed
     __keyMap = {"left":False, "right":False, "up":False, "down":False}
