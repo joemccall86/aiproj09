@@ -11,8 +11,8 @@ import math
 class NPC(Agent):
     collisionCount = 0
     
-    def __init__(self, modelStanding, modelAnimationDict, turnRate, speed):
-        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed)
+    def __init__(self, modelStanding, modelAnimationDict, turnRate, speed, positionDictionary):
+        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, positionDictionary)
         
         self.rangeFinderCount = 13
         self.rangeFinders = [CollisionRay() for i in range(self.rangeFinderCount)]
@@ -41,14 +41,16 @@ class NPC(Agent):
             angle += deviation
             
         rangeFinderCollisionNodePath = self.attachNewNode(rangeFinderCollisionNode)
-        rangeFinderCollisionNodePath.show()
+        # Uncomment the following line to show the collision rays
+##        rangeFinderCollisionNodePath.show()
         
         # Create the CollisionTraverser and the CollisionHandlerQueue
         self.traverser = CollisionTraverser()
         self.queue = CollisionHandlerQueue()
         
         self.traverser.addCollider(rangeFinderCollisionNodePath, self.queue)
-        self.traverser.showCollisions(render)
+        # Uncomment the following line to show the collisions
+##        self.traverser.showCollisions(render)
 
     def sense(self, task):
         self.traverser.traverse(render)
