@@ -23,11 +23,13 @@ class NPC(Agent):
                 agentList, 
                 collisionMask=BitMask32.allOff(),
                 adjacencySensorThreshold = 0,
-                radarSlices = 0):
+                radarSlices = 0,
+                radarLength = 50.0):
         Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList)
         self.collisionMask = collisionMask
         self.adjacencySensorThreshold = adjacencySensorThreshold
         self.radarSlices = radarSlices
+        self.radarLength = radarLength
         
         self.rangeFinderCount = 13
         self.rangeFinders = [CollisionRay() for i in range(self.rangeFinderCount)]
@@ -72,14 +74,17 @@ class NPC(Agent):
         
         # Set up visualizations for radar
         
-##        ls = LineSegs()
-##        ls.setThickness(5.0)
-##        ls.setColor(0, 0, 1, 1)
-##        for i in range(radarSlices):
-##            ls.moveTo(0, 0, 0)
-##            ls.drawTo(50.0*math.cos(i * 2 * math.pi / radarSlices), 50.0*math.sin(i * 2 * math.pi / radarSlices), 0)
-##            np = NodePath(ls.create())
-##            np.reparentTo(self)
+        ls = LineSegs()
+        ls.setThickness(5.0)
+        ls.setColor(0, 0, 1, 1)
+        for i in range(radarSlices):
+            ls.moveTo(0, 0, 0)
+            ls.drawTo(self.radarLength * math.cos(i * 2 * math.pi / radarSlices), 
+                      self.radarLength * math.sin(i * 2 * math.pi / radarSlices), 0)
+            ls.drawTo(self.radarLength * math.cos((i+1) * 2 * math.pi / radarSlices), 
+                      self.radarLength * math.sin((i+1) * 2 * math.pi / radarSlices), 0)
+            np = NodePath(ls.create())
+            np.reparentTo(self)
             
 
     def sense(self, task):
@@ -143,6 +148,8 @@ class NPC(Agent):
         for agent in self.agentList:
             if self != agent:
                 transform = self.getPos() - agent.getPos()
+                if transform.length() > math.sqrt(self.radarLength):
+                    continue
                 # Handle the special case
                 if transform.getX() == 0:
                     if transform.getY() < 0:
