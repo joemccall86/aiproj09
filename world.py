@@ -14,14 +14,15 @@ class World(DirectObject):
     modelRunning = "models/ralph-run"
     modelWalking = "models/ralph-walk"
     
-    globalPositionDictionary = {}
+    globalAgentList = []
     ralph = NPC(modelStanding, 
                 {"run":modelRunning, "walk":modelWalking},
                 turnRate = 150, 
                 speed = 5,
-                positionDictionary = globalPositionDictionary,
+                agentList = globalAgentList,
                 collisionMask = BitMask32.bit(0),
-                adjacencySensorThreshold = 5)
+                adjacencySensorThreshold = 5,
+                radarSlices = 7)
 
                 
     # Key map dictionary; These represent the keys pressed
@@ -59,7 +60,7 @@ class World(DirectObject):
                     {"run":self.modelRunning, "walk":self.modelWalking},
                     turnRate = 150, 
                     speed = 5,
-                    positionDictionary = self.globalPositionDictionary,
+                    agentList = self.globalAgentList,
                     collisionMask = BitMask32.bit(i+1))
                     for i in range(otherRalphsCount)]
         
@@ -71,8 +72,6 @@ class World(DirectObject):
             index += 1
             # uncomment this to make Jim happy
 ##            taskMgr.add(ralph.sense, "sense" + str(index))
-
-            taskMgr.add(ralph.recordPosition, "recordPosition" + str(index))
                     
         # Make it visible
         self.ralph.reparentTo(render)
@@ -101,6 +100,7 @@ class World(DirectObject):
             wall.instanceTo(tempWall)
     
 ##        base.oobeCull()
+##        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.ralph)
         base.camera.setPos(0, 30, 10)
@@ -112,7 +112,6 @@ class World(DirectObject):
         
         # now add the sense loop
         taskMgr.add(self.ralph.sense, "sense")
-        taskMgr.add(self.ralph.recordPosition, "recordPosition")
         
         self.isMoving = False
         

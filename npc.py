@@ -5,6 +5,8 @@ from pandac.PandaModules import CollisionTraverser
 from pandac.PandaModules import CollisionHandlerQueue
 from pandac.PandaModules import Vec3
 from pandac.PandaModules import BitMask32
+from pandac.PandaModules import LineSegs
+from pandac.PandaModules import NodePath
 from direct.task import Task
 import math
 
@@ -16,12 +18,14 @@ class NPC(Agent):
                 modelAnimationDict, 
                 turnRate, 
                 speed, 
-                positionDictionary, 
+                agentList, 
                 collisionMask=BitMask32.allOff(),
-                adjacencySensorThreshold = 0):
-        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, positionDictionary)
+                adjacencySensorThreshold = 0,
+                radarSlices = 0):
+        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList)
         self.collisionMask = collisionMask
         self.adjacencySensorThreshold = adjacencySensorThreshold
+        self.radarSlices = radarSlices
         
         self.rangeFinderCount = 13
         self.rangeFinders = [CollisionRay() for i in range(self.rangeFinderCount)]
@@ -63,10 +67,22 @@ class NPC(Agent):
 ##        self.traverser.showCollisions(render)
 
         self.adjacentAgents = []
+        
+        # Set up visualizations for radar
+        
+        ls = LineSegs()
+        ls.setThickness(5.0)
+        ls.setColor(0, 0, 1, 1)
+        for i in range(radarSlices):
+            ls.moveTo(0, 0, 0)
+            ls.drawTo(50.0*math.cos(i * 2 * math.pi / radarSlices), 50.0*math.sin(i * 2 * math.pi / radarSlices), 0)
+            np = NodePath(ls.create())
+            np.reparentTo(self)
 
     def sense(self, task):
         self.rangeFinderSense()
         self.adjacencySense()
+        self.radarSense()
         return Task.cont
     
     def think(self):
@@ -93,23 +109,53 @@ class NPC(Agent):
     
     def adjacencySense(self):
         # loop thru the positionDictionary
-        for position in self.positionDictionary.items():
-            if self != position[0]:
-                transform = self.getPos() - position[-1]
+        for agent in self.agentList:
+            if self != agent:
+                transform = self.getPos() - agent.getPos()
                 distance = transform.length()
                 if distance <= self.adjacencySensorThreshold:
-                    if position[0] not in self.adjacentAgents:
-                        self.adjacentAgents.append(position[0])
+                    if agent not in self.adjacentAgents:
+                        self.adjacentAgents.append(agent)
                 else:
-                    if position[0] in self.adjacentAgents:
-                        self.adjacentAgents.remove(position[0])
+                    if agent in self.adjacentAgents:
+                        self.adjacentAgents.remove(agent)
                         
 ##        print(len(self.adjacentAgents))
+        return
+    
+    def radarSense(self):
+        self.radarActivationLevels = [0] * self.radarSlices
+        angleStep = 360.0 / self.radarSlices
+        for agent in self.agentList:
+            if self != agent:
+                transform = self.getPos() - agent.getPos()
+                # Handle the special case
+                if transform.getX() == 0:
+                    if transform.getY() < 0:
+                        transformAngle = 90
+                    else:
+                        transformAngle = 270
+                else:
+                    transformAngle = math.atan(transform.getY()/transform.getX())
+                    transformAngle = math.degrees(transformAngle)
+                    
+                transformAngle += self.getH()
+                while transformAngle >= 360:
+                    transformAngle -= 360
+                while transformAngle < 0:
+                    transformAngle += 360
+                    
+                orthant = int(transformAngle // angleStep) # // means floor
+                self.radarActivationLevels[orthant] += 1
+            
+##        print(self.radarActivationLevels)
         return
 
 if __name__ == "__main__":
     N = NPC("models/ralph",
             {"run":"models/ralph-run"},
             turnRate = 5,
-            speed = 100)
+            speed = 100,
+            agentList = [])
     print ("compiled good")
+    

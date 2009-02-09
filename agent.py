@@ -4,11 +4,14 @@ import direct.directbase.DirectStart
 
 class Agent(Actor):
     
-    def __init__(self, modelStanding, modelAnimationDict, turnRate, speed, positionDictionary):
+    def __init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList):
         Actor.__init__(self, modelStanding, modelAnimationDict)
         self.turnRate = turnRate
         self.speed = speed
-        self.positionDictionary = positionDictionary
+        self.agentList = agentList
+        
+        if self not in agentList:
+            self.agentList.append(self)
     
     def turnLeft(self, angle):
         self.setH(self.getH() + angle)
@@ -35,10 +38,6 @@ class Agent(Actor):
         backward.normalize()
         self.setPos(self.getPos() + backward * distance)
         return
-    
-    def recordPosition(self, task):
-        self.positionDictionary[self] = self.getPos()
-        return Task.cont
 
 
 if __name__ == "__main__":
