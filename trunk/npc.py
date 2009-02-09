@@ -11,14 +11,25 @@ import math
 class NPC(Agent):
     collisionCount = 0
     
-    def __init__(self, modelStanding, modelAnimationDict, turnRate, speed, positionDictionary):
+    def __init__(self, 
+                modelStanding, 
+                modelAnimationDict, 
+                turnRate, 
+                speed, 
+                positionDictionary, 
+                collisionMask=BitMask32.allOff(),
+                adjacencySensorThreshold = 0):
         Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, positionDictionary)
+        self.collisionMask = collisionMask
+        self.adjacencySensorThreshold = adjacencySensorThreshold
         
         self.rangeFinderCount = 13
         self.rangeFinders = [CollisionRay() for i in range(self.rangeFinderCount)]
         self.persistentRangeFinderData = {}
         for rangeFinder in self.rangeFinders:
             self.persistentRangeFinderData[rangeFinder] = 0
+            
+        
         
         # Set up the range finders                            
         rangeFinderCollisionNode = CollisionNode("rangeFinders")
@@ -31,12 +42,11 @@ class NPC(Agent):
                                     -math.sin(math.radians(angle)),
                                     0)
             
-            # This is purely to make them visible
             rangeFinderCollisionNode.addSolid(rangeFinder)
 
             # Set the Collision mask
-            rangeFinderCollisionNode.setFromCollideMask(BitMask32.bit(0))
-            rangeFinderCollisionNode.setIntoCollideMask(BitMask32.bit(0))
+            rangeFinderCollisionNode.setFromCollideMask(self.collisionMask)
+            rangeFinderCollisionNode.setIntoCollideMask(self.collisionMask)
             
             angle += deviation
             
@@ -52,7 +62,20 @@ class NPC(Agent):
         # Uncomment the following line to show the collisions
 ##        self.traverser.showCollisions(render)
 
+        self.adjacentAgents = []
+
     def sense(self, task):
+        self.rangeFinderSense()
+        self.adjacencySense()
+        return Task.cont
+    
+    def think(self):
+        return
+    
+    def act(self):
+        return
+    
+    def rangeFinderSense(self):
         self.traverser.traverse(render)
         for rangeFinder in self.rangeFinders:
             self.persistentRangeFinderData[rangeFinder] = 0
@@ -66,12 +89,22 @@ class NPC(Agent):
 ##        for i in range(self.rangeFinderCount):
 ##            pd.append(self.persistentRangeFinderData[self.rangeFinders[i]])
 ##        print(pd)
-        return Task.cont
-    
-    def think(self):
         return
     
-    def act(self):
+    def adjacencySense(self):
+        # loop thru the positionDictionary
+        for position in self.positionDictionary.items():
+            if self != position[0]:
+                transform = self.getPos() - position[-1]
+                distance = transform.length()
+                if distance <= self.adjacencySensorThreshold:
+                    if position[0] not in self.adjacentAgents:
+                        self.adjacentAgents.append(position[0])
+                else:
+                    if position[0] in self.adjacentAgents:
+                        self.adjacentAgents.remove(position[0])
+                        
+##        print(len(self.adjacentAgents))
         return
 
 if __name__ == "__main__":
