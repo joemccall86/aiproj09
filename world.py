@@ -67,14 +67,12 @@ class World(DirectObject):
         tempWallCollideNodePath.node().setIntoCollideMask(BitMask32.bit(0))
         tempWallCollideNodePath.node().setFromCollideMask(BitMask32.bit(1))
         
-        wall.reparentTo(render)
-        
         # One's not enough, let's make 10!
         # Instance this wall several times
-##        for i in range(2):
-##            tempWall = render.attachNewNode("wall")
-##            tempWall.setPos(i*2, -10, 0)
-##            wall.instanceTo(tempWall)
+        for i in range(10):
+            tempWall = render.attachNewNode("wall")
+            tempWall.setPos(i*2, -10, 0)
+            wall.instanceTo(tempWall)
         
 ##        base.oobeCull()
         base.disableMouse()
