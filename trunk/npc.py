@@ -7,7 +7,9 @@ from pandac.PandaModules import Vec3
 from pandac.PandaModules import BitMask32
 from pandac.PandaModules import LineSegs
 from pandac.PandaModules import NodePath
+from pandac.PandaModules import TextNode
 from direct.task import Task
+from direct.gui.OnscreenText import OnscreenText
 import math
 
 class NPC(Agent):
@@ -70,14 +72,15 @@ class NPC(Agent):
         
         # Set up visualizations for radar
         
-        ls = LineSegs()
-        ls.setThickness(5.0)
-        ls.setColor(0, 0, 1, 1)
-        for i in range(radarSlices):
-            ls.moveTo(0, 0, 0)
-            ls.drawTo(50.0*math.cos(i * 2 * math.pi / radarSlices), 50.0*math.sin(i * 2 * math.pi / radarSlices), 0)
-            np = NodePath(ls.create())
-            np.reparentTo(self)
+##        ls = LineSegs()
+##        ls.setThickness(5.0)
+##        ls.setColor(0, 0, 1, 1)
+##        for i in range(radarSlices):
+##            ls.moveTo(0, 0, 0)
+##            ls.drawTo(50.0*math.cos(i * 2 * math.pi / radarSlices), 50.0*math.sin(i * 2 * math.pi / radarSlices), 0)
+##            np = NodePath(ls.create())
+##            np.reparentTo(self)
+            
 
     def sense(self, task):
         self.rangeFinderSense()
@@ -91,6 +94,8 @@ class NPC(Agent):
     def act(self):
         return
     
+    rangeFinderText = OnscreenText(text="", style=1, fg=(1,1,1,1),
+                       pos=(-1.3,0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
     def rangeFinderSense(self):
         self.traverser.traverse(render)
         for rangeFinder in self.rangeFinders:
@@ -100,13 +105,17 @@ class NPC(Agent):
             point = entry.getSurfacePoint(self)
             length = point.length()
             self.persistentRangeFinderData[entry.getFrom()] = length
-        
-##        pd = []
-##        for i in range(self.rangeFinderCount):
-##            pd.append(self.persistentRangeFinderData[self.rangeFinders[i]])
-##        print(pd)
+
+        pd = []
+        for i in range(self.rangeFinderCount):
+            pd.append(int(self.persistentRangeFinderData[self.rangeFinders[i]]))
+
+        self.rangeFinderText.clearText()
+        self.rangeFinderText.setText(str(pd))
         return
     
+    adjacencyText = OnscreenText(text="", style=1, fg=(1,1,1,1),
+                                 pos=(-1.3,0.90), align=TextNode.ALeft, scale = .05, mayChange = True)
     def adjacencySense(self):
         # loop thru the positionDictionary
         for agent in self.agentList:
@@ -120,9 +129,14 @@ class NPC(Agent):
                     if agent in self.adjacentAgents:
                         self.adjacentAgents.remove(agent)
                         
-##        print(len(self.adjacentAgents))
+        self.adjacencyText.clearText()
+        self.adjacencyText.setText(str(len(self.adjacentAgents)))
         return
     
+    radarText = OnscreenText(text="", style=1, fg=(1,1,1,1),
+                             pos=(-1.3,0.85), align=TextNode.ALeft, scale = .05, mayChange = True)
+##    angleText = OnscreenText(text="", style=1, fg=(1,1,1,1),
+##                             pos=(-1.3,0.80), align=TextNode.ALeft, scale = .05, mayChange = True)
     def radarSense(self):
         self.radarActivationLevels = [0] * self.radarSlices
         angleStep = 360.0 / self.radarSlices
@@ -132,23 +146,33 @@ class NPC(Agent):
                 # Handle the special case
                 if transform.getX() == 0:
                     if transform.getY() < 0:
-                        transformAngle = 90
+                        transformAngle = 270.0
                     else:
-                        transformAngle = 270
+                        transformAngle = 90.0
                 else:
                     transformAngle = math.atan(transform.getY()/transform.getX())
                     transformAngle = math.degrees(transformAngle)
-                    
+                    if transform.getY() < 0 and transform.getX() < 0:
+                        transformAngle += 180.0
+                    elif transform.getX() < 0:
+                        transformAngle = 180.0 - transformAngle
+                    elif transform.getY() < 0:
+                        transformAngle = 360.0 - transformAngle
+            
                 transformAngle += self.getH()
-                while transformAngle >= 360:
-                    transformAngle -= 360
-                while transformAngle < 0:
-                    transformAngle += 360
+                while transformAngle >= 360.0:
+                    transformAngle -= 360.0
+                while transformAngle < 0.0:
+                    transformAngle += 360.0
+                
+##                self.angleText.clearText()
+##                self.angleText.setText(str(transformAngle))
                     
                 orthant = int(transformAngle // angleStep) # // means floor
                 self.radarActivationLevels[orthant] += 1
             
-##        print(self.radarActivationLevels)
+        self.radarText.clearText()
+        self.radarText.setText(str(self.radarActivationLevels))
         return
 
 if __name__ == "__main__":
