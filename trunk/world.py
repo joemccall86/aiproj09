@@ -20,7 +20,23 @@ class World(DirectObject):
                 turnRate = 150, 
                 speed = 5,
                 positionDictionary = globalPositionDictionary)
-    
+                
+    ralphImpersonator = NPC(modelStanding, 
+                {"run":modelRunning, "walk":modelWalking},
+                turnRate = 150, 
+                speed = 5,
+                positionDictionary = globalPositionDictionary)
+    ralphClone = NPC(modelStanding, 
+                {"run":modelRunning, "walk":modelWalking},
+                turnRate = 150, 
+                speed = 5,
+                positionDictionary = globalPositionDictionary)
+    ralphTwin = NPC(modelStanding, 
+                {"run":modelRunning, "walk":modelWalking},
+                turnRate = 150, 
+                speed = 5,
+                positionDictionary = globalPositionDictionary)
+                
     # Key map dictionary; These represent the keys pressed
     __keyMap = {"left":False, "right":False, "up":False, "down":False}
     
@@ -77,6 +93,13 @@ class World(DirectObject):
             tempWall.setPos(i*2, -10, 0)
             wall.instanceTo(tempWall)
         
+        self.ralphImpersonator.reparentTo(render)
+        self.ralphImpersonator.moveForward(5)
+        self.ralphClone.reparentTo(render)
+        self.ralphClone.moveForward(10)
+        self.ralphTwin.reparentTo(render)
+        self.ralphTwin.moveForward(15)
+    
 ##        base.oobeCull()
         base.disableMouse()
         base.camera.reparentTo(self.ralph)
