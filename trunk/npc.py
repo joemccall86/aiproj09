@@ -16,6 +16,9 @@ class NPC(Agent):
         
         self.rangeFinderCount = 13
         self.rangeFinders = [CollisionRay() for i in range(self.rangeFinderCount)]
+        self.persistentRangeFinderData = {}
+        for rangeFinder in self.rangeFinders:
+            self.persistentRangeFinderData[rangeFinder] = 0
         
         # Set up the range finders                            
         rangeFinderCollisionNode = CollisionNode("rangeFinders")
@@ -40,20 +43,27 @@ class NPC(Agent):
         rangeFinderCollisionNodePath = self.attachNewNode(rangeFinderCollisionNode)
         rangeFinderCollisionNodePath.show()
         
-        # Now set up the persistent data
-        self.persistentRangeFinderData = [0] * self.rangeFinderCount
-        
         # Create the CollisionTraverser and the CollisionHandlerQueue
         self.traverser = CollisionTraverser()
         self.queue = CollisionHandlerQueue()
         
         self.traverser.addCollider(rangeFinderCollisionNodePath, self.queue)
+        self.traverser.showCollisions(render)
 
     def sense(self, task):
         self.traverser.traverse(render)
+        for rangeFinder in self.rangeFinders:
+            self.persistentRangeFinderData[rangeFinder] = 0
         for i in range(self.queue.getNumEntries()):
-            self.collisionCount += 1
-            print("collision" + str(self.collisionCount))
+            entry = self.queue.getEntry(i)
+            point = entry.getSurfacePoint(self)
+            length = point.length()
+            self.persistentRangeFinderData[entry.getFrom()] = length
+        
+##        pd = []
+##        for i in range(self.rangeFinderCount):
+##            pd.append(self.persistentRangeFinderData[self.rangeFinders[i]])
+##        print(pd)
         return Task.cont
     
     def think(self):
