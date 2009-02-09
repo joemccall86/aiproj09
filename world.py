@@ -19,23 +19,10 @@ class World(DirectObject):
                 {"run":modelRunning, "walk":modelWalking},
                 turnRate = 150, 
                 speed = 5,
-                positionDictionary = globalPositionDictionary)
-                
-    ralphImpersonator = NPC(modelStanding, 
-                {"run":modelRunning, "walk":modelWalking},
-                turnRate = 150, 
-                speed = 5,
-                positionDictionary = globalPositionDictionary)
-    ralphClone = NPC(modelStanding, 
-                {"run":modelRunning, "walk":modelWalking},
-                turnRate = 150, 
-                speed = 5,
-                positionDictionary = globalPositionDictionary)
-    ralphTwin = NPC(modelStanding, 
-                {"run":modelRunning, "walk":modelWalking},
-                turnRate = 150, 
-                speed = 5,
-                positionDictionary = globalPositionDictionary)
+                positionDictionary = globalPositionDictionary,
+                collisionMask = BitMask32.bit(0),
+                adjacencySensorThreshold = 5)
+
                 
     # Key map dictionary; These represent the keys pressed
     __keyMap = {"left":False, "right":False, "up":False, "down":False}
@@ -67,6 +54,26 @@ class World(DirectObject):
         env.setPos(0, 0, 0)
         env.setScale(100)
         
+        otherRalphsCount = 3
+        otherRalphs = [NPC(self.modelStanding, 
+                    {"run":self.modelRunning, "walk":self.modelWalking},
+                    turnRate = 150, 
+                    speed = 5,
+                    positionDictionary = self.globalPositionDictionary,
+                    collisionMask = BitMask32.bit(i+1))
+                    for i in range(otherRalphsCount)]
+        
+        index = 1
+        for ralph in otherRalphs:
+            ralph.reparentTo(render)
+            ralph.setScale(0.2)
+            ralph.setX(5 * index)
+            index += 1
+            # uncomment this to make Jim happy
+##            taskMgr.add(ralph.sense, "sense" + str(index))
+
+            taskMgr.add(ralph.recordPosition, "recordPosition" + str(index))
+                    
         # Make it visible
         self.ralph.reparentTo(render)
         self.ralph.setScale(0.2)
@@ -83,8 +90,8 @@ class World(DirectObject):
         
         # Add collision stuff to the wall
         tempWallCollideNodePath = wall.find("/Box")
-        tempWallCollideNodePath.node().setIntoCollideMask(BitMask32.bit(0))
-        tempWallCollideNodePath.node().setFromCollideMask(BitMask32.bit(1))
+        tempWallCollideNodePath.node().setIntoCollideMask(BitMask32.allOn())
+        tempWallCollideNodePath.node().setFromCollideMask(BitMask32.allOn())
         
         # One's not enough, let's make 10!
         # Instance this wall several times
@@ -92,13 +99,6 @@ class World(DirectObject):
             tempWall = render.attachNewNode("wall")
             tempWall.setPos(i*2, -10, 0)
             wall.instanceTo(tempWall)
-        
-        self.ralphImpersonator.reparentTo(render)
-        self.ralphImpersonator.moveForward(5)
-        self.ralphClone.reparentTo(render)
-        self.ralphClone.moveForward(10)
-        self.ralphTwin.reparentTo(render)
-        self.ralphTwin.moveForward(15)
     
 ##        base.oobeCull()
         base.disableMouse()
@@ -112,6 +112,7 @@ class World(DirectObject):
         
         # now add the sense loop
         taskMgr.add(self.ralph.sense, "sense")
+        taskMgr.add(self.ralph.recordPosition, "recordPosition")
         
         self.isMoving = False
         
