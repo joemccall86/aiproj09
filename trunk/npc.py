@@ -21,6 +21,7 @@ class NPC(Agent):
                 turnRate, 
                 speed, 
                 agentList, 
+                rangeFinderCount = 13,
                 collisionMask=BitMask32.allOff(),
                 adjacencySensorThreshold = 0,
                 radarSlices = 0,
@@ -35,7 +36,7 @@ class NPC(Agent):
         
         self.setScale(self.scale)
         
-        self.rangeFinderCount = 13
+        self.rangeFinderCount = rangeFinderCount
         self.rangeFinders = [CollisionRay() for i in range(self.rangeFinderCount)]
         self.persistentRangeFinderData = {}
         for rangeFinder in self.rangeFinders:
@@ -64,7 +65,7 @@ class NPC(Agent):
             
         rangeFinderCollisionNodePath = self.attachNewNode(rangeFinderCollisionNode)
         # Uncomment the following line to show the collision rays
-##        rangeFinderCollisionNodePath.show()
+        rangeFinderCollisionNodePath.show()
         
         # Create the CollisionTraverser and the CollisionHandlerQueue
         self.traverser = CollisionTraverser()
@@ -72,22 +73,19 @@ class NPC(Agent):
         
         self.traverser.addCollider(rangeFinderCollisionNodePath, self.queue)
         # Uncomment the following line to show the collisions
-##        self.traverser.showCollisions(render)
+        self.traverser.showCollisions(render)
 
         self.adjacentAgents = []
 
         # Set up visualizations for radar
-
         ls = LineSegs()
         ls.setThickness(5.0)
         relativeRadarLength = float(self.radarLength) / self.scale
         ls.setColor(0, 0, 1, 1)
         for i in range(radarSlices):
             ls.moveTo(0, 0, 0)            
-            ls.drawTo(-relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(radarSlices)), 
-                      -relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(radarSlices)), 0)
-##            ls.drawTo(relativeRadarLength * math.cos(float(i+1.) * 2. * math.pi / float(radarSlices)), 
-##                      relativeRadarLength * math.sin(float(i+1.) * 2. * math.pi / float(radarSlices)), 0)
+            ls.drawTo(relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(radarSlices)), 
+                      relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(radarSlices)), 0)
             np = NodePath(ls.create())
             np.reparentTo(self)
             
@@ -154,15 +152,14 @@ class NPC(Agent):
     
     radarText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                              pos=(-1.3,0.85), align=TextNode.ALeft, scale = .05, mayChange = True)
-    angleText = OnscreenText(text="", style=1, fg=(1,1,1,1),
-                             pos=(-1.3,0.80), align=TextNode.ALeft, scale = .05, mayChange = True)
-    transformAngleText = OnscreenText(text="", style=1, fg=(1,1,1,1),
-                             pos=(-1.3,0.75), align=TextNode.ALeft, scale = .05, mayChange = True)
-    getHText = OnscreenText(text="", style=1, fg=(1,1,1,1),
-                             pos=(-1.3,0.70), align=TextNode.ALeft, scale = .05, mayChange = True)
+##    angleText = OnscreenText(text="", style=1, fg=(1,1,1,1),
+##                             pos=(-1.3,0.80), align=TextNode.ALeft, scale = .05, mayChange = True)
+##    transformAngleText = OnscreenText(text="", style=1, fg=(1,1,1,1),
+##                             pos=(-1.3,0.75), align=TextNode.ALeft, scale = .05, mayChange = True)
+##    getHText = OnscreenText(text="", style=1, fg=(1,1,1,1),
+##                             pos=(-1.3,0.70), align=TextNode.ALeft, scale = .05, mayChange = True)
     def radarSense(self):
         self.radarActivationLevels = [0] * self.radarSlices
-##        angleStep = 360.0 / self.radarSlices
         for agent in self.agentList:
             if self != agent:        
 
@@ -185,18 +182,20 @@ class NPC(Agent):
 ##                np = NodePath(ls.create("arst"))
 ##                np.reparentTo(render)
             
-                self.transformAngleText.setText("transformAngle = " + str(math.degrees(transformAngle)))
-                self.getHText.setText("self.getH() = " + str(self.getH()))
-                transformAngle += math.radians(self.getH())
+##                self.transformAngleText.setText("transformAngle = " + str(math.degrees(transformAngle)))
+##                self.getHText.setText("self.getH() = " + str(self.getH()))
+                
+                transformAngle -= math.radians(self.getH())
                 while transformAngle >= 2. * math.pi:
                     transformAngle -= (2. * math.pi)
                 while transformAngle < 0.0:
                     transformAngle += (2. * math.pi)
                 
-                self.angleText.clearText()
-                self.angleText.setText(str(math.degrees(transformAngle)))
+##                self.angleText.clearText()
+##                self.angleText.setText(str(math.degrees(transformAngle)))
                     
                 orthant = int(self.radarSlices * transformAngle / (2. * math.pi))
+                orthant = self.radarSlices - orthant - 1
                     
                 self.radarActivationLevels[orthant] += 1
             
