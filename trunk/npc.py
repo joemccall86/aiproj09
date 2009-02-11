@@ -127,8 +127,7 @@ class NPC(Agent):
         for i in range(self.rangeFinderCount):
             pd.append(int(self.persistentRangeFinderData[self.rangeFinders[i]]))
 
-        self.rangeFinderText.clearText()
-        self.rangeFinderText.setText(str(pd))
+        self.rangeFinderText.setText("Range Data (feelers): " + str(pd))
         return
     
     adjacencyText = OnscreenText(text="", style=1, fg=(1,1,1,1),
@@ -146,8 +145,7 @@ class NPC(Agent):
                     if agent in self.adjacentAgents:
                         self.adjacentAgents.remove(agent)
                         
-        self.adjacencyText.clearText()
-        self.adjacencyText.setText(str(len(self.adjacentAgents)))
+        self.adjacencyText.setText("Adjacent Agents: " + str(len(self.adjacentAgents)))
         return
     
     radarText = OnscreenText(text="", style=1, fg=(1,1,1,1),
@@ -199,8 +197,7 @@ class NPC(Agent):
                     
                 self.radarActivationLevels[orthant] += 1
             
-        self.radarText.clearText()
-        self.radarText.setText(str(self.radarActivationLevels))
+        self.radarText.setText("Radar (Pie Slice): " + str(self.radarActivationLevels))
         return
 
 if __name__ == "__main__":

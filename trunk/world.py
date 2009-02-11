@@ -64,7 +64,7 @@ class World(DirectObject):
                     turnRate = 150, 
                     speed = 5,
                     agentList = self.globalAgentList,
-                    rangeFinderCount = 2,
+                    rangeFinderCount = 4,
                     collisionMask = BitMask32.bit(i+1),
                     scale = 0.2)
                     for i in range(otherRalphsCount)]
@@ -103,7 +103,7 @@ class World(DirectObject):
             wall.instanceTo(tempWall)
     
 ##        base.oobeCull()
-        base.oobe()
+##        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.ralph)
         base.camera.setPos(0, 30, 10)
@@ -115,6 +115,7 @@ class World(DirectObject):
         
         # now add the sense loop
         taskMgr.add(self.ralph.sense, "sense")
+        taskMgr.add(self.__printPositionAndHeading, "__printPositionAndHeading")
         
         self.isMoving = False
         
@@ -164,6 +165,21 @@ class World(DirectObject):
     
     def __setKey(self, key, value):
         self.__keyMap[key] = value
+        
+    positionHeadingText = OnscreenText(text="", style=1, fg=(1,1,1,1),
+                   pos=(-1.3,-0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
+    def __printPositionAndHeading(self, task):
+        heading = self.ralph.getH()
+        while heading > 360.0:
+            heading -= 360.0
+        while heading < 0.0:
+            heading += 360.0
+            
+        self.positionHeadingText.setText("Position: (" + 
+            str(self.ralph.getPos().getX()) + ", " + 
+            str(self.ralph.getPos().getY()) + ") at heading " + 
+            str(heading))
+        return Task.cont
     
 if __name__ == "__main__":
     w = World()
