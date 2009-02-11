@@ -24,7 +24,7 @@ class NPC(Agent):
                 collisionMask=BitMask32.allOff(),
                 adjacencySensorThreshold = 0,
                 radarSlices = 0,
-                radarLength = 50.0):
+                radarLength = 0.0):
         Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList)
         self.collisionMask = collisionMask
         self.adjacencySensorThreshold = adjacencySensorThreshold
@@ -148,7 +148,7 @@ class NPC(Agent):
         for agent in self.agentList:
             if self != agent:
                 transform = self.getPos() - agent.getPos()
-                if transform.length() > math.sqrt(self.radarLength):
+                if transform.length() > self.radarLength:
                     continue
                 # Handle the special case
                 if transform.getX() == 0:

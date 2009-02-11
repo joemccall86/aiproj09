@@ -23,7 +23,8 @@ class World(DirectObject):
                 agentList = globalAgentList,
                 collisionMask = BitMask32.bit(0),
                 adjacencySensorThreshold = 5,
-                radarSlices = 5)
+                radarSlices = 4,
+                radarLength = 5)
 
                 
     # Key map dictionary; These represent the keys pressed
@@ -100,7 +101,7 @@ class World(DirectObject):
             wall.instanceTo(tempWall)
     
 ##        base.oobeCull()
-##        base.oobe()
+        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.ralph)
         base.camera.setPos(0, 30, 10)
