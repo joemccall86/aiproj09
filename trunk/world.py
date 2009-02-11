@@ -23,8 +23,9 @@ class World(DirectObject):
                 agentList = globalAgentList,
                 collisionMask = BitMask32.bit(0),
                 adjacencySensorThreshold = 5,
-                radarSlices = 4,
-                radarLength = 5)
+                radarSlices = 5,
+                radarLength = 5,
+                scale = 0.2)
 
                 
     # Key map dictionary; These represent the keys pressed
@@ -56,27 +57,26 @@ class World(DirectObject):
         env.setPos(0, 0, 0)
         env.setScale(100)
         
-        otherRalphsCount = 3
+        otherRalphsCount = 1
         otherRalphs = [NPC(self.modelStanding, 
                     {"run":self.modelRunning, "walk":self.modelWalking},
                     turnRate = 150, 
                     speed = 5,
                     agentList = self.globalAgentList,
-                    collisionMask = BitMask32.bit(i+1))
+                    collisionMask = BitMask32.bit(i+1),
+                    scale = 0.2)
                     for i in range(otherRalphsCount)]
         
         index = 1
         for ralph in otherRalphs:
             ralph.reparentTo(render)
-            ralph.setScale(0.2)
-            ralph.setX(5 * index)
+            ralph.setY(-5 * index)
             index += 1
             # uncomment this to make Jim happy
 ##            taskMgr.add(ralph.sense, "sense" + str(index))
                     
         # Make it visible
         self.ralph.reparentTo(render)
-        self.ralph.setScale(0.2)
         
         stoneTexture = loader.loadTexture("textures/Stones.jpg")
         stoneTexture.setMinfilter(Texture.FTLinearMipmapLinear)
@@ -95,7 +95,7 @@ class World(DirectObject):
         
         # One's not enough, let's make 10!
         # Instance this wall several times
-        for i in range(2):
+        for i in range(0):
             tempWall = render.attachNewNode("wall")
             tempWall.setPos(i*10, -10, 0)
             wall.instanceTo(tempWall)
