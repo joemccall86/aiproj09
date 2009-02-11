@@ -8,27 +8,7 @@ import sys
 from direct.task import Task
 from direct.gui.OnscreenText import OnscreenText
 
-class World(DirectObject):
-        
-    # Now to make our first agent
-    modelStanding = "models/ralph"
-    modelRunning = "models/ralph-run"
-    modelWalking = "models/ralph-walk"
-    
-    globalAgentList = []
-    ralph = NPC(modelStanding, 
-                {"run":modelRunning, "walk":modelWalking},
-                turnRate = 150, 
-                speed = 5,
-                rangeFinderCount = 13,
-                agentList = globalAgentList,
-                collisionMask = BitMask32.bit(0),
-                adjacencySensorThreshold = 5,
-                radarSlices = 5,
-                radarLength = 5,
-                scale = 0.2)
-
-                
+class World(DirectObject):                
     # Key map dictionary; These represent the keys pressed
     __keyMap = {"left":False, "right":False, "up":False, "down":False}
     
@@ -41,8 +21,24 @@ class World(DirectObject):
         DirectObject.__init__(self)
         env = loader.loadModel(groundModel)
         
+        self.globalAgentList = []
+        # Now to make our first agent
+        modelStanding = "models/ralph"
+        modelRunning = "models/ralph-run"
+        modelWalking = "models/ralph-walk"
+        self.ralph = NPC(modelStanding, 
+                    {"run":modelRunning, "walk":modelWalking},
+                    turnRate = 150, 
+                    speed = 5,
+                    agentList = self.globalAgentList,
+                    collisionMask = BitMask32.bit(0),
+                    adjacencySensorThreshold = 5,
+                    radarSlices = 5,
+                    radarLength =5,
+                    scale = 0.2)
         
-        # Make it visible
+        # Make it visibler
+        
         env.reparentTo(render)
         
         texture = loader.loadTexture("textures/ground.png")
@@ -59,8 +55,8 @@ class World(DirectObject):
         env.setScale(100)
         
         otherRalphsCount = 3
-        otherRalphs = [NPC(self.modelStanding, 
-                    {"run":self.modelRunning, "walk":self.modelWalking},
+        otherRalphs = [NPC(modelStanding, 
+                    {"run":modelRunning, "walk":modelWalking},
                     turnRate = 150, 
                     speed = 5,
                     agentList = self.globalAgentList,

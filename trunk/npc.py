@@ -98,6 +98,8 @@ class NPC(Agent):
                         relativeRadarLength * math.sin(float(i+1.) * 2. * math.pi / float(circleResolution)), 0)
             np = NodePath(ls.create())
             np.reparentTo(self)
+        
+
 
     def sense(self, task):
         self.rangeFinderSense()
@@ -132,19 +134,34 @@ class NPC(Agent):
     
     adjacencyText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                                  pos=(-1.3,0.90), align=TextNode.ALeft, scale = .05, mayChange = True)
+
+    adjacencyTexts = {}
     def adjacencySense(self):
         # loop thru the positionDictionary
+        index = 0
+        for agent in self.agentList:
+            if not self.adjacencyTexts.has_key(agent):
+                self.adjacencyTexts[agent] = OnscreenText(text="", style=1, fg=(1,1,1,1),
+                        pos=(-1.3,-0.85 + (index*0.05)), align=TextNode.ALeft, scale = .05, mayChange = True)
+                index += 1
+        index = 0
         for agent in self.agentList:
             if self != agent:
                 transform = self.getPos() - agent.getPos()
                 distance = transform.length()
+                self.adjacencyTexts[agent].clearText()
                 if distance <= self.adjacencySensorThreshold:
                     if agent not in self.adjacentAgents:
                         self.adjacentAgents.append(agent)
+                    self.adjacencyTexts[agent].setText("Agent " + str(index) + ": (" + 
+                            str(agent.getPos().getX()) + ", " +
+                            str(agent.getPos().getY()) + ") at heading " + 
+                            str(agent.getH()))
                 else:   
                     if agent in self.adjacentAgents:
                         self.adjacentAgents.remove(agent)
-                        
+            index += 1
+        
         self.adjacencyText.setText("Adjacent Agents: " + str(len(self.adjacentAgents)))
         return
     
