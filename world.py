@@ -20,6 +20,7 @@ class World(DirectObject):
                 {"run":modelRunning, "walk":modelWalking},
                 turnRate = 150, 
                 speed = 5,
+                rangeFinderCount = 13,
                 agentList = globalAgentList,
                 collisionMask = BitMask32.bit(0),
                 adjacencySensorThreshold = 5,
@@ -57,12 +58,13 @@ class World(DirectObject):
         env.setPos(0, 0, 0)
         env.setScale(100)
         
-        otherRalphsCount = 1
+        otherRalphsCount = 3
         otherRalphs = [NPC(self.modelStanding, 
                     {"run":self.modelRunning, "walk":self.modelWalking},
                     turnRate = 150, 
                     speed = 5,
                     agentList = self.globalAgentList,
+                    rangeFinderCount = 2,
                     collisionMask = BitMask32.bit(i+1),
                     scale = 0.2)
                     for i in range(otherRalphsCount)]
@@ -70,7 +72,7 @@ class World(DirectObject):
         index = 1
         for ralph in otherRalphs:
             ralph.reparentTo(render)
-            ralph.setY(-5 * index)
+            ralph.setX(-5 * index)
             index += 1
             # uncomment this to make Jim happy
 ##            taskMgr.add(ralph.sense, "sense" + str(index))
@@ -91,11 +93,11 @@ class World(DirectObject):
         # Add collision stuff to the wall
         tempWallCollideNodePath = wall.find("/Box")
         tempWallCollideNodePath.node().setIntoCollideMask(BitMask32.allOn())
-        tempWallCollideNodePath.node().setFromCollideMask(BitMask32.allOn())
+        tempWallCollideNodePath.node().setFromCollideMask(BitMask32.allOff())
         
         # One's not enough, let's make 10!
         # Instance this wall several times
-        for i in range(0):
+        for i in range(3):
             tempWall = render.attachNewNode("wall")
             tempWall.setPos(i*10, -10, 0)
             wall.instanceTo(tempWall)
