@@ -54,7 +54,7 @@ class World(DirectObject):
         env.setPos(0, 0, 0)
         env.setScale(100)
         
-        otherRalphsCount = 3
+        otherRalphsCount = 5
         otherRalphs = [NPC(modelStanding, 
                     {"run":modelRunning, "walk":modelWalking},
                     turnRate = 150, 
@@ -68,8 +68,9 @@ class World(DirectObject):
         index = 1
         for ralph in otherRalphs:
             ralph.reparentTo(render)
-            ralph.setX(-5 * index)
+            ralph.setX(5)
             index += 1
+            taskMgr.add(ralph.wanderTask, "wander" + str(i))
             # uncomment this to make Jim happy
 ##            taskMgr.add(ralph.sense, "sense" + str(index))
                     
@@ -92,11 +93,29 @@ class World(DirectObject):
         tempWallCollideNodePath.node().setFromCollideMask(BitMask32.allOff())
         
         # One's not enough, let's make 10!
-        # Instance this wall several times
-        for i in range(3):
+        # Instance thiss wall several times
+        numWallsPerSide = 0
+        for i in range(numWallsPerSide):
             tempWall = render.attachNewNode("wall")
-            tempWall.setPos(i*10, -10, 0)
+            tempWall.setPos(0, -i*wall.getScale().getY(), 0)
             wall.instanceTo(tempWall)
+        for i in range(numWallsPerSide):
+            tempWall = render.attachNewNode("wall")
+            tempWall.setPos(numWallsPerSide * wall.getScale().getY(), -i*wall.getScale().getY(), 0)
+            wall.instanceTo(tempWall)
+        wall2 = loader.loadModel(wallModel)
+        wall2.setScale(10, 1, 10)
+        wall2.setTexture(stoneTexture, 1)
+        for i in range(numWallsPerSide):
+            tempWall = render.attachNewNode("wall")
+            tempWall.setPos(i*wall2.getScale().getX(), 0, 0)
+            wall2.instanceTo(tempWall)
+        for i in range(numWallsPerSide):
+            tempWall = render.attachNewNode("wall")
+            tempWall.setPos(numWallsPerSide * wall2.getScale().getX() - ((1+i)*wall2.getScale().getX()), 
+                            -numWallsPerSide * wall2.getScale().getX(), 0)
+            wall2.instanceTo(tempWall)
+            
     
 ##        base.oobeCull()
 ##        base.oobe()
@@ -108,6 +127,7 @@ class World(DirectObject):
         
         self.__setKeymap()
         taskMgr.add(self.__processKey, "processKey")
+##        taskMgr.add(self.ralph.wanderTask, "wander")
         
         # now add the sense loop
         taskMgr.add(self.ralph.sense, "sense")

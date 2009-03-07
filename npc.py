@@ -3,15 +3,23 @@ from pandac.PandaModules import CollisionRay
 from pandac.PandaModules import CollisionNode
 from pandac.PandaModules import CollisionTraverser
 from pandac.PandaModules import CollisionHandlerQueue
-from pandac.PandaModules import Vec3
+from pandac.PandaModules import Vec3, Vec2
 from pandac.PandaModules import BitMask32
 from pandac.PandaModules import LineSegs
 from pandac.PandaModules import NodePath
 from pandac.PandaModules import TextNode
 from direct.task import Task
 from direct.gui.OnscreenText import OnscreenText
+import random
 import math
-
+        
+def RandGenerator():
+    while True:
+        yield random.uniform(-1000, 1000)
+        
+##RG = TrueRandGenerator()
+RG = RandGenerator()
+        
 class NPC(Agent):
     collisionCount = 0
     
@@ -43,7 +51,6 @@ class NPC(Agent):
             self.persistentRangeFinderData[rangeFinder] = 0
             
         
-        
         # Set up the range finders                            
         rangeFinderCollisionNode = CollisionNode("rangeFinders")
         deviation = 180 / (self.rangeFinderCount-1)
@@ -65,7 +72,7 @@ class NPC(Agent):
             
         rangeFinderCollisionNodePath = self.attachNewNode(rangeFinderCollisionNode)
         # Uncomment the following line to show the collision rays
-        rangeFinderCollisionNodePath.show()
+##        rangeFinderCollisionNodePath.show()
         
         # Create the CollisionTraverser and the CollisionHandlerQueue
         self.traverser = CollisionTraverser()
@@ -73,7 +80,7 @@ class NPC(Agent):
         
         self.traverser.addCollider(rangeFinderCollisionNodePath, self.queue)
         # Uncomment the following line to show the collisions
-        self.traverser.showCollisions(render)
+##        self.traverser.showCollisions(render)
 
         self.adjacentAgents = []
 
@@ -82,23 +89,22 @@ class NPC(Agent):
         ls.setThickness(5.0)
         relativeRadarLength = float(self.radarLength) / self.scale
         ls.setColor(0, 0, 1, 1)
-        for i in range(radarSlices):
-            ls.moveTo(0, 0, 0)            
-            ls.drawTo(relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(radarSlices)), 
-                      relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(radarSlices)), 0)
-            np = NodePath(ls.create())
-            np.reparentTo(self)
-            
-        # Draw a circle around NPC
-        circleResolution = 100
-        for i in range(circleResolution):
-            ls.drawTo(relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(circleResolution)), 
-                        relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(circleResolution)), 0)
-            ls.drawTo(relativeRadarLength * math.cos(float(i+1.) * 2. * math.pi / float(circleResolution)), 
-                        relativeRadarLength * math.sin(float(i+1.) * 2. * math.pi / float(circleResolution)), 0)
-            np = NodePath(ls.create())
-            np.reparentTo(self)
-        
+##        for i in range(radarSlices):
+##            ls.moveTo(0, 0, 0)            
+##            ls.drawTo(relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(radarSlices)), 
+##                      relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(radarSlices)), 0)
+##            np = NodePath(ls.create())
+##            np.reparentTo(self)
+##            
+##        # Draw a circle around NPC
+##        circleResolution = 100
+##        for i in range(circleResolution):
+##            ls.drawTo(relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(circleResolution)), 
+##                        relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(circleResolution)), 0)
+##            ls.drawTo(relativeRadarLength * math.cos(float(i+1.) * 2. * math.pi / float(circleResolution)), 
+##                        relativeRadarLength * math.sin(float(i+1.) * 2. * math.pi / float(circleResolution)), 0)
+##            np = NodePath(ls.create())
+##            np.reparentTo(self)        
 
 
     def sense(self, task):
@@ -107,8 +113,9 @@ class NPC(Agent):
         self.radarSense()
         return Task.cont
     
-    def think(self):
-        return
+    def think(self, task):
+        # If we get too close to a wall, let's turn around 180 from the rangeFinder that is closest
+        return Task.cont
     
     def act(self):
         return
@@ -129,7 +136,7 @@ class NPC(Agent):
         for i in range(self.rangeFinderCount):
             pd.append(int(self.persistentRangeFinderData[self.rangeFinders[i]]))
 
-        self.rangeFinderText.setText("Range Data (feelers): " + str(pd))
+##        self.rangeFinderText.setText("Range Data (feelers): " + str(pd))
         return
     
     adjacencyText = OnscreenText(text="", style=1, fg=(1,1,1,1),
@@ -153,16 +160,16 @@ class NPC(Agent):
                 if distance <= self.adjacencySensorThreshold:
                     if agent not in self.adjacentAgents:
                         self.adjacentAgents.append(agent)
-                    self.adjacencyTexts[agent].setText("Agent " + str(index) + ": (" + 
-                            str(agent.getPos().getX()) + ", " +
-                            str(agent.getPos().getY()) + ") at heading " + 
-                            str(agent.getH()))
+##                    self.adjacencyTexts[agent].setText("Agent " + str(index) + ": (" + 
+##                            str(agent.getPos().getX()) + ", " +
+##                            str(agent.getPos().getY()) + ") at heading " + 
+##                            str(agent.getH()))
                 else:   
                     if agent in self.adjacentAgents:
                         self.adjacentAgents.remove(agent)
             index += 1
         
-        self.adjacencyText.setText("Adjacent Agents: " + str(len(self.adjacentAgents)))
+##        self.adjacencyText.setText("Adjacent Agents: " + str(len(self.adjacentAgents)))
         return
     
     radarText = OnscreenText(text="", style=1, fg=(1,1,1,1),
@@ -215,6 +222,103 @@ class NPC(Agent):
                 self.radarActivationLevels[orthant] += 1
             
         self.radarText.setText("Radar (Pie Slice): " + str(self.radarActivationLevels))
+        return
+
+    @classmethod
+    def RandomClamped(self):
+        r = float(RG.next())
+        r /= 1000
+        return r
+            
+    wanderTarget = Vec2(0.0, 0.0)
+    isMoving = False
+    previousTime = 0.0
+    callCount = 0
+    def wanderTask(self, task):
+        self.callCount += 1
+        wanderCircleRadius = 2.5
+        if self.callCount == 5:
+            jitter = 50.
+            self.wanderTarget += Vec2(
+                self.RandomClamped() * jitter, 
+                self.RandomClamped() * jitter)
+            self.wanderTarget.normalize()
+            self.wanderTarget *= wanderCircleRadius
+            self.callCount = 0
+        
+        # Now move the circle in front of us
+        # First grab the absolute coordinates. We want to move it 'up' wanderDistance
+        wanderDistance = 5.0
+        theta = math.atan2(self.wanderTarget.getY(),self.wanderTarget.getX())
+        relativeX = (wanderCircleRadius * math.cos(theta))
+        relativeY = (wanderCircleRadius * math.sin(theta)) - wanderDistance
+        targetLocal = Vec2(relativeX, relativeY)
+        
+##        # For the hell of it, let's draw the circle
+##        if not self.isMoving:
+##            circleLineSegs = LineSegs()
+##            circleLineSegs.setColor(0, 0, 1)
+##            circleLineSegs.moveTo(wanderCircleRadius/self.scale, -wanderDistance/self.scale, 0)
+##            circleResolution = 20
+##            for i in range(1.0+circleResolution):
+##                if 0 == i: continue
+##                theta = i*2.0*math.pi/circleResolution
+##                R = wanderCircleRadius / self.scale
+##                xcoord = R * math.cos(theta)
+##                ycoord = R * math.sin(theta)
+##                # Move it ahead of us
+##                ycoord -= wanderDistance / self.scale
+##                circleLineSegs.drawTo(xcoord, ycoord, 0)
+##            NodePath(circleLineSegs.create()).reparentTo(self)
+##            
+##            # Now plot the point on the circle
+##            self.pointLineSegs = LineSegs()
+##            self.pointLineSegs.setColor(1, 0, 0)
+##            self.pointLineSegs.moveTo(0,0,0)
+##            
+##            self.pointNodePath = None
+##            
+##        if self.pointNodePath != None:
+##            self.pointNodePath.removeNode()
+##            self.pointNodePath = None
+##        
+##        self.pointLineSegs.moveTo(0,0,0)
+##        self.pointLineSegs.drawTo(targetLocal.getX()/self.scale, 
+##            targetLocal.getY()/self.scale, 0)
+##        self.pointNodePath = NodePath(self.pointLineSegs.create())
+##        self.pointNodePath.reparentTo(self)
+            
+            
+        # Leave a trail
+##        ls = LineSegs()
+##        ls.setThickness(2.0)
+##        ls.setColor(0, 0, 1)
+##        ls.moveTo(self.getPos())
+##        NodePath(ls.create()).reparentTo(render)
+        
+        elapsedTime = task.time - self.previousTime
+        distance = self.speed * elapsedTime
+        turnAngle = self.turnRate * elapsedTime
+        
+        # Now we have a relative target. We should go there.
+        heading = math.atan2(targetLocal.getY(), targetLocal.getX())
+        degreesHeading = math.degrees(heading)
+        if -90.0 < degreesHeading and degreesHeading <= 0.0:
+            self.turnLeft(turnAngle)
+        else:
+            self.turnRight(turnAngle)
+        
+        self.moveForward(distance)
+        
+        # He's always going to be moving, so let's make him loop the animation.
+        if not self.isMoving:
+            self.loop("run")
+            self.isMoving = True
+        
+        self.previousTime = task.time
+        return Task.cont
+
+    def ANNThink(self):
         return
 
 if __name__ == "__main__":
