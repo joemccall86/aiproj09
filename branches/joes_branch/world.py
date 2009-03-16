@@ -29,13 +29,13 @@ class World(DirectObject):
         self.ralph = NPC(modelStanding, 
                     {"run":modelRunning, "walk":modelWalking},
                     turnRate = 150, 
-                    speed = 5,
+                    speed = 25,
                     agentList = self.globalAgentList,
                     collisionMask = BitMask32.bit(0),
                     adjacencySensorThreshold = 5,
                     radarSlices = 5,
-                    radarLength =5,
-                    scale = 0.2)
+                    radarLength = 25,
+                    scale = 1.0)
         
         # Make it visibler
         
@@ -47,14 +47,14 @@ class World(DirectObject):
         texture.setMinfilter(Texture.FTLinearMipmapLinear)
         
         env.setTexGen(TextureStage.getDefault(), TexGenAttrib.MWorldPosition) 
-        env.setTexScale(TextureStage.getDefault(), 0.1, 0.1)
+        env.setTexScale(TextureStage.getDefault(), 0.02, 0.02)
         env.setTexture(texture, 1)
         
         # Make it so that it's big enough to walk on
         env.setPos(0, 0, 0)
-        env.setScale(100)
+        env.setScale(500)
         
-        otherRalphsCount = 5
+        otherRalphsCount = 0
         otherRalphs = [NPC(modelStanding, 
                     {"run":modelRunning, "walk":modelWalking},
                     turnRate = 150, 
@@ -65,11 +65,9 @@ class World(DirectObject):
                     scale = 0.2)
                     for i in range(otherRalphsCount)]
         
-        index = 1
-        for ralph in otherRalphs:
+        for index, ralph in enumerate(otherRalphs):
             ralph.reparentTo(render)
-            ralph.setX(5)
-            index += 1
+            ralph.setY(-5*(1+index))
             taskMgr.add(ralph.wanderTask, "wander" + str(i))
             # uncomment this to make Jim happy
 ##            taskMgr.add(ralph.sense, "sense" + str(index))
@@ -94,7 +92,7 @@ class World(DirectObject):
         
         # One's not enough, let's make 10!
         # Instance thiss wall several times
-        numWallsPerSide = 0
+        numWallsPerSide = 3
         for i in range(numWallsPerSide):
             tempWall = render.attachNewNode("wall")
             tempWall.setPos(0, -i*wall.getScale().getY(), 0)
@@ -118,7 +116,7 @@ class World(DirectObject):
             
     
 ##        base.oobeCull()
-##        base.oobe()
+        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.ralph)
         base.camera.setPos(0, 30, 10)
@@ -126,11 +124,12 @@ class World(DirectObject):
         base.camera.setP(base.camera.getP() + 15)
         
         self.__setKeymap()
-        taskMgr.add(self.__processKey, "processKey")
-##        taskMgr.add(self.ralph.wanderTask, "wander")
+##        taskMgr.add(self.__proccessKey, "processKeyTask")
+        taskMgr.add(self.ralph.wanderTask, "wander")
+##        taskMgr.add(self.ralph.sense, "senseTask")
+##        taskMgr.add(self.ralph.think, "thinkTask")
+##        taskMgr.add(self.ralph.act, "actTask")
         
-        # now add the sense loop
-        taskMgr.add(self.ralph.sense, "sense")
         taskMgr.add(self.__printPositionAndHeading, "__printPositionAndHeading")
         
         self.isMoving = False
@@ -138,18 +137,22 @@ class World(DirectObject):
         base.setBackgroundColor(r=0, g=0, b=.1, a=1)
         
     def __setKeymap(self):
+        
         self.accept("escape", sys.exit)
         
-        self.accept("arrow_left", self.__setKey, ["left", True])
-        self.accept("arrow_left-up", self.__setKey, ["left", False])
-        self.accept("arrow_right", self.__setKey, ["right", True])
-        self.accept("arrow_right-up", self.__setKey, ["right", False])
-        self.accept("arrow_up", self.__setKey, ["up", True])
-        self.accept("arrow_up-up", self.__setKey, ["up", False])
-        self.accept("arrow_down", self.__setKey, ["down", True])
-        self.accept("arrow_down-up", self.__setKey, ["down", False])
+        def setKey(key, value):
+            self.__keyMap[key] = value
+        
+        self.accept("arrow_left",     setKey, ["left", True])
+        self.accept("arrow_left-up",  setKey, ["left", False])
+        self.accept("arrow_right",    setKey, ["right", True])
+        self.accept("arrow_right-up", setKey, ["right", False])
+        self.accept("arrow_up",       setKey, ["up", True])
+        self.accept("arrow_up-up",    setKey, ["up", False])
+        self.accept("arrow_down",     setKey, ["down", True])
+        self.accept("arrow_down-up",  setKey, ["down", False])
 
-    def __processKey(self, task):
+    def __proccessKey(self, task):
         elapsedTime = task.time - self.__previousTime
         turnAngle = self.ralph.turnRate * elapsedTime
         distance = self.ralph.speed * elapsedTime
@@ -178,9 +181,6 @@ class World(DirectObject):
         # Store the previous time and continue
         self.__previousTime = task.time
         return Task.cont
-    
-    def __setKey(self, key, value):
-        self.__keyMap[key] = value
         
     positionHeadingText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                    pos=(-1.3,-0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
