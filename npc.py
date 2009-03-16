@@ -15,9 +15,9 @@ import math
         
 def RandGenerator():
     while True:
+        random.seed()
         yield random.uniform(-1000, 1000)
         
-##RG = TrueRandGenerator()
 RG = RandGenerator()
         
 class NPC(Agent):
@@ -114,11 +114,30 @@ class NPC(Agent):
         return Task.cont
     
     def think(self, task):
-        # If we get too close to a wall, let's turn around 180 from the rangeFinder that is closest
+        self.ANNThink()
         return Task.cont
     
-    def act(self):
-        return
+    isMoving = False
+    def act(self, task):
+        # Based on the neural node outputs, run forward and turn however we need to.
+        try:
+            if not self.timers.has_key(self.act):
+                self.timers[self.act] = 0.0
+        except AttributeError:
+            self.timers = {}
+            self.timers[self.act] = 0.0
+            
+        elapsedTime = task.time - self.timers[self.act]
+        distance = self.speed * elapsedTime
+        
+        self.moveForward(distance)
+        
+        if not self.isMoving:
+            self.isMoving = True
+            self.loop("run")
+        
+        self.timers[self.act] = task.time
+        return Task.cont
     
     rangeFinderText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                        pos=(-1.3,0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
@@ -221,7 +240,7 @@ class NPC(Agent):
                     
                 self.radarActivationLevels[orthant] += 1
             
-        self.radarText.setText("Radar (Pie Slice): " + str(self.radarActivationLevels))
+##        self.radarText.setText("Radar (Pie Slice): " + str(self.radarActivationLevels))
         return
 
     @classmethod
@@ -231,7 +250,6 @@ class NPC(Agent):
         return r
             
     wanderTarget = Vec2(0.0, 0.0)
-    isMoving = False
     previousTime = 0.0
     callCount = 0
     def wanderTask(self, task):
@@ -317,8 +335,28 @@ class NPC(Agent):
         
         self.previousTime = task.time
         return Task.cont
-
+    
+    #  So we need to define a lifetime for a generation and run it. 
+    #  Inputs: Radar Activation Levels
+    #  Outputs: Turn Left n degrees, Turn Right n degrees
+    
+    lifetimeTicks = 500
+    ANNThinkCallCount = 0
+    tickCount = 0
     def ANNThink(self):
+        """ 
+        This method is called by the think task to implement an ANN using
+        neat-python. Its inputs are the radar activation levels and its
+        outputs are movement requests. 
+        """
+        self.ANNThinkCallCount += 1
+        if self.ANNThinkCallCount == self.lifetimeTicks:
+            self.tickCount += 1
+            self.ANNThinkCallCount = 0
+            # Start over
+            self.setPos(0,0,0)
+            
+        
         return
 
 if __name__ == "__main__":
