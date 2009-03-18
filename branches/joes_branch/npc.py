@@ -10,6 +10,8 @@ from pandac.PandaModules import NodePath
 from pandac.PandaModules import TextNode
 from direct.task import Task
 from direct.gui.OnscreenText import OnscreenText
+from neat import config, population, chromosome, genome, visualize
+from neat.nn import nn_pure as nn
 import random
 import math
         
@@ -34,13 +36,15 @@ class NPC(Agent):
                 adjacencySensorThreshold = 0,
                 radarSlices = 0,
                 radarLength = 0.0,
-                scale = 1.0):
+                scale = 1.0,
+                brain = None):
         Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList)
         self.collisionMask = collisionMask
         self.adjacencySensorThreshold = adjacencySensorThreshold
         self.radarSlices = radarSlices
         self.radarLength = radarLength
         self.scale = scale
+        self.brain = brain
         
         self.setScale(self.scale)
         
@@ -118,25 +122,10 @@ class NPC(Agent):
         return Task.cont
     
     isMoving = False
+    previousTime = 0.0
     def act(self, task):
-        # Based on the neural node outputs, run forward and turn however we need to.
-        try:
-            if not self.timers.has_key(self.act):
-                self.timers[self.act] = 0.0
-        except AttributeError:
-            self.timers = {}
-            self.timers[self.act] = 0.0
-            
-        elapsedTime = task.time - self.timers[self.act]
-        distance = self.speed * elapsedTime
-        
-        self.moveForward(distance)
-        
-        if not self.isMoving:
-            self.isMoving = True
-            self.loop("run")
-        
-        self.timers[self.act] = task.time
+        elapsedTime = task.time - self.previousTime
+        self.ANNAct(elapsedTime)
         return Task.cont
     
     rangeFinderText = OnscreenText(text="", style=1, fg=(1,1,1,1),
@@ -179,10 +168,6 @@ class NPC(Agent):
                 if distance <= self.adjacencySensorThreshold:
                     if agent not in self.adjacentAgents:
                         self.adjacentAgents.append(agent)
-##                    self.adjacencyTexts[agent].setText("Agent " + str(index) + ": (" + 
-##                            str(agent.getPos().getX()) + ", " +
-##                            str(agent.getPos().getY()) + ") at heading " + 
-##                            str(agent.getH()))
                 else:   
                     if agent in self.adjacentAgents:
                         self.adjacentAgents.remove(agent)
@@ -340,6 +325,13 @@ class NPC(Agent):
     #  Inputs: Radar Activation Levels
     #  Outputs: Turn Left n degrees, Turn Right n degrees
     
+    def fitness(self, population):
+        annInputs = [self.getX(), self.getY()]
+        for chromo in population:
+            pass
+            
+        return
+    
     lifetimeTicks = 500
     ANNThinkCallCount = 0
     tickCount = 0
@@ -347,17 +339,61 @@ class NPC(Agent):
         """ 
         This method is called by the think task to implement an ANN using
         neat-python. Its inputs are the radar activation levels and its
-        outputs are movement requests. 
-        """
+        outputs are movement requests. We are NOT evaluating the fitness
+        in this function. Rather, we just use our brain.
+        """        
         self.ANNThinkCallCount += 1
+        annInputs = [self.getX(), self.getY()]
         if self.ANNThinkCallCount == self.lifetimeTicks:
             self.tickCount += 1
             self.ANNThinkCallCount = 0
             # Start over
             self.setPos(0,0,0)
+            outputs = brain.pactivate(annInputs) # parallel activation
             
+            try:
+                self.annMovementRequests
+            except NameError:
+                self.annMovementRequests = {
+                    "left":False,
+                    "right":False,
+                    "up":False,
+                    "down":False}
+                    
+            self.annMovementRequests["left"]    = (1 == outputs[0])
+            self.annMovementRequests["right"]   = (1 == outputs[1])
+            self.annMovementRequests["up"]      = (1 == outputs[2])
+            self.annMovementRequests["down"]    = (1 == outputs[3])
         
         return
+    
+    def ANNAct(self, elapsedTime):
+        """
+        This method acts upon the movement requests that were calculated in ANNThink.
+        """
+        turnAngle = self.turnRate * elapsedTime
+        distance = self.speed * elapsedTime
+        
+        if self.annMovementRequests["left"]:
+            self.turnLeft(turnAngle)
+        if self.annMovementRequests["right"]:
+            self.turnRight(turnAngle)
+        if self.annMovementRequests["up"]:
+            self.moveForward(distance)
+        if self.annMovementRequests["down"]:
+            self.moveBackward(distance)
+            
+        if self.annMovementRequests["left"] or \
+            self.annMovementRequests["right"] or \
+            self.annMovementRequests["up"] or \
+            self.annMovementRequests["down"]:
+            if not self.isMoving:
+                self.loop("run")
+                self.isMoving = True
+        else:
+            self.stop()
+            self.pose("walk", frame = 5)
+            self.isMoving = False
 
 if __name__ == "__main__":
     N = NPC("models/ralph",
