@@ -116,7 +116,7 @@ class World(DirectObject):
             
     
 ##        base.oobeCull()
-        base.oobe()
+##        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.ralph)
         base.camera.setPos(0, 30, 10)
@@ -125,10 +125,10 @@ class World(DirectObject):
         
         self.__setKeymap()
 ##        taskMgr.add(self.__proccessKey, "processKeyTask")
-        taskMgr.add(self.ralph.wanderTask, "wander")
-##        taskMgr.add(self.ralph.sense, "senseTask")
-##        taskMgr.add(self.ralph.think, "thinkTask")
-##        taskMgr.add(self.ralph.act, "actTask")
+##        taskMgr.add(self.ralph.wanderTask, "wander")
+        taskMgr.add(self.ralph.sense, "senseTask")
+        taskMgr.add(self.ralph.think, "thinkTask")
+        taskMgr.add(self.ralph.act, "actTask")
         
         taskMgr.add(self.__printPositionAndHeading, "__printPositionAndHeading")
         
