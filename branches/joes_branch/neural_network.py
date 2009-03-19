@@ -7,7 +7,7 @@ class NeuralNetwork():
     
     def __init__(self):
         # We will be using this later, I'm just anal about it right now.
-        pop = None
+        self.pop = None
 
         # needed for pyneat
         config.load('ai_config')
@@ -17,12 +17,17 @@ class NeuralNetwork():
         
     def nextGeneration(self, brains, listOfTargets, listOfPositions):
         """
-        Creates the next generation of brains and returns them as a list.
-        Takes in a list of brains, and a list of inputs for the neural network
+        Brains is a list of chromosomes that we need to copy into a population.
+        This function returns a new list of chromosomes (the next generation)
         """
         numBrains = len(brains)
         assert(numBrains == len(listOfTargets))
         assert(numBrains == len(listOfPositions))
+        
+        # TODO find a faster way to do this
+        if None == self.pop:
+            self.pop = population.Population()
+        self.pop.setPop(brains)
         
         # Note that this function should be as streamlined as possible
         def fitness(population):
@@ -33,16 +38,17 @@ class NeuralNetwork():
                 x1, y1 = listOfPositions[i]
                 x2, y2 = listOfTargets[i]
                 
-                distance = math.sqrt(math.pow(x2-x1, 2) + math.pow(y2-y1, 2))
+                distance = math.hypot(x2-x1, y2-y1)
                 # Since we want to minimize distance, just make the fitness the negative of the distance
-                chromo.fitness = -distance
+                chromo.fitness = 2000 - distance
         
+        # Point the fitness function to the one we just defined
         population.Population.evaluate = fitness
-        if None == self.pop:
-            self.pop = population.Population()
         
         # One epoch
-        pop.rt_epoch()
+        self.pop.rt_epoch()
+        
+        return self.pop.getPop()
         
 if __name__ == "__main__":
     nn = NeuralNetwork()

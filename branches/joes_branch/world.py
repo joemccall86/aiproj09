@@ -7,6 +7,8 @@ from npc import NPC
 import sys
 from direct.task import Task
 from direct.gui.OnscreenText import OnscreenText
+from neural_network import NeuralNetwork
+import random
 
 class World(DirectObject):                
     # Key map dictionary; These represent the keys pressed
@@ -54,23 +56,33 @@ class World(DirectObject):
         env.setPos(0, 0, 0)
         env.setScale(500)
         
-        otherRalphsCount = 0
+        otherRalphsCount = 1
         otherRalphs = [NPC(modelStanding, 
                     {"run":modelRunning, "walk":modelWalking},
                     turnRate = 150, 
-                    speed = 5,
+                    speed = 15,
                     agentList = self.globalAgentList,
                     rangeFinderCount = 4,
                     collisionMask = BitMask32.bit(i+1),
-                    scale = 0.2)
+                    scale = 1.0,
+                    brain = None)
                     for i in range(otherRalphsCount)]
         
         for index, ralph in enumerate(otherRalphs):
             ralph.reparentTo(render)
             ralph.setY(-5*(1+index))
-            taskMgr.add(ralph.wanderTask, "wander" + str(i))
+##            taskMgr.add(ralph.wanderTask, "wander" + str(index))
             # uncomment this to make Jim happy
 ##            taskMgr.add(ralph.sense, "sense" + str(index))
+##            taskMgr.add(ralph.think, "think" + str(index))
+##            taskMgr.add(ralph.act,   "act"   + str(index))
+            taskMgr.add(ralph.seekTask, "seekTask" + str(index), extraArgs = [self.ralph], appendTask = True)
+
+        targetCount = otherRalphsCount
+        targets = [loader.loadModel("models/bunny") for i in range(targetCount)]
+        for target in targets:
+            target.setPos(random.randint(1, 100) * 1, random.randint(1, 100) * 1, 0)
+            target.reparentTo(render)
                     
         # Make it visible
         self.ralph.reparentTo(render)
@@ -92,7 +104,7 @@ class World(DirectObject):
         
         # One's not enough, let's make 10!
         # Instance thiss wall several times
-        numWallsPerSide = 3
+        numWallsPerSide = 0
         for i in range(numWallsPerSide):
             tempWall = render.attachNewNode("wall")
             tempWall.setPos(0, -i*wall.getScale().getY(), 0)
@@ -124,15 +136,19 @@ class World(DirectObject):
         base.camera.setP(base.camera.getP() + 15)
         
         self.__setKeymap()
-##        taskMgr.add(self.__proccessKey, "processKeyTask")
+        taskMgr.add(self.__proccessKey, "processKeyTask")
 ##        taskMgr.add(self.ralph.wanderTask, "wander")
-        taskMgr.add(self.ralph.sense, "senseTask")
-        taskMgr.add(self.ralph.think, "thinkTask")
-        taskMgr.add(self.ralph.act, "actTask")
+##        taskMgr.add(self.ralph.sense, "senseTask")
+##        taskMgr.add(self.ralph.think, "thinkTask")
+##        taskMgr.add(self.ralph.act, "actTask")
         
         taskMgr.add(self.__printPositionAndHeading, "__printPositionAndHeading")
         
-        self.isMoving = False
+        listOfTargets = [(target.getX(), target.getY()) for target in targets]
+        agentList = [(ralph.getX(), ralph.getY()) for ralph in otherRalphs]
+##        taskMgr.add(self.neatEvaluateTask, "self.neatEvaluateTask", extraArgs = [listOfTargets, otherRalphs], appendTask = True)
+        
+        self.neuralNetwork = NeuralNetwork()
         
         base.setBackgroundColor(r=0, g=0, b=.1, a=1)
         
@@ -152,6 +168,7 @@ class World(DirectObject):
         self.accept("arrow_down",     setKey, ["down", True])
         self.accept("arrow_down-up",  setKey, ["down", False])
 
+    isMoving = False
     def __proccessKey(self, task):
         elapsedTime = task.time - self.__previousTime
         turnAngle = self.ralph.turnRate * elapsedTime
@@ -195,6 +212,24 @@ class World(DirectObject):
             str(self.ralph.getPos().getX()) + ", " + 
             str(self.ralph.getPos().getY()) + ") at heading " + 
             str(heading))
+        return Task.cont
+
+    # These agents each have a brain. We need to create a population based on these brains.
+    generationLifetimeTicks = 100
+    neatEvaluateTaskCallCount = 0
+    def neatEvaluateTask(self, listOfTargets, agentList, task):
+        self.neatEvaluateTaskCallCount += 1
+        if self.generationLifetimeTicks == self.neatEvaluateTaskCallCount:
+            self.neatEvaluateTaskCallCount = 0
+        else:
+            oldBrains = [agent.brain for agent in agentList]
+                
+            listOfPositions = [(agent.getX(), agent.getY()) for agent in agentList]
+            newBrains = self.neuralNetwork.nextGeneration(oldBrains, listOfTargets, listOfPositions)
+            
+            for agent, brain in zip(agentList, newBrains):
+                agent.brain = brain
+                
         return Task.cont
     
 if __name__ == "__main__":
