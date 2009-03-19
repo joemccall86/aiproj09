@@ -56,32 +56,37 @@ class World(DirectObject):
         env.setPos(0, 0, 0)
         env.setScale(500)
         
-        otherRalphsCount = 1
+        otherRalphsCount = 5
         otherRalphs = [NPC(modelStanding, 
                     {"run":modelRunning, "walk":modelWalking},
                     turnRate = 150, 
-                    speed = 15,
+                    speed = 25,
                     agentList = self.globalAgentList,
                     rangeFinderCount = 4,
+                    radarSlices = 5,
                     collisionMask = BitMask32.bit(i+1),
                     scale = 1.0,
                     brain = None)
                     for i in range(otherRalphsCount)]
         
+        self.startingPositions = {}
+        
         for index, ralph in enumerate(otherRalphs):
             ralph.reparentTo(render)
-            ralph.setY(-5*(1+index))
+            ralph.setX(random.random() * 500)
+            ralph.setY(random.random() * 500)
+            self.startingPositions[ralph] = ralph.getPos()
 ##            taskMgr.add(ralph.wanderTask, "wander" + str(index))
             # uncomment this to make Jim happy
-##            taskMgr.add(ralph.sense, "sense" + str(index))
-##            taskMgr.add(ralph.think, "think" + str(index))
-##            taskMgr.add(ralph.act,   "act"   + str(index))
-            taskMgr.add(ralph.seekTask, "seekTask" + str(index), extraArgs = [self.ralph], appendTask = True)
+            taskMgr.add(ralph.sense, "sense" + str(index))
+            taskMgr.add(ralph.think, "think" + str(index))
+            taskMgr.add(ralph.act,   "act"   + str(index))
+##            taskMgr.add(ralph.seekTask, "seekTask" + str(index), extraArgs = [self.ralph], appendTask = True)
 
         targetCount = otherRalphsCount
         targets = [loader.loadModel("models/bunny") for i in range(targetCount)]
         for target in targets:
-            target.setPos(random.randint(1, 100) * 1, random.randint(1, 100) * 1, 0)
+            target.setPos(random.randint(1, 500) * 1, random.randint(1, 500) * 1, 0)
             target.reparentTo(render)
                     
         # Make it visible
@@ -102,16 +107,22 @@ class World(DirectObject):
         tempWallCollideNodePath.node().setIntoCollideMask(BitMask32.allOn())
         tempWallCollideNodePath.node().setFromCollideMask(BitMask32.allOff())
         
+        tempWall = render.attachNewNode("wall")
+        tempWall.setPos(250, 250, 0)
+        wall.instanceTo(tempWall)
+        
         # One's not enough, let's make 10!
         # Instance thiss wall several times
         numWallsPerSide = 0
         for i in range(numWallsPerSide):
             tempWall = render.attachNewNode("wall")
             tempWall.setPos(0, -i*wall.getScale().getY(), 0)
+            tempWall.setY(-tempWall.getY())
             wall.instanceTo(tempWall)
         for i in range(numWallsPerSide):
             tempWall = render.attachNewNode("wall")
             tempWall.setPos(numWallsPerSide * wall.getScale().getY(), -i*wall.getScale().getY(), 0)
+            tempWall.setY(-tempWall.getY())
             wall.instanceTo(tempWall)
         wall2 = loader.loadModel(wallModel)
         wall2.setScale(10, 1, 10)
@@ -119,11 +130,13 @@ class World(DirectObject):
         for i in range(numWallsPerSide):
             tempWall = render.attachNewNode("wall")
             tempWall.setPos(i*wall2.getScale().getX(), 0, 0)
+            tempWall.setY(-tempWall.getY())
             wall2.instanceTo(tempWall)
         for i in range(numWallsPerSide):
             tempWall = render.attachNewNode("wall")
             tempWall.setPos(numWallsPerSide * wall2.getScale().getX() - ((1+i)*wall2.getScale().getX()), 
                             -numWallsPerSide * wall2.getScale().getX(), 0)
+            tempWall.setY(-tempWall.getY())
             wall2.instanceTo(tempWall)
             
     
@@ -146,12 +159,45 @@ class World(DirectObject):
         
         listOfTargets = [(target.getX(), target.getY()) for target in targets]
         agentList = [(ralph.getX(), ralph.getY()) for ralph in otherRalphs]
-##        taskMgr.add(self.neatEvaluateTask, "self.neatEvaluateTask", extraArgs = [listOfTargets, otherRalphs], appendTask = True)
+        taskMgr.add(self.neatEvaluateTask, "self.neatEvaluateTask", extraArgs = [listOfTargets, otherRalphs], appendTask = True)
         
         self.neuralNetwork = NeuralNetwork()
         
         base.setBackgroundColor(r=0, g=0, b=.1, a=1)
         
+        self.__setupCollisionHandling()
+        taskMgr.add(self.__handleCollisionTask, "__handleCollisionTask")
+        
+    def __handleCollisionTask(self, task):
+        self.cTrav.traverse(render)
+        entries = []
+        for i in range(self.ralphGroundHandler.getNumEntries()):
+            entry = self.ralphGroundHandler.getEntry(i)
+            entries.append(entry)
+        if len(entries) > 0:
+            print entries[0].getIntoNode().getName()
+##        entries.sort(lambda x,y: cmp(y.getSurfacePoint(render).getZ(),
+##                                     x.getSurfacePoint(render).getZ()))
+##        if (len(entries)>0) and (entries[0].getIntoNode().getName() == "terrain"):
+##            self.ralph.setZ(entries[0].getSurfacePoint(render).getZ())
+##        else:
+##            self.ralph.setPos(startpos)
+##        return Task.cont
+    
+    def __setupCollisionHandling(self):
+        self.cTrav = CollisionTraverser()
+
+        self.ralphGroundRay = CollisionRay()
+        self.ralphGroundRay.setOrigin(0,0,1000)
+        self.ralphGroundRay.setDirection(0,0,-1)
+        self.ralphGroundCol = CollisionNode('ralphRay')
+        self.ralphGroundCol.addSolid(self.ralphGroundRay)
+        self.ralphGroundCol.setFromCollideMask(BitMask32.bit(6))
+        self.ralphGroundCol.setIntoCollideMask(BitMask32.allOn())
+        self.ralphGroundColNp = self.ralph.attachNewNode(self.ralphGroundCol)
+        self.ralphGroundHandler = CollisionHandlerQueue()
+        self.cTrav.addCollider(self.ralphGroundColNp, self.ralphGroundHandler)    
+    
     def __setKeymap(self):
         
         self.accept("escape", sys.exit)
@@ -214,14 +260,14 @@ class World(DirectObject):
             str(heading))
         return Task.cont
 
-    # These agents each have a brain. We need to create a population based on these brains.
-    generationLifetimeTicks = 100
+    # Every generation, throw out the old brains and put in the new ones. At
+    # this point we can start all over with new nodes.
+    generationLifetimeTicks = 500
     neatEvaluateTaskCallCount = 0
     def neatEvaluateTask(self, listOfTargets, agentList, task):
         self.neatEvaluateTaskCallCount += 1
         if self.generationLifetimeTicks == self.neatEvaluateTaskCallCount:
             self.neatEvaluateTaskCallCount = 0
-        else:
             oldBrains = [agent.brain for agent in agentList]
                 
             listOfPositions = [(agent.getX(), agent.getY()) for agent in agentList]
@@ -229,6 +275,7 @@ class World(DirectObject):
             
             for agent, brain in zip(agentList, newBrains):
                 agent.brain = brain
+                agent.setPos(self.startingPositions[agent])
                 
         return Task.cont
     

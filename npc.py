@@ -141,8 +141,8 @@ class NPC(Agent):
     previousTime = 0.0
     def act(self, task):
         elapsedTime = task.time - self.previousTime
-##        self.ANNAct(elapsedTime)
-        self.seekTarget(elapsedTime)
+        self.ANNAct(elapsedTime)
+##        self.seekTarget(elapsedTime)
         self.previousTime = task.time
         return Task.cont
     
