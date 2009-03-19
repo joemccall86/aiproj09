@@ -40,7 +40,9 @@ class NeuralNetwork():
                 
                 distance = math.hypot(x2-x1, y2-y1)
                 # Since we want to minimize distance, just make the fitness the negative of the distance
-                chromo.fitness = 2000 - distance
+                chromo.fitness = 500 - distance
+                
+                print "chromo" , i , chromo.fitness
         
         # Point the fitness function to the one we just defined
         population.Population.evaluate = fitness
