@@ -12,6 +12,7 @@ from direct.task import Task
 from direct.gui.OnscreenText import OnscreenText
 from neat import config, population, chromosome, genome, visualize
 from neat.nn import nn_pure as nn
+from neat.config import Config
 import random
 import math
         
@@ -21,6 +22,9 @@ def RandGenerator():
         yield random.uniform(-1000, 1000)
         
 RG = RandGenerator()
+
+# needed for neat-python
+config.load('ai_config')
         
 class NPC(Agent):
     collisionCount = 0
@@ -46,6 +50,11 @@ class NPC(Agent):
         self.scale = scale
         self.brain = brain
         
+        if None == self.brain:
+            self.brain = chromosome.Chromosome.create_fully_connected()
+            if Config.hidden_nodes > 0:
+                self.brain.add_hidden_nodes(Config.hidden_nodes)
+        
         self.setScale(self.scale)
         
         self.rangeFinderCount = rangeFinderCount
@@ -54,6 +63,12 @@ class NPC(Agent):
         for rangeFinder in self.rangeFinders:
             self.persistentRangeFinderData[rangeFinder] = 0
             
+                    
+        self.annMovementRequests = {
+            "left":False,
+            "right":False,
+            "up":False,
+            "down":False}
         
         # Set up the range finders                            
         rangeFinderCollisionNode = CollisionNode("rangeFinders")
@@ -73,6 +88,7 @@ class NPC(Agent):
             rangeFinderCollisionNode.setIntoCollideMask(self.collisionMask)
             
             angle += deviation
+
             
         rangeFinderCollisionNodePath = self.attachNewNode(rangeFinderCollisionNode)
         # Uncomment the following line to show the collision rays
@@ -125,7 +141,15 @@ class NPC(Agent):
     previousTime = 0.0
     def act(self, task):
         elapsedTime = task.time - self.previousTime
-        self.ANNAct(elapsedTime)
+##        self.ANNAct(elapsedTime)
+        self.seekTarget(elapsedTime)
+        self.previousTime = task.time
+        return Task.cont
+    
+    def seekTask(self, seekTarget, task):
+        elapsedTime = task.time - self.previousTime
+        self.seekTarget(seekTarget, elapsedTime)
+        self.previousTime = task.time
         return Task.cont
     
     rangeFinderText = OnscreenText(text="", style=1, fg=(1,1,1,1),
@@ -319,22 +343,11 @@ class NPC(Agent):
             self.isMoving = True
         
         self.previousTime = task.time
-        return Task.cont
+        return Task.cont    
+
     
-    #  So we need to define a lifetime for a generation and run it. 
-    #  Inputs: Radar Activation Levels
-    #  Outputs: Turn Left n degrees, Turn Right n degrees
-    
-    def fitness(self, population):
-        annInputs = [self.getX(), self.getY()]
-        for chromo in population:
-            pass
-            
-        return
-    
-    lifetimeTicks = 500
-    ANNThinkCallCount = 0
-    tickCount = 0
+    generationLifetimeTicks = 500
+    ANNThinkCallCount = 500
     def ANNThink(self):
         """ 
         This method is called by the think task to implement an ANN using
@@ -343,29 +356,16 @@ class NPC(Agent):
         in this function. Rather, we just use our brain.
         """        
         self.ANNThinkCallCount += 1
-        annInputs = [self.getX(), self.getY()]
-        if self.ANNThinkCallCount == self.lifetimeTicks:
-            self.tickCount += 1
-            self.ANNThinkCallCount = 0
-            # Start over
-            self.setPos(0,0,0)
-            outputs = brain.pactivate(annInputs) # parallel activation
-            
-            try:
-                self.annMovementRequests
-            except NameError:
-                self.annMovementRequests = {
-                    "left":False,
-                    "right":False,
-                    "up":False,
-                    "down":False}
-                    
-            self.annMovementRequests["left"]    = (1 == outputs[0])
-            self.annMovementRequests["right"]   = (1 == outputs[1])
-            self.annMovementRequests["up"]      = (1 == outputs[2])
-            self.annMovementRequests["down"]    = (1 == outputs[3])
+        annInputs = self.getX(), self.getY()
+        phenotype = nn.create_phenotype(self.brain)
+        outputs = phenotype.pactivate(annInputs) # parallel activation
         
-        return
+##        print(outputs)
+                    
+        self.annMovementRequests["left"]    = (outputs[0] > 0.5)
+        self.annMovementRequests["right"]   = (outputs[1] > 0.5)
+        self.annMovementRequests["up"]      = (outputs[2] > 0.5)
+        self.annMovementRequests["down"]    = (outputs[3] > 0.5)
     
     def ANNAct(self, elapsedTime):
         """
@@ -394,6 +394,43 @@ class NPC(Agent):
             self.stop()
             self.pose("walk", frame = 5)
             self.isMoving = False
+                
+    def seekTarget(self, seekTarget, elapsedTime):
+        moveDistance = self.speed * elapsedTime
+        moveAngle = self.turnRate * elapsedTime
+        
+        oldHeadingDegrees = self.getH()
+        self.lookAt(seekTarget.getPos())
+        newHeadingDegrees = self.getH()
+        self.setH(oldHeadingDegrees)
+        
+        oldHeadingDegrees %= 360.0
+        newHeadingDegrees += 180.0
+        newHeadingDegrees %= 360.0
+        
+        deltaHeadingDegrees = math.fabs(oldHeadingDegrees - newHeadingDegrees)
+        negSwitch = deltaHeadingDegrees < 180.0 and 1.0 or -1.0
+        if oldHeadingDegrees < newHeadingDegrees:
+            self.turnLeft(negSwitch * moveAngle)
+        if oldHeadingDegrees > newHeadingDegrees:
+            self.turnRight(negSwitch * moveAngle)
+        
+        deltaR = math.hypot(self.getX()-seekTarget.getX(), self.getY() - seekTarget.getY())
+        if deltaR > 10:
+            self.moveForward(moveDistance)
+            
+        if math.fabs(oldHeadingDegrees - newHeadingDegrees) < 2*moveAngle and deltaR < 10:
+            if self.isMoving:
+                self.stop()
+                self.pose("walk", frame = 5)
+                self.isMoving = False
+        else:
+            if not self.isMoving:
+                self.loop("run")
+                self.isMoving = True
+            
+            
+        return Task.cont
 
 if __name__ == "__main__":
     N = NPC("models/ralph",
