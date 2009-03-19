@@ -33,7 +33,8 @@ class World(DirectObject):
                     turnRate = 150, 
                     speed = 25,
                     agentList = self.globalAgentList,
-                    collisionMask = BitMask32.bit(0),
+                    collisionMask = BitMask32.bit(1),
+                    rangeFinderCount = 13,
                     adjacencySensorThreshold = 5,
                     radarSlices = 5,
                     radarLength = 25,
@@ -64,7 +65,7 @@ class World(DirectObject):
                     agentList = self.globalAgentList,
                     rangeFinderCount = 4,
                     radarSlices = 5,
-                    collisionMask = BitMask32.bit(i+1),
+                    collisionMask = BitMask32.bit(i+2),
                     scale = 1.0,
                     brain = None)
                     for i in range(otherRalphsCount)]
@@ -81,6 +82,7 @@ class World(DirectObject):
             taskMgr.add(ralph.sense, "sense" + str(index))
             taskMgr.add(ralph.think, "think" + str(index))
             taskMgr.add(ralph.act,   "act"   + str(index))
+            taskMgr.add(ralph.handleCollisionTask, "handleCollisions" + str(index))
 ##            taskMgr.add(ralph.seekTask, "seekTask" + str(index), extraArgs = [self.ralph], appendTask = True)
 
         targetCount = otherRalphsCount
@@ -99,13 +101,14 @@ class World(DirectObject):
         wallModel = "models/box.egg.pz"
         wall = loader.loadModel(wallModel)
         wall.setPos(0, -10, 0)
-        wall.setScale(1, 10, 10)
+        wall.setScale(10, 100, 100)
         wall.setTexture(stoneTexture, 1)
         
         # Add collision stuff to the wall
         tempWallCollideNodePath = wall.find("/Box")
+        # We want everyone to collide with the box
         tempWallCollideNodePath.node().setIntoCollideMask(BitMask32.allOn())
-        tempWallCollideNodePath.node().setFromCollideMask(BitMask32.allOff())
+        tempWallCollideNodePath.node().setFromCollideMask(BitMask32.allOn())
         
         tempWall = render.attachNewNode("wall")
         tempWall.setPos(250, 250, 0)
@@ -150,6 +153,7 @@ class World(DirectObject):
         
         self.__setKeymap()
         taskMgr.add(self.__proccessKey, "processKeyTask")
+        taskMgr.add(self.ralph.handleCollisionTask, "handleCollisionTask")
 ##        taskMgr.add(self.ralph.wanderTask, "wander")
 ##        taskMgr.add(self.ralph.sense, "senseTask")
 ##        taskMgr.add(self.ralph.think, "thinkTask")
@@ -165,38 +169,7 @@ class World(DirectObject):
         
         base.setBackgroundColor(r=0, g=0, b=.1, a=1)
         
-        self.__setupCollisionHandling()
-        taskMgr.add(self.__handleCollisionTask, "__handleCollisionTask")
         
-    def __handleCollisionTask(self, task):
-        self.cTrav.traverse(render)
-        entries = []
-        for i in range(self.ralphGroundHandler.getNumEntries()):
-            entry = self.ralphGroundHandler.getEntry(i)
-            entries.append(entry)
-        if len(entries) > 0:
-            print entries[0].getIntoNode().getName()
-##        entries.sort(lambda x,y: cmp(y.getSurfacePoint(render).getZ(),
-##                                     x.getSurfacePoint(render).getZ()))
-##        if (len(entries)>0) and (entries[0].getIntoNode().getName() == "terrain"):
-##            self.ralph.setZ(entries[0].getSurfacePoint(render).getZ())
-##        else:
-##            self.ralph.setPos(startpos)
-##        return Task.cont
-    
-    def __setupCollisionHandling(self):
-        self.cTrav = CollisionTraverser()
-
-        self.ralphGroundRay = CollisionRay()
-        self.ralphGroundRay.setOrigin(0,0,1000)
-        self.ralphGroundRay.setDirection(0,0,-1)
-        self.ralphGroundCol = CollisionNode('ralphRay')
-        self.ralphGroundCol.addSolid(self.ralphGroundRay)
-        self.ralphGroundCol.setFromCollideMask(BitMask32.bit(6))
-        self.ralphGroundCol.setIntoCollideMask(BitMask32.allOn())
-        self.ralphGroundColNp = self.ralph.attachNewNode(self.ralphGroundCol)
-        self.ralphGroundHandler = CollisionHandlerQueue()
-        self.cTrav.addCollider(self.ralphGroundColNp, self.ralphGroundHandler)    
     
     def __setKeymap(self):
         
@@ -219,6 +192,8 @@ class World(DirectObject):
         elapsedTime = task.time - self.__previousTime
         turnAngle = self.ralph.turnRate * elapsedTime
         distance = self.ralph.speed * elapsedTime
+        
+        self.previousPosition = self.ralph.getPos()
         
         if self.__keyMap["left"]:
             self.ralph.turnLeft(turnAngle)
