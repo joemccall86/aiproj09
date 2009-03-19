@@ -21,7 +21,9 @@ class Agent(Actor):
         self.setH(self.getH() - angle)
         return
     
+    previousPosition = None
     def moveForward(self, distance):
+        self.previousPosition = self.getPos()
         # Gets the net transform from render as a matrix, and get the second
         # row, which represents the transform on the y-axis (in front of us)
         backward = self.getNetTransform().getMat().getRow3(1)
@@ -34,6 +36,7 @@ class Agent(Actor):
         return
     
     def moveBackward(self, distance):
+        self.previousPosition = self.getPos()
         backward = self.getNetTransform().getMat().getRow3(1)
         backward.normalize()
         self.setPos(self.getPos() + backward * distance)
