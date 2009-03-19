@@ -63,7 +63,7 @@ class World(DirectObject):
                     turnRate = 150, 
                     speed = 25,
                     agentList = self.globalAgentList,
-                    rangeFinderCount = 4,
+                    rangeFinderCount = 13,
                     radarSlices = 5,
                     collisionMask = BitMask32.bit(i+2),
                     scale = 1.0,

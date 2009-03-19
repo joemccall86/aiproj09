@@ -356,7 +356,9 @@ class NPC(Agent):
         in this function. Rather, we just use our brain.
         """        
         self.ANNThinkCallCount += 1
-        annInputs = self.getX(), self.getY()
+        annInputs = [self.getX(), self.getY()]
+        annInputs.extend(self.radarActivationLevels)
+        annInputs.extend(self.persistentRangeFinderData.values())
         phenotype = nn.create_phenotype(self.brain)
         outputs = phenotype.pactivate(annInputs) # parallel activation
         
