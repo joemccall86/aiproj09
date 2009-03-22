@@ -17,12 +17,25 @@ class World(DirectObject):
         DirectObject.__init__(self)
         
         self.__setupEnvironment()
+        self.__setupGravity()
         self.__setupWalls()
         self.__setupMainAgent()
         self.__setupOtherAgents()
         self.__setupTargets()
         self.__setupTasks()
         self.__setupCamera()
+
+    def __setupGravity(self):
+        base.enableParticles()
+        
+        gravityFN=ForceNode('world-forces')
+        gravityFNP=render.attachNewNode(gravityFN)
+        gravityForce=LinearVectorForce(0,0,-9.81) #gravity acceleration
+        gravityFN.addForce(gravityForce)
+
+        base.physicsMgr.addLinearForce(gravityForce)
+
+        return 
 
     __envirnoment = None
     def __setupEnvironment(self):
@@ -46,6 +59,8 @@ class World(DirectObject):
         # Make it so that it's big enough to walk on
         self.__envirnoment.setPos(0, 0, 0)
         self.__envirnoment.setScale(500)
+        
+        # Now to add collision stuff to the ground
         
         base.setBackgroundColor(r=0, g=0, b=.1, a=1)
     
@@ -116,7 +131,8 @@ class World(DirectObject):
                             adjacencySensorThreshold = 5,
                             radarSlices = 5,
                             radarLength = 25,
-                            scale = 1.0)                    
+                            scale = 1.0,
+                            weightKg = 35.0)                    
         # Make it visible
         self.__mainAgent.reparentTo(render)
         
