@@ -41,8 +41,9 @@ class NPC(Agent):
                 radarSlices = 0,
                 radarLength = 0.0,
                 scale = 1.0,
-                brain = None):
-        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList)
+                brain = None,
+                weightKg = 0.1):
+        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList, weightKg)
         self.collisionMask = collisionMask
         self.adjacencySensorThreshold = adjacencySensorThreshold
         self.radarSlices = radarSlices
