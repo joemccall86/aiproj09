@@ -98,14 +98,14 @@ class World(DirectObject):
         self.setWaypoints()
         self.ralph.setCurrentTarget(self.waypointA6)
         bestPath = self.ralph.AStar(self.waypointA6, self.waypoints)
-        if bestPath == None:
-            print("There is no path to target")
-        else:
-            print("There IS a path to target")
-            print("bestPath = ")
-            for waypoint in bestPath:
-                print(str(waypoint.getNodeID()))
-            print(bestPath)
+##        if bestPath == None:
+##            print("There is no path to target")
+##        else:
+##            print("There IS a path to target")
+##            print("bestPath = ")
+##            for waypoint in bestPath:
+##                print(str(waypoint.getNodeID()))
+##            print(bestPath)
         #Set initial target.
         self.ralph.setCurrentTarget(bestPath[0])
         #######################################################

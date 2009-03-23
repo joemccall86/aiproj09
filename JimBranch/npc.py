@@ -250,17 +250,18 @@ class NPC(Agent):
 ##########################################
     def followPath(self, path, target, task):
         if len(path) > 0:
-            print("Not there yet.")
             nextWaypoint = path[0]
-            print("Distance to next waypoint = " + str(self.distance(self, nextWaypoint)))
-            print("Ralph seeking waypoint:" + str(nextWaypoint.getNodeID()))
-            print("Which is located at: " + str(nextWaypoint.getX()) + ", " + str(nextWaypoint.getY()))
-            print("followPath(): Distance = " + str(self.distance(self, nextWaypoint)))
+            #print("followPath() distance = " + str(self.distance(self, nextWaypoint)))
             if self.distance(self, nextWaypoint) < 1:
-                print("Telling Ralph to seek waypoint:" + str(nextWaypoint.getNodeID()))
-                self.setCurrentTarget(path.pop(0))
+                #print("WAYPOINT FOUND, UPDATING CURRENT TARGET")
+                path.pop(0)
+                nextWaypoint = path[0]
+                #print("Telling Ralph to seek waypoint:" + str(nextWaypoint.getNodeID()))
+                self.currentTarget = nextWaypoint
+                #print("Set self.currentTarget to node " + str(self.currentTarget.getNodeID()) + " at position " + str(self.currentTarget.getX()) + ", " + str(self.currentTarget.getY()))
+                #self.setCurrentTarget(path.pop(0))
         else:
-            print("Telling Ralph to seek final Target")
+            #print("Telling Ralph to seek final Target")
             self.setCurrentTarget(target)
         return Task.cont
         
@@ -375,8 +376,8 @@ class NPC(Agent):
         return
     
     def seek(self, position, elapsedTime):
-        print("Seeking position " + str(position.getX()) + ", " + str(position.getY()))
-        print("Current position " + str(self.getX())     + ", " + str(position.getY()))
+        #print("Seeking position " + str(position.getX()) + ", " + str(position.getY()))
+        #print("Current position " + str(self.getX())     + ", " + str(position.getY()))
         worldPosition = self.getPos()
         worldTargetPosition = position
         worldHeading = self.getH()
@@ -385,15 +386,14 @@ class NPC(Agent):
         worldXDirection = worldTargetPosition.getX() - worldPosition.getX()
         worldDirectionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
         distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
-        print("distanceToTarget = " + str(distanceToTarget))
+        #print("distanceToTarget = " + str(distanceToTarget))
         angleToTarget = worldDirectionToTarget - worldHeading + 180
         angleToTarget = angleToTarget % 360
         turnAngle = self.turnRate * elapsedTime
         distance = self.speed * elapsedTime
 
         if(distanceToTarget < self.radarLength):
-##            self.moveForward(0)
-##        else:
+            #print("Target is in range")
             if(distanceToTarget < 1):
                 self.moveForward(0)#do nothing
             elif(80 <= angleToTarget and angleToTarget <= 100):
@@ -420,6 +420,8 @@ class NPC(Agent):
                 self.turnRight(turnAngle)
             else:
                 print("You can start crying now.")
+        else:
+            print("Target is out of range")
         return
 
 if __name__ == "__main__":
