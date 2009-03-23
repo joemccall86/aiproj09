@@ -115,7 +115,7 @@ class World(DirectObject):
         #base.oobeCull()
         base.camera.setPos(0,0,50)
         base.camera.lookAt(0,0,0)
-        base.oobe()
+        #base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.ralph)
         base.camera.setPos(0, 30, 10)

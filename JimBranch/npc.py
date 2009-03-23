@@ -255,7 +255,8 @@ class NPC(Agent):
             if self.distance(self, nextWaypoint) < 1:
                 #print("WAYPOINT FOUND, UPDATING CURRENT TARGET")
                 path.pop(0)
-                nextWaypoint = path[0]
+                if len(path) > 0:
+                    nextWaypoint = path[0]
                 #print("Telling Ralph to seek waypoint:" + str(nextWaypoint.getNodeID()))
                 self.currentTarget = nextWaypoint
                 #print("Set self.currentTarget to node " + str(self.currentTarget.getNodeID()) + " at position " + str(self.currentTarget.getX()) + ", " + str(self.currentTarget.getY()))
