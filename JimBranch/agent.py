@@ -4,11 +4,12 @@ import direct.directbase.DirectStart
 
 class Agent(Actor):
     
-    def __init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList):
+    def __init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList, agentName):
         Actor.__init__(self, modelStanding, modelAnimationDict)
         self.turnRate = turnRate
         self.speed = speed
         self.agentList = agentList
+        self.agentName = agentName
         
         if self not in agentList:
             self.agentList.append(self)

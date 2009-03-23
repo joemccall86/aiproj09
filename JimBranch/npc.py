@@ -11,34 +11,42 @@ from pandac.PandaModules import TextNode
 from direct.task import Task
 from direct.gui.OnscreenText import OnscreenText
 import math
+from math import sqrt
+from waypoint import Waypoint
+
 
 class NPC(Agent):
     collisionCount = 0
-    
+    __previousTime = 0
     def __init__(self, 
                 modelStanding, 
                 modelAnimationDict, 
                 turnRate, 
                 speed, 
-                agentList, 
+                agentList,
+                agentName, 
                 rangeFinderCount = 13,
                 collisionMask=BitMask32.allOff(),
                 adjacencySensorThreshold = 0,
                 radarSlices = 0,
                 radarLength = 0.0,
                 scale = 1.0):
-        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList)
+        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList, agentName)
         self.collisionMask = collisionMask
         self.adjacencySensorThreshold = adjacencySensorThreshold
         self.radarSlices = radarSlices
         self.radarLength = radarLength
         self.scale = scale
-        
+        self.turnRate = turnRate
+        self.speed = speed
         self.setScale(self.scale)
         
         self.rangeFinderCount = rangeFinderCount
         self.rangeFinders = [CollisionRay() for i in range(self.rangeFinderCount)]
         self.persistentRangeFinderData = {}
+        
+        self.currentTarget = NodePath()
+        
         for rangeFinder in self.rangeFinders:
             self.persistentRangeFinderData[rangeFinder] = 0
             
@@ -99,6 +107,7 @@ class NPC(Agent):
             np = NodePath(ls.create())
             np.reparentTo(self)
         
+        
 
 
     def sense(self, task):
@@ -108,13 +117,159 @@ class NPC(Agent):
         return Task.cont
     
     def think(self):
+        someCondition = True
+        if someConditon:
+            None
         return
     
-    def act(self):
-        return
+    def act(self, task):
+        #if(self.agentName == "ralph"):
+            #This loop will be replaced with whatever 'think' decides should be sought.
+        print("currentTarget = " + str(self.currentTarget.getNodeID()))
+        elapsedTime = task.time - self.__previousTime
+        self.seek(self.currentTarget.getPos(), elapsedTime)
+##        for i in self.agentList:
+##            if(i.agentName == "bunny"):
+##                elapsedTime = task.time - self.__previousTime
+##                self.seek(i.getPos(), elapsedTime)
+        self.__previousTime = task.time
+        return Task.cont
     
     rangeFinderText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                        pos=(-1.3,0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
+    
+    #@classmethod
+    def AStar(self, target, waypoints):
+        infinity = 1E400
+        def getClosestNodeTo(thing):
+            #Find closest Waypoint
+            shortestDistanceFound = infinity
+            closestNodeToSelf = Waypoint(Vec3(0,0,5))
+            closestNodeIndex = 0
+            for i in range(8):
+                #print("distance = " + str(self.distance(self, self.waypoints[i])))
+                if self.distance(thing, waypoints[i]) < shortestDistanceFound:
+                    closestNodeToSelf = waypoints[i]
+                    shortestDistanceFound = self.distance(thing, waypoints[i])
+            return closestNodeToSelf
+                    
+        closestNodeToSelf = getClosestNodeTo(self)
+        closestNodeToSelf.changeToYellow()
+        #print("Starting node = " + str(closestNodeToSelf.getNodeID()) + " exected to be B4 which is 14") 
+        closestNodeToTarget = getClosestNodeTo(target)
+        #print("End node = " + str(closestNodeToTarget.getNodeID()) + "expected to be A6 which is 6")
+        closestNodeToTarget.changeToGreen()
+        
+        
+        #AStar from wiki
+        def reconstructPath(cameFrom, currentNode):            
+            #print("Reconstructing path")
+            pathToTarget = []
+            while cameFrom.has_key(currentNode):
+##                print("ID of currentNode = " + str(currentNode.getNodeID()))
+                pathToTarget.append(cameFrom[currentNode])
+                currentNode = cameFrom[currentNode]
+            pathToTarget.reverse()
+            return pathToTarget
+            
+##            print("Reconstructing path")
+##            pathToTarget = []
+##            if cameFrom.has_key(currentNode):
+##                print("Current Node ID = " + str(currentNode.getNodeID()))
+##                returnValue = reconstructPath(cameFrom,cameFrom[currentNode])
+##                if returnValue != None:
+##                    pathToTarget = returnValue
+##                    print("Returning something != None")
+##                return pathToTarget.append(currentNode)
+##            else:
+##                ##print("reconstuct path returning none")
+##                return None
+
+        closedSet = []
+        openSet = [closestNodeToSelf]
+        gScore = {closestNodeToSelf: 0} # Distance from start along optimal path.
+        hScore = {closestNodeToSelf: self.distance(closestNodeToSelf, closestNodeToTarget)}
+        fScore = {closestNodeToSelf: hScore[closestNodeToSelf]} #Estimated total distance from start to goal
+        
+        infinity = 1E400
+        cameFrom = {}
+        while len(openSet) > 0:
+            #print("size of openSet = " + str(len(openSet)))
+            lowestFScoreFound = infinity 
+            nodeWithLowestFScoreFound = None #Node in openset having lowest fScore[] value
+            for waypoint in openSet:
+                if fScore[waypoint] < lowestFScoreFound:
+                    lowestFScoreFound = fScore[waypoint]
+                    nodeWithLowestFScoreFound = waypoint
+            #Make sure that something was found
+            if(nodeWithLowestFScoreFound == None):
+                print("Something went horribly wrong, no node found with fScore < infinity")
+                
+            if nodeWithLowestFScoreFound == closestNodeToTarget: #If goal is found
+                returnValue = reconstructPath(cameFrom, closestNodeToTarget) #Be sure to define cameFrom
+                if returnValue == None:
+                    print("A* returning None")
+                else:
+                    print("A* is NOT returning None")
+                return returnValue
+            
+            openSet.remove(nodeWithLowestFScoreFound)
+            closedSet.append(nodeWithLowestFScoreFound)
+            #print("Current node has " + str(len(nodeWithLowestFScoreFound.getNeighbors())) + " neighbors")
+            for neighbor in nodeWithLowestFScoreFound.getNeighbors():
+                #print("Checking neighbor " + str(neighbor.getNodeID()))
+                if neighbor in closedSet:
+                    continue
+                neighborGScore = gScore[nodeWithLowestFScoreFound] + self.distance(nodeWithLowestFScoreFound, neighbor)
+                #Assume that neighbor is not better than what we have
+                neighborIsBetter = False
+                if neighbor not in openSet:
+                    openSet.append(neighbor)
+                    hScore[neighbor] = self.distance(neighbor, closestNodeToTarget)
+                    neighborIsBetter = True
+                elif neigborGScore < gScore[neighbor]:
+                    neighborIsBetter = True
+                if neighborIsBetter:
+                    cameFrom[neighbor] = nodeWithLowestFScoreFound
+                    ##print("cameFrom is type " + str(type(cameFrom)))
+                    gScore[neighbor] = neighborGScore
+                    fScore[neighbor] = gScore[neighbor] + hScore[neighbor]
+        print("Returning NONE from A*")
+        return None
+
+    #@staticmethod
+    def distance(self, source, target):
+        xComponent = source.getX() - target.getX()
+        yComponent = source.getY() - target.getY()
+        return math.hypot(xComponent, yComponent)
+
+#########################################
+##########################################
+########################################
+#######################################
+##########################################
+    def followPath(self, path, target, task):
+        if len(path) > 0:
+            print("Not there yet.")
+            nextWaypoint = path[0]
+            print("Distance to next waypoint = " + str(self.distance(self, nextWaypoint)))
+            print("Ralph seeking waypoint:" + str(nextWaypoint.getNodeID()))
+            print("Which is located at: " + str(nextWaypoint.getX()) + ", " + str(nextWaypoint.getY()))
+            if self.distance(self, nextWaypoint) < 1:
+                print("Telling Ralph to seek waypoint:" + str(nextWaypoint.getNodeID()))
+                self.setCurrentTarget(nextWaypoint)
+        else:
+            print("Telling Ralph to seek final Target")
+            self.setCurrentTarget(target)
+        
+        
+        
+    def getCurrentTarget(self):
+        return self.currentTarget
+    
+    def setCurrentTarget(self, target):
+        self.currentTarget = target
+        
     def rangeFinderSense(self):
         self.traverser.traverse(render)
         for rangeFinder in self.rangeFinders:
@@ -131,7 +286,7 @@ class NPC(Agent):
 
         self.rangeFinderText.setText("Range Data (feelers): " + str(pd))
         return
-    
+        
     adjacencyText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                                  pos=(-1.3,0.90), align=TextNode.ALeft, scale = .05, mayChange = True)
 
@@ -176,7 +331,7 @@ class NPC(Agent):
     def radarSense(self):
         self.radarActivationLevels = [0] * self.radarSlices
         for agent in self.agentList:
-            if self != agent:        
+            if self != agent and self.getPos() != agent.getPos():        
 
                 transform = agent.getPos() - self.getPos()
                 if transform.length() > self.radarLength:
@@ -216,12 +371,60 @@ class NPC(Agent):
             
         self.radarText.setText("Radar (Pie Slice): " + str(self.radarActivationLevels))
         return
+    
+    def seek(self, position, elapsedTime):
+        print("Seeking position " + str(position.getX()) + ", " + str(position.getY()))
+        print("Current position " + str(self.getX())     + ", " + str(position.getY()))
+        worldPosition = self.getPos()
+        worldTargetPosition = position
+        worldHeading = self.getH()
+        worldHeading = worldHeading % 360
+        worldYDirection = worldTargetPosition.getY() - worldPosition.getY()
+        worldXDirection = worldTargetPosition.getX() - worldPosition.getX()
+        worldDirectionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
+        distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
+        angleToTarget = worldDirectionToTarget - worldHeading + 180
+        angleToTarget = angleToTarget % 360
+        turnAngle = self.turnRate * elapsedTime
+        distance = self.speed * elapsedTime
+
+        if(distanceToTarget < self.radarLength):
+            self.moveForward(0)
+        else:
+            if(distanceToTarget < 1):
+                self.moveForward(0)#do nothing
+            elif(80 <= angleToTarget and angleToTarget <= 100):
+                self.moveForward(distance)
+            elif(0 <= angleToTarget and angleToTarget < 90):
+                self.moveForward(0)#do nothing
+                self.moveForward(distance)
+                #self.turnLeft(turnAngle)
+                self.turnRight(turnAngle)
+            elif(90 <= angleToTarget and angleToTarget < 180):
+                self.moveForward(0)#do nothing
+                self.moveForward(distance)
+                self.turnLeft(turnAngle)
+                #self.turnRight(turnAngle)
+            elif(180 <= angleToTarget and angleToTarget < 270):
+                self.moveForward(0)#do nothing
+                #self.moveForward(distance)
+                self.turnLeft(turnAngle)
+                #self.turnRight(turnAngle)
+            elif(270 <= angleToTarget and angleToTarget < 360):
+                self.moveForward(0)#do nothing
+                #self.moveForward(distance)
+                #self.turnLeft(turnAngle)
+                self.turnRight(turnAngle)
+            else:
+                print("You can start crying now.")
+        return
 
 if __name__ == "__main__":
     N = NPC("models/ralph",
             {"run":"models/ralph-run"},
             turnRate = 5,
             speed = 100,
-            agentList = [])
+            agentList = [],
+            agentName = "")
     print ("compiled good")
     
