@@ -41,9 +41,9 @@ class World(DirectObject):
                     agentName = "ralph",
                     collisionMask = BitMask32.bit(0),
                     adjacencySensorThreshold = 5,
-                    radarSlices = 5,
-                    radarLength =5,
-                    scale = 1)
+                    radarSlices = 8,
+                    radarLength = 6,
+                    scale = 0.2)
         
         # Make it visibler
         

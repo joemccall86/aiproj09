@@ -255,12 +255,14 @@ class NPC(Agent):
             print("Distance to next waypoint = " + str(self.distance(self, nextWaypoint)))
             print("Ralph seeking waypoint:" + str(nextWaypoint.getNodeID()))
             print("Which is located at: " + str(nextWaypoint.getX()) + ", " + str(nextWaypoint.getY()))
+            print("followPath(): Distance = " + str(self.distance(self, nextWaypoint)))
             if self.distance(self, nextWaypoint) < 1:
                 print("Telling Ralph to seek waypoint:" + str(nextWaypoint.getNodeID()))
-                self.setCurrentTarget(nextWaypoint)
+                self.setCurrentTarget(path.pop(0))
         else:
             print("Telling Ralph to seek final Target")
             self.setCurrentTarget(target)
+        return Task.cont
         
         
         
@@ -383,26 +385,27 @@ class NPC(Agent):
         worldXDirection = worldTargetPosition.getX() - worldPosition.getX()
         worldDirectionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
         distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
+        print("distanceToTarget = " + str(distanceToTarget))
         angleToTarget = worldDirectionToTarget - worldHeading + 180
         angleToTarget = angleToTarget % 360
         turnAngle = self.turnRate * elapsedTime
         distance = self.speed * elapsedTime
 
         if(distanceToTarget < self.radarLength):
-            self.moveForward(0)
-        else:
+##            self.moveForward(0)
+##        else:
             if(distanceToTarget < 1):
                 self.moveForward(0)#do nothing
             elif(80 <= angleToTarget and angleToTarget <= 100):
                 self.moveForward(distance)
             elif(0 <= angleToTarget and angleToTarget < 90):
-                self.moveForward(0)#do nothing
-                self.moveForward(distance)
+                #self.moveForward(0)#do nothing
+                #self.moveForward(distance)
                 #self.turnLeft(turnAngle)
                 self.turnRight(turnAngle)
             elif(90 <= angleToTarget and angleToTarget < 180):
-                self.moveForward(0)#do nothing
-                self.moveForward(distance)
+                #self.moveForward(0)#do nothing
+                #self.moveForward(distance)
                 self.turnLeft(turnAngle)
                 #self.turnRight(turnAngle)
             elif(180 <= angleToTarget and angleToTarget < 270):
