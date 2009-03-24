@@ -1,5 +1,6 @@
 from agent import Agent
 from pandac.PandaModules import CollisionRay
+from pandac.PandaModules import CollisionSphere
 from pandac.PandaModules import CollisionNode
 from pandac.PandaModules import CollisionTraverser
 from pandac.PandaModules import CollisionHandlerQueue
@@ -42,8 +43,9 @@ class NPC(Agent):
                 radarLength = 0.0,
                 scale = 1.0,
                 brain = None,
-                weightKg = 0.1):
-        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList, weightKg)
+                weightKg = 0.1,
+                collisionTraverser = None):
+        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList, weightKg, collisionMask, collisionTraverser)
         self.collisionMask = collisionMask
         self.adjacencySensorThreshold = adjacencySensorThreshold
         self.radarSlices = radarSlices
@@ -126,7 +128,6 @@ class NPC(Agent):
 ##                        relativeRadarLength * math.sin(float(i+1.) * 2. * math.pi / float(circleResolution)), 0)
 ##            np = NodePath(ls.create())
 ##            np.reparentTo(self)        
-        self.__setupCollisionHandling()
 
     def sense(self, task):
         self.rangeFinderSense()
@@ -432,34 +433,6 @@ class NPC(Agent):
                 self.loop("run")
                 self.isMoving = True
             
-            
-        return Task.cont
-    
-    def __setupCollisionHandling(self):
-        self.cTrav = CollisionTraverser()
-
-        self.ralphGroundRay = CollisionRay()
-        self.ralphGroundRay.setOrigin(0,0,1000)
-        self.ralphGroundRay.setDirection(0,0,-1)
-        self.ralphGroundCol = CollisionNode('ralphRay')
-        self.ralphGroundCol.addSolid(self.ralphGroundRay)
-        self.ralphGroundCol.setFromCollideMask(self.collisionMask)
-        self.ralphGroundCol.setIntoCollideMask(BitMask32.allOff())
-        self.ralphGroundColNp = self.attachNewNode(self.ralphGroundCol)
-        self.ralphGroundHandler = CollisionHandlerQueue()
-        self.cTrav.addCollider(self.ralphGroundColNp, self.ralphGroundHandler) 
-        
-    def handleCollisionTask(self, task):
-        self.cTrav.traverse(render)
-        entries = []
-        for i in range(self.ralphGroundHandler.getNumEntries()):
-            entry = self.ralphGroundHandler.getEntry(i)
-            entries.append(entry)
-        if len(entries) > 0:
-            name = entries[0].getIntoNode().getName()
-            # if we run into the box, just set our position to where it was before we tried to move forward
-            if self.previousPosition != None:
-                self.setPos(self.previousPosition)
             
         return Task.cont
 
