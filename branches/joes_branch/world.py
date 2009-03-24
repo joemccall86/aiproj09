@@ -10,6 +10,9 @@ from direct.gui.OnscreenText import OnscreenText
 from neural_network import NeuralNetwork
 import random
 
+
+base.floor = CollisionHandlerFloor()
+
 class World(DirectObject):                
 
     
@@ -17,13 +20,18 @@ class World(DirectObject):
         DirectObject.__init__(self)
         
         self.__setupEnvironment()
-        self.__setupGravity()
+        self.__setupCollisions()
+##        self.__setupGravity()
         self.__setupWalls()
         self.__setupMainAgent()
         self.__setupOtherAgents()
         self.__setupTargets()
         self.__setupTasks()
         self.__setupCamera()
+        
+    def __setupCollisions(self):
+        self.cTrav = CollisionTraverser("traverser")
+        base.cTrav = self.cTrav
 
     def __setupGravity(self):
         base.enableParticles()
@@ -32,33 +40,41 @@ class World(DirectObject):
         gravityFNP=render.attachNewNode(gravityFN)
         gravityForce=LinearVectorForce(0,0,-9.81) #gravity acceleration
         gravityFN.addForce(gravityForce)
+        
+        base.cTrav.showCollisions(render)
 
         base.physicsMgr.addLinearForce(gravityForce)
 
         return 
 
-    __envirnoment = None
     def __setupEnvironment(self):
-        groundModel = "models/gridBack"
         
-        self.__envirnoment = loader.loadModel(groundModel)
+        groundModel = "models/gridBack"        
+        environment = loader.loadModel(groundModel)
+        
+        # Add collision stuff to the floor
+        envCollideNodePath = environment.find("/GridBack")
+        # We want everyone to collide with the box
+        envCollideNodePath.node().setIntoCollideMask(BitMask32.allOn())
+        # But we don't care if the wall collides into anybody
+        envCollideNodePath.node().setFromCollideMask(BitMask32.allOff())
         
         # Make it visibler
         
-        self.__envirnoment.reparentTo(render)
+        environment.reparentTo(render)
         
         texture = loader.loadTexture("textures/ground.png")
         
         # This is so the textures can look better from a distance
         texture.setMinfilter(Texture.FTLinearMipmapLinear)
         
-        self.__envirnoment.setTexGen(TextureStage.getDefault(), TexGenAttrib.MWorldPosition) 
-        self.__envirnoment.setTexScale(TextureStage.getDefault(), 0.02, 0.02)
-        self.__envirnoment.setTexture(texture, 1)
+        environment.setTexGen(TextureStage.getDefault(), TexGenAttrib.MWorldPosition) 
+        environment.setTexScale(TextureStage.getDefault(), 0.02, 0.02)
+        environment.setTexture(texture, 1)
         
         # Make it so that it's big enough to walk on
-        self.__envirnoment.setPos(0, 0, 0)
-        self.__envirnoment.setScale(500)
+        environment.setPos(0, 0, 0)
+        environment.setScale(500)
         
         # Now to add collision stuff to the ground
         
@@ -69,7 +85,7 @@ class World(DirectObject):
         stoneTexture.setMinfilter(Texture.FTLinearMipmapLinear)
         
         #Add some wallz
-        wallModel = "models/box.egg.pz"
+        wallModel = "models/box"
         wall = loader.loadModel(wallModel)
         wall.setPos(0, -10, 0)
         wall.setScale(10, 100, 100)
@@ -83,7 +99,7 @@ class World(DirectObject):
         tempWallCollideNodePath.node().setFromCollideMask(BitMask32.allOff())
         
         tempWall = render.attachNewNode("wall")
-        tempWall.setPos(250, 250, 0)
+        tempWall.setPos(25, 25, 0)
         wall.instanceTo(tempWall)
         
         # One's not enough, let's make 10!
@@ -132,9 +148,11 @@ class World(DirectObject):
                             radarSlices = 5,
                             radarLength = 25,
                             scale = 1.0,
-                            weightKg = 35.0)                    
+                            weightKg = 35.0,
+                            collisionTraverser = self.cTrav)                    
         # Make it visible
         self.__mainAgent.reparentTo(render)
+##        self.__mainAgent.actor.setZ(10)
         
     __otherRalphsCount = 5
     __otherRalphs = []
@@ -155,7 +173,8 @@ class World(DirectObject):
                                 radarSlices = 5,
                                 collisionMask = BitMask32.bit(i+2),
                                 scale = 1.0,
-                                brain = None)
+                                brain = None,
+                                collisionTraverser = self.cTrav)
                                 for i in range(self.__otherRalphsCount)]
         for index, ralph in enumerate(self.__otherRalphs):
             ralph.reparentTo(render)
@@ -185,7 +204,7 @@ class World(DirectObject):
 ##            taskMgr.add(ralph.sense, "sense" + str(index))
 ##            taskMgr.add(ralph.think, "think" + str(index))
 ##            taskMgr.add(ralph.act,   "act"   + str(index))
-            taskMgr.add(ralph.handleCollisionTask, "handleCollisions" + str(index))
+##            taskMgr.add(ralph.handleCollisionTask, "handleCollisions" + str(index))
 ##            taskMgr.add(ralph.wanderTask, "wander" + str(index))
             taskMgr.add(ralph.seekTask, "seekTask" + str(index), extraArgs = [self.__agentToTargetMap[ralph]], appendTask = True)
             
@@ -197,7 +216,7 @@ class World(DirectObject):
         
         self.__setKeymap()
         taskMgr.add(self.__proccessKey, "processKeyTask")
-        taskMgr.add(self.__mainAgent.handleCollisionTask, "handleCollisionTask")
+##        taskMgr.add(self.__mainAgent.handleCollisionTask, "handleCollisionTask")
 ##        taskMgr.add(self.ralph.wanderTask, "wander")
 ##        taskMgr.add(self.ralph.sense, "senseTask")
 ##        taskMgr.add(self.ralph.think, "thinkTask")
@@ -274,8 +293,9 @@ class World(DirectObject):
             heading += 360.0
             
         self.positionHeadingText.setText("Position: (" + 
-            str(self.__mainAgent.getPos().getX()) + ", " + 
-            str(self.__mainAgent.getPos().getY()) + ") at heading " + 
+            str(self.__mainAgent.getX()) + ", " + 
+            str(self.__mainAgent.getY()) + ", " +
+            str(self.__mainAgent.getZ()) + ") at heading " + 
             str(heading))
         return Task.cont
 
