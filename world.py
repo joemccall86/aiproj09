@@ -22,7 +22,7 @@ class World(DirectObject):
         self.__setupWalls()
         self.__setupMainAgent()
         self.__setupOtherAgents()
-        self.__setupTargets()
+##        self.__setupTargets()
         self.__setupTasks()
         self.__setupCamera()
         
@@ -36,7 +36,7 @@ class World(DirectObject):
         
         gravityFN=ForceNode('world-forces')
         gravityFNP=render.attachNewNode(gravityFN)
-        gravityForce=LinearVectorForce(0,0,-9.81) #gravity acceleration
+        gravityForce=LinearVectorForce(0,0,-32.18) #gravity acceleration ft/s^2
         gravityFN.addForce(gravityForce)
         
 ##        base.cTrav.showCollisions(render)
@@ -46,8 +46,6 @@ class World(DirectObject):
         return 
 
     def __setupEnvironment(self):
-        
-        cm = CardMaker("ground")        
         cm = CardMaker("ground")
         size = 1000
         cm.setFrame(-size, size, -size, size)
@@ -69,59 +67,18 @@ class World(DirectObject):
         base.setBackgroundColor(r=0, g=0, b=.1, a=1)
     
     def __setupWalls(self):
+        wall = loader.loadModel("models/box")
+        wall.setScale(100, 100, 100)
+        wall.setPos(-100, -100, 0)
+        
         stoneTexture = loader.loadTexture("textures/Stones.jpg")
         stoneTexture.setMinfilter(Texture.FTLinearMipmapLinear)
-        
-        #Add some wallz
-        wallModel = "models/box"
-        wall = loader.loadModel(wallModel)
-        wall.setPos(25, 25, 0)
-        wall.setScale(10, 100, 100)
         wall.setTexture(stoneTexture, 1)
         
-        # Add collision stuff to the wall
-        tempWallCollideNodePath = wall.find("/Box")
-        # We want everyone to collide with the box
-        tempWallCollideNodePath.node().setIntoCollideMask(BitMask32.allOn())
-        # But we don't care if the wall collides into anybody
-        tempWallCollideNodePath.node().setFromCollideMask(BitMask32.allOff())
+        wall.find("/Box").setCollideMask(BitMask32.allOn())
         
         wall.reparentTo(render)
         
-        
-##        tempWall = render.attachNewNode("wall")
-##        tempWall.setPos(25, 25, 0)
-##        wall.instanceTo(tempWall)
-        
-        # One's not enough, let's make 10!
-        # Instance thiss wall several times
-        numWallsPerSide = 0
-        for i in range(numWallsPerSide):
-            tempWall = render.attachNewNode("wall")
-            tempWall.setPos(0, -i*wall.getScale().getY(), 0)
-            tempWall.setY(-tempWall.getY())
-            wall.instanceTo(tempWall)
-        for i in range(numWallsPerSide):
-            tempWall = render.attachNewNode("wall")
-            tempWall.setPos(numWallsPerSide * wall.getScale().getY(), -i*wall.getScale().getY(), 0)
-            tempWall.setY(-tempWall.getY())
-            wall.instanceTo(tempWall)
-        wall2 = loader.loadModel(wallModel)
-        wall2.setScale(10, 1, 10)
-        wall2.setTexture(stoneTexture, 1)
-        for i in range(numWallsPerSide):
-            tempWall = render.attachNewNode("wall")
-            tempWall.setPos(i*wall2.getScale().getX(), 0, 0)
-            tempWall.setY(-tempWall.getY())
-            wall2.instanceTo(tempWall)
-        for i in range(numWallsPerSide):
-            tempWall = render.attachNewNode("wall")
-            tempWall.setPos(numWallsPerSide * wall2.getScale().getX() - ((1+i)*wall2.getScale().getX()), 
-                            -numWallsPerSide * wall2.getScale().getX(), 0)
-            tempWall.setY(-tempWall.getY())
-            wall2.instanceTo(tempWall)
-        return
-    
     __globalAgentList = []
     __mainAgent = None
     def __setupMainAgent(self):
@@ -143,9 +100,9 @@ class World(DirectObject):
                             collisionTraverser = self.cTrav)                    
         # Make it visible
         self.__mainAgent.reparentTo(render)
-        self.__mainAgent.setZ(10)
+        self.__mainAgent.setPos(-50, -50, 110)
         
-    __otherRalphsCount = 0
+    __otherRalphsCount = 10
     __otherRalphs = []
     __startingPositions = {}
     def __setupOtherAgents(self):
@@ -169,8 +126,9 @@ class World(DirectObject):
                                 for i in range(self.__otherRalphsCount)]
         for index, ralph in enumerate(self.__otherRalphs):
             ralph.reparentTo(render)
-            ralph.setX(random.random() * 500)
-            ralph.setY(random.random() * 500)
+            ralph.setX(random.random() * -100)
+            ralph.setY(random.random() * -100)
+            ralph.setZ(110)
             self.__startingPositions[ralph] = ralph.getPos()
             
     __targetCount = __otherRalphsCount
@@ -195,9 +153,8 @@ class World(DirectObject):
 ##            taskMgr.add(ralph.sense, "sense" + str(index))
 ##            taskMgr.add(ralph.think, "think" + str(index))
 ##            taskMgr.add(ralph.act,   "act"   + str(index))
-##            taskMgr.add(ralph.handleCollisionTask, "handleCollisions" + str(index))
-##            taskMgr.add(ralph.wanderTask, "wander" + str(index))
-            taskMgr.add(ralph.seekTask, "seekTask" + str(index), extraArgs = [self.__agentToTargetMap[ralph]], appendTask = True)
+            taskMgr.add(ralph.wanderTask, "wander" + str(index))
+##            taskMgr.add(ralph.seekTask, "seekTask" + str(index), extraArgs = [self.__agentToTargetMap[ralph]], appendTask = True)
             
         taskMgr.add(self.__printPositionAndHeading, "__printPositionAndHeading")
         

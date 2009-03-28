@@ -78,7 +78,7 @@ class Agent(NodePath):
         fromObject = self.attachNewNode(CollisionNode("agentCollisionNode"))
         fromObject.node().addSolid(CollisionSphere(0, 0, 2.5, 2.5))
         fromObject.node().setFromCollideMask(self.collisionMask)
-        fromObject.node().setIntoCollideMask(BitMask32.allOff())
+        fromObject.node().setIntoCollideMask(BitMask32.allOn())
         fromObject.show()
         
         pusher = PhysicsCollisionHandler()
@@ -86,6 +86,8 @@ class Agent(NodePath):
         pusher.setStaticFrictionCoef(0.7)
         pusher.addCollider(fromObject, self)
         collisionTraverser.addCollider(fromObject, pusher)
+
+
 
 
 if __name__ == "__main__":
