@@ -404,7 +404,7 @@ class NPC(Agent):
         moveAngle = self.turnRate * elapsedTime
         
         oldHeadingDegrees = self.getH()
-        self.lookAt(seekTarget.getPos())
+        self.lookAt(seekTarget)
         newHeadingDegrees = self.getH()
         self.setH(oldHeadingDegrees)
         
