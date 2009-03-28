@@ -16,7 +16,7 @@ from direct.task import Task
 from direct.showbase import DirectObject
 import direct.directbase.DirectStart
 
-class Agent(NodePath, DirectObject.DirectObject):
+class Agent(NodePath):
     """
     The Agent class takes care of the Actor component (game) and the ActorNode
     component (physics) inside an agent. You can call this as you would any
@@ -31,7 +31,7 @@ class Agent(NodePath, DirectObject.DirectObject):
                     massKg, 
                     collisionMask, 
                     collisionTraverser = None):
-        NodePath.__init__(self, "agent node")
+        NodePath.__init__(self, ActorNode("actor node"))
         
         self.actor = Actor()
         self.actor.loadModel(modelStanding)
@@ -44,63 +44,48 @@ class Agent(NodePath, DirectObject.DirectObject):
         self.turnRate = turnRate
         self.speed = speed
         self.agentList = agentList
+        self.massKg = massKg
         self.collisionMask = collisionMask
         
         if self.actor not in agentList:
-            self.agentList.append(self.actor)
-                    
-        actorNode = ActorNode(str(self.actor) + " physics")
-        actorNodePath = self.attachNewNode(actorNode)
-        base.physicsMgr.attachPhysicalNode(actorNode)
-        self.actor.reparentTo(actorNodePath)
+            self.agentList.append(self.actor)    
+            
+        self.actor.reparentTo(self)
         
-        actorNode.getPhysicsObject().setMass(massKg)
-        
-        self.__setupCollisionHandling(collisionTraverser, actorNodePath)
+        self.__setupCollisionHandling(collisionTraverser)
 
     
     def turnLeft(self, angle):
         self.setH(self.getH() + angle)
-        return
     
     def turnRight(self, angle):
         self.setH(self.getH() - angle)
-        return
     
-    previousPosition = None
     def moveForward(self, distance):
         self.setFluidY(self, -distance)
     
     def moveBackward(self, distance):
         self.setFluidY(self, distance)
     
-    def __setupCollisionHandling(self, collisionTraverser, actorNodePath):
+    def __setupCollisionHandling(self, collisionTraverser):
         if not collisionTraverser.getRespectPrevTransform():
             collisionTraverser.setRespectPrevTransform(True)
-        
-        fromObject = self.attachNewNode(CollisionNode('ralphSphere'))
-        collisionSphere = CollisionSphere(0, 0, 2.5, 2.6)
-        fromObject.node().addSolid(collisionSphere)
+            
+        self.actor.setCollideMask(BitMask32.allOff())
+            
+        self.node().getPhysicsObject().setMass(self.massKg) 
+        base.physicsMgr.attachPhysicalNode(self.node())
+        fromObject = self.attachNewNode(CollisionNode("agentCollisionNode"))
+        fromObject.node().addSolid(CollisionSphere(0, 0, 2.5, 2.5))
         fromObject.node().setFromCollideMask(self.collisionMask)
         fromObject.node().setIntoCollideMask(BitMask32.allOff())
+        fromObject.show()
         
-        pusher = CollisionHandlerPusher()
+        pusher = PhysicsCollisionHandler()
+        pusher.setDynamicFrictionCoef(0.5)
+        pusher.setStaticFrictionCoef(0.7)
         pusher.addCollider(fromObject, self)
         collisionTraverser.addCollider(fromObject, pusher)
-        
-        collisionRay = CollisionRay()
-        collisionRay.setOrigin(0,0,10)
-        collisionRay.setDirection(0, 0, -1)
-        collisionNode = CollisionNode("agentRay")
-        collisionNode.addSolid(collisionRay)
-        collisionNode.setFromCollideMask(self.collisionMask)
-        collisionNode.setIntoCollideMask(BitMask32.allOff())
-        collisionNodePath = self.actor.attachNewNode(collisionNode)
-##        collisionNodePath.show()
-        
-        base.floor.addCollider(collisionNodePath, self)
-        collisionTraverser.addCollider(collisionNodePath, base.floor)
-        
 
 
 if __name__ == "__main__":

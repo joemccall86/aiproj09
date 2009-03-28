@@ -10,9 +10,6 @@ from direct.gui.OnscreenText import OnscreenText
 from neural_network import NeuralNetwork
 import random
 
-
-base.floor = CollisionHandlerFloor()
-
 class World(DirectObject):                
 
     
@@ -21,7 +18,7 @@ class World(DirectObject):
         
         self.__setupEnvironment()
         self.__setupCollisions()
-##        self.__setupGravity()
+        self.__setupGravity()
         self.__setupWalls()
         self.__setupMainAgent()
         self.__setupOtherAgents()
@@ -34,6 +31,7 @@ class World(DirectObject):
         base.cTrav = self.cTrav
 
     def __setupGravity(self):
+        base.particlesEnabled = True
         base.enableParticles()
         
         gravityFN=ForceNode('world-forces')
@@ -41,7 +39,7 @@ class World(DirectObject):
         gravityForce=LinearVectorForce(0,0,-9.81) #gravity acceleration
         gravityFN.addForce(gravityForce)
         
-        base.cTrav.showCollisions(render)
+##        base.cTrav.showCollisions(render)
 
         base.physicsMgr.addLinearForce(gravityForce)
 
@@ -49,18 +47,14 @@ class World(DirectObject):
 
     def __setupEnvironment(self):
         
-        groundModel = "models/gridBack"        
-        environment = loader.loadModel(groundModel)
-        
-        # Add collision stuff to the floor
-        envCollideNodePath = environment.find("/GridBack")
-        # We want everyone to collide with the box
-        envCollideNodePath.node().setIntoCollideMask(BitMask32.allOn())
-        # But we don't care if the wall collides into anybody
-        envCollideNodePath.node().setFromCollideMask(BitMask32.allOff())
-        
-        # Make it visibler
-        
+        cm = CardMaker("ground")        
+        cm = CardMaker("ground")
+        size = 1000
+        cm.setFrame(-size, size, -size, size)
+        environment = render.attachNewNode(cm.generate())
+        environment.setPos(0, 0, 0)
+        environment.lookAt(0, 0, -1)
+        environment.setCollideMask(BitMask32.allOn())
         environment.reparentTo(render)
         
         texture = loader.loadTexture("textures/ground.png")
@@ -72,12 +66,6 @@ class World(DirectObject):
         environment.setTexScale(TextureStage.getDefault(), 0.02, 0.02)
         environment.setTexture(texture, 1)
         
-        # Make it so that it's big enough to walk on
-        environment.setPos(0, 0, 0)
-        environment.setScale(500)
-        
-        # Now to add collision stuff to the ground
-        
         base.setBackgroundColor(r=0, g=0, b=.1, a=1)
     
     def __setupWalls(self):
@@ -87,7 +75,7 @@ class World(DirectObject):
         #Add some wallz
         wallModel = "models/box"
         wall = loader.loadModel(wallModel)
-        wall.setPos(0, -10, 0)
+        wall.setPos(25, 25, 0)
         wall.setScale(10, 100, 100)
         wall.setTexture(stoneTexture, 1)
         
@@ -98,9 +86,12 @@ class World(DirectObject):
         # But we don't care if the wall collides into anybody
         tempWallCollideNodePath.node().setFromCollideMask(BitMask32.allOff())
         
-        tempWall = render.attachNewNode("wall")
-        tempWall.setPos(25, 25, 0)
-        wall.instanceTo(tempWall)
+        wall.reparentTo(render)
+        
+        
+##        tempWall = render.attachNewNode("wall")
+##        tempWall.setPos(25, 25, 0)
+##        wall.instanceTo(tempWall)
         
         # One's not enough, let's make 10!
         # Instance thiss wall several times
@@ -152,9 +143,9 @@ class World(DirectObject):
                             collisionTraverser = self.cTrav)                    
         # Make it visible
         self.__mainAgent.reparentTo(render)
-##        self.__mainAgent.actor.setZ(10)
+        self.__mainAgent.setZ(10)
         
-    __otherRalphsCount = 5
+    __otherRalphsCount = 0
     __otherRalphs = []
     __startingPositions = {}
     def __setupOtherAgents(self):
@@ -226,7 +217,7 @@ class World(DirectObject):
 ##        base.oobeCull()
 ##        base.oobe()
         base.disableMouse()
-        base.camera.reparentTo(self.__mainAgent)
+        base.camera.reparentTo(self.__mainAgent.actor)
         base.camera.setPos(0, 30, 10)
         base.camera.lookAt(self.__mainAgent)
         base.camera.setP(base.camera.getP() + 15)
