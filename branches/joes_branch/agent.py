@@ -71,24 +71,21 @@ class Agent(NodePath):
         if not collisionTraverser.getRespectPrevTransform():
             collisionTraverser.setRespectPrevTransform(True)
             
+        # We do this so we don't take into account the actual model, but the collision sphere
         self.actor.setCollideMask(BitMask32.allOff())
             
         self.node().getPhysicsObject().setMass(self.massKg) 
         base.physicsMgr.attachPhysicalNode(self.node())
         fromObject = self.attachNewNode(CollisionNode("agentCollisionNode"))
+        fromObject.setCollideMask(BitMask32.allOn())
         fromObject.node().addSolid(CollisionSphere(0, 0, 2.5, 2.5))
-        fromObject.node().setFromCollideMask(self.collisionMask)
-        fromObject.node().setIntoCollideMask(BitMask32.allOn())
-        fromObject.show()
+##        fromObject.show()
         
         pusher = PhysicsCollisionHandler()
         pusher.setDynamicFrictionCoef(0.5)
         pusher.setStaticFrictionCoef(0.7)
         pusher.addCollider(fromObject, self)
         collisionTraverser.addCollider(fromObject, pusher)
-
-
-
 
 if __name__ == "__main__":
     A = Agent("models/ralph", {"run":"models/ralph-run"}, turnRate = 300, speed = 5, agentList=[], massKg = 0.1, collisionMask = BitMask32.allOff())
