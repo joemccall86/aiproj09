@@ -7,7 +7,7 @@ from npc import NPC
 import sys
 from direct.task import Task
 from direct.gui.OnscreenText import OnscreenText
-from neural_network import NeuralNetwork
+##from neural_network import NeuralNetwork
 from waypoint import Waypoint
 from pathFinder import PathFinder
 import random
@@ -312,7 +312,7 @@ class World(DirectObject):
     generationCount = 0
     generationLifetimeTicks = 500
     neatEvaluateTaskCallCount = 0
-    neuralNetwork = NeuralNetwork()
+##    neuralNetwork = NeuralNetwork()
     def neatEvaluateTask(self, listOfTargets, agentList, task):
         self.neatEvaluateTaskCallCount += 1
         if self.generationLifetimeTicks == self.neatEvaluateTaskCallCount:
