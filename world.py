@@ -79,7 +79,6 @@ class World(DirectObject):
 ##        wall.setScale(5, 5, 5)
 ##        wall.setPos(-5, -5, 0)
 ##        wall.setTexGen(TextureStage.getDefault(), TexGenAttrib.MWorldPosition)
-        wall.setTexScale(TextureStage.getDefault(), 40, 1, 1)
         
         stoneTexture = loader.loadTexture('textures/Stones.jpg')
         stoneTexture.setMinfilter(Texture.FTLinearMipmapLinear)
@@ -87,61 +86,27 @@ class World(DirectObject):
         
         wall.find("/Box").setCollideMask(BitMask32.allOn())
 
+        wall.setTexScale(TextureStage.getDefault(), 40, 1, 1)
         frame = NodePath("frame")
-        
-        tempWall = frame.attachNewNode("frameWall")
-        wall.instanceTo(tempWall)
-        tempWall.setScale(200, 5, 5)
-        tempWall.setPos(0, 0, 0)
-        
-        tempWall = frame.attachNewNode("frameWall")        
-        wall.instanceTo(tempWall)
-        tempWall.setScale(200, 5, 5)
-        tempWall.setPos(0, 200, 0)
-        
-        tempWall = frame.attachNewNode("frameWall")        
-        wall.instanceTo(tempWall)
-        tempWall.setScale(5, 200, 5)
-        tempWall.setPos(0, 0, 0)
-        
-        tempWall = frame.attachNewNode("frameWall")        
-        wall.instanceTo(tempWall)
-        tempWall.setScale(5, 200, 5)
-        tempWall.setPos(200, 0, 0)
-        
-        frame.setPos(-100,  -100, 0)
+        frameScales =    ((200, 5), (200, 5), (5, 200), (5, 200))
+        framePositions = ((0, 0),   (0, 200), (0, 0),   (200, 0))
+        for scale, pos in zip(frameScales, framePositions):
+            tempWall = frame.attachNewNode("frameWall")
+            wall.instanceTo(tempWall)
+            tempWall.setScale(scale[0], scale[1], 5)
+            tempWall.setPos(pos[0], pos[1], 0)
+        frame.setPos(-100, -100, 0)
         frame.reparentTo(render)
         
         wall.setTexScale(TextureStage.getDefault(), 20, 1, 1)
         maze = NodePath("maze")
-        
-        tempWall = maze.attachNewNode("mazeWall")
-        wall.instanceTo(tempWall)
-        tempWall.setScale(100, 5, 5)
-        tempWall.setPos(-50, -50, 0)
-        
-        tempWall = maze.attachNewNode("mazeWall")
-        wall.instanceTo(tempWall)
-        tempWall.setScale(100, 5, 5)
-        tempWall.setPos(-50, 0, 0)
-        
-        tempWall = maze.attachNewNode("mazeWall")
-        wall.instanceTo(tempWall)
-        tempWall.setScale(5, 100, 5)
-        tempWall.setPos(50, -50, 0)
-        
-        # Create a maze in the box
-##        for i in range(20):
-##            tempWall = maze.attachNewNode("wall")
-##            tempWall.setPos(i*5, 0, 0)
-##            wall.instanceTo(tempWall)
-##            tempWall = maze.attachNewNode("wall")
-##            tempWall.setPos(50, i*5, 0)
-##            wall.instanceTo(tempWall)
-##            tempWall = maze.attachNewNode("wall")
-##            tempWall.setPos(i*5, 50, 0)
-##            wall.instanceTo(tempWall)
-            
+        mazeScales =    ((100, 5),   (100, 5), (5, 100))
+        mazePositions = ((-50, -50), (-50, 0), (50, -50))
+        for scale, pos in zip(mazeScales, mazePositions):
+            tempWall = maze.attachNewNode("mazeWall")
+            wall.instanceTo(tempWall)
+            tempWall.setScale(scale[0], scale[1], 5)
+            tempWall.setPos(pos[0], pos[1], 0)
         maze.reparentTo(render)
         
     __globalAgentList = []
