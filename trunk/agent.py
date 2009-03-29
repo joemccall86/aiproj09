@@ -79,7 +79,7 @@ class Agent(NodePath):
         fromObject = self.attachNewNode(CollisionNode("agentCollisionNode"))
         fromObject.setCollideMask(BitMask32.allOn())
         fromObject.node().addSolid(CollisionSphere(0, 0, 2.5, 2.5))
-##        fromObject.show()
+        fromObject.show()
         
         pusher = PhysicsCollisionHandler()
         pusher.setDynamicFrictionCoef(0.5)
