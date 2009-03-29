@@ -114,26 +114,26 @@ class NPC(Agent):
         self.adjacentAgents = []
 
         # Set up visualizations for radar
-        ls = LineSegs()
-        ls.setThickness(5.0)
-        relativeRadarLength = float(self.radarLength) / self.scale
-        ls.setColor(0, 0, 1, 1)
-        for i in range(radarSlices):
-            ls.moveTo(0, 0, 0)            
-            ls.drawTo(relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(radarSlices)), 
-                      relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(radarSlices)), 0)
-            np = NodePath(ls.create())
-            np.reparentTo(self)
-            
-        # Draw a circle around NPC
-        circleResolution = 100
-        for i in range(circleResolution):
-            ls.drawTo(relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(circleResolution)), 
-                        relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(circleResolution)), 0)
-            ls.drawTo(relativeRadarLength * math.cos(float(i+1.) * 2. * math.pi / float(circleResolution)), 
-                        relativeRadarLength * math.sin(float(i+1.) * 2. * math.pi / float(circleResolution)), 0)
-            np = NodePath(ls.create())
-            np.reparentTo(self)        
+##        ls = LineSegs()
+##        ls.setThickness(5.0)
+##        relativeRadarLength = float(self.radarLength) / self.scale
+##        ls.setColor(0, 0, 1, 1)
+##        for i in range(radarSlices):
+##            ls.moveTo(0, 0, 0)            
+##            ls.drawTo(relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(radarSlices)), 
+##                      relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(radarSlices)), 0)
+##            np = NodePath(ls.create())
+##            np.reparentTo(self)
+##            
+##        # Draw a circle around NPC
+##        circleResolution = 100
+##        for i in range(circleResolution):
+##            ls.drawTo(relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(circleResolution)), 
+##                        relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(circleResolution)), 0)
+##            ls.drawTo(relativeRadarLength * math.cos(float(i+1.) * 2. * math.pi / float(circleResolution)), 
+##                        relativeRadarLength * math.sin(float(i+1.) * 2. * math.pi / float(circleResolution)), 0)
+##            np = NodePath(ls.create())
+##            np.reparentTo(self)        
 
         self.previousTime = 0.0
 
@@ -433,11 +433,9 @@ class NPC(Agent):
         turnAngle = self.turnRate * elapsedTime
         distance = self.speed * elapsedTime
 
-        if(distanceToTarget < self.radarLength):
+        if(2.75 < distanceToTarget < self.radarLength):
             #print("Target is in range")
-            if(distanceToTarget < 2.75): #This number must be less than the distance in FollowPath()
-                None#self.moveForward(0)#do nothing
-            elif(80 <= angleToTarget and angleToTarget <= 100):
+            if(80 <= angleToTarget and angleToTarget <= 100):
                 self.moveForward(distance)
             elif(0 <= angleToTarget and angleToTarget < 90):
                 #self.moveForward(0)#do nothing
