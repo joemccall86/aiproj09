@@ -7,175 +7,397 @@ from npc import NPC
 import sys
 from direct.task import Task
 from direct.gui.OnscreenText import OnscreenText
+from neural_network import NeuralNetwork
+from waypoint import Waypoint
+from pathFinder import PathFinder
+import random
 
 class World(DirectObject):                
-    # Key map dictionary; These represent the keys pressed
-    __keyMap = {"left":False, "right":False, "up":False, "down":False}
-    
-    # Keep track of time at previous frame to keep speed consistant on different platforms.
-    __previousTime = 0
-    
     def __init__(self):
-        groundModel = "models/gridBack"
-        
         DirectObject.__init__(self)
-        env = loader.loadModel(groundModel)
         
-        self.globalAgentList = []
-        # Now to make our first agent
-        modelStanding = "models/ralph"
-        modelRunning = "models/ralph-run"
-        modelWalking = "models/ralph-walk"
-        self.ralph = NPC(modelStanding, 
-                    {"run":modelRunning, "walk":modelWalking},
-                    turnRate = 150, 
-                    speed = 5,
-                    agentList = self.globalAgentList,
-                    collisionMask = BitMask32.bit(0),
-                    adjacencySensorThreshold = 5,
-                    radarSlices = 5,
-                    radarLength =5,
-                    scale = 0.2)
+        self.__setupEnvironment()
+        self.__setupCollisions()
+        self.__setupGravity()
+        self.__setupWalls()
+        self.__setupMainAgent()
+        self.__setupOtherAgents()
+        self.__setupTargets()
+        self.__setupCamera()
         
-        # Make it visibler
+        # TODO move this into NPC's think function
+        self.setWaypoints()
+        # make the target seek me
+        self.bestPath = PathFinder.AStar(self.__mainTarget, self.__mainAgent, self.waypoints)
+        print(self.bestPath)
         
-        env.reparentTo(render)
+        self.__setupTasks()
+        
+    def __setupCollisions(self):
+        self.cTrav = CollisionTraverser("traverser")
+        base.cTrav = self.cTrav
+
+    def __setupGravity(self):
+        base.particlesEnabled = True
+        base.enableParticles()
+        
+        gravityFN=ForceNode('world-forces')
+        gravityFNP=render.attachNewNode(gravityFN)
+        gravityForce=LinearVectorForce(0,0,-32.18) #gravity acceleration ft/s^2
+##        gravityForce.setMassDependent(1)
+        gravityFN.addForce(gravityForce)
+        
+##        base.cTrav.showCollisions(render)
+
+        base.physicsMgr.addLinearForce(gravityForce)
+
+    def __setupEnvironment(self):
+        cm = CardMaker("ground")
+        size = 1000
+        cm.setFrame(-size, size, -size, size)
+        environment = render.attachNewNode(cm.generate())
+        environment.setPos(0, 0, 0)
+        environment.lookAt(0, 0, -1)
+        environment.setCollideMask(BitMask32.allOn())
+        environment.reparentTo(render)
         
         texture = loader.loadTexture("textures/ground.png")
         
         # This is so the textures can look better from a distance
         texture.setMinfilter(Texture.FTLinearMipmapLinear)
         
-        env.setTexGen(TextureStage.getDefault(), TexGenAttrib.MWorldPosition) 
-        env.setTexScale(TextureStage.getDefault(), 0.1, 0.1)
-        env.setTexture(texture, 1)
+        environment.setTexGen(TextureStage.getDefault(), TexGenAttrib.MWorldPosition) 
+        environment.setTexScale(TextureStage.getDefault(), 0.02, 0.02)
+        environment.setTexture(texture, 1)
         
-        # Make it so that it's big enough to walk on
-        env.setPos(0, 0, 0)
-        env.setScale(100)
+        base.setBackgroundColor(r=0, g=0, b=.1, a=1)
+    
+    def __setupWalls(self):
+        wall = loader.loadModel("models/box")
+        wall.setScale(5, 5, 5)
+        wall.setPos(-5, -5, 0)
+        wall.setTexGen(TextureStage.getDefault(), TexGenAttrib.MWorldPosition)
+        wall.setTexScale(TextureStage.getDefault(), 0.2, 0.2)
         
-        otherRalphsCount = 3
-        otherRalphs = [NPC(modelStanding, 
-                    {"run":modelRunning, "walk":modelWalking},
-                    turnRate = 150, 
-                    speed = 5,
-                    agentList = self.globalAgentList,
-                    rangeFinderCount = 4,
-                    collisionMask = BitMask32.bit(i+1),
-                    scale = 0.2)
-                    for i in range(otherRalphsCount)]
-        
-        index = 1
-        for ralph in otherRalphs:
-            ralph.reparentTo(render)
-            ralph.setX(-5 * index)
-            index += 1
-            # uncomment this to make Jim happy
-##            taskMgr.add(ralph.sense, "sense" + str(index))
-                    
-        # Make it visible
-        self.ralph.reparentTo(render)
-        
-        stoneTexture = loader.loadTexture("textures/Stones.jpg")
+        stoneTexture = loader.loadTexture('textures/Stones.jpg')
         stoneTexture.setMinfilter(Texture.FTLinearMipmapLinear)
-        
-        #Add some wallz
-        wallModel = "models/box.egg.pz"
-        wall = loader.loadModel(wallModel)
-        wall.setPos(0, -10, 0)
-        wall.setScale(1, 10, 10)
         wall.setTexture(stoneTexture, 1)
         
-        # Add collision stuff to the wall
-        tempWallCollideNodePath = wall.find("/Box")
-        tempWallCollideNodePath.node().setIntoCollideMask(BitMask32.allOn())
-        tempWallCollideNodePath.node().setFromCollideMask(BitMask32.allOff())
+        wall.find("/Box").setCollideMask(BitMask32.allOn())
         
-        # One's not enough, let's make 10!
-        # Instance this wall several times
-        for i in range(3):
+        # Create a box
+        for i in range(40):
             tempWall = render.attachNewNode("wall")
-            tempWall.setPos(i*10, -10, 0)
+            tempWall.setPos(i*5 - 400, -400, 0)
             wall.instanceTo(tempWall)
+            tempWall = render.attachNewNode("wall")
+            tempWall.setPos(i*5 - 400, 400, 0)
+            wall.instanceTo(tempWall)
+            tempWall = render.attachNewNode("wall")
+            tempWall.setPos(-400, i*5 - 400, 0)
+            wall.instanceTo(tempWall)
+            tempWall = render.attachNewNode("wall")
+            tempWall.setPos(400, i*5 - 400, 0)
+            wall.instanceTo(tempWall)
+            
+        # Create a maze in the box
+        for i in range(20):
+            tempWall = render.attachNewNode("wall")
+            tempWall.setPos(i*5 - 50, 0, 0)
+            wall.instanceTo(tempWall)
+            tempWall = render.attachNewNode("wall")
+            tempWall.setPos(50, i*5 - 50, 0)
+            wall.instanceTo(tempWall)
+            tempWall = render.attachNewNode("wall")
+            tempWall.setPos(i*5 - 50, 50, 0)
+            wall.instanceTo(tempWall)
+        
+    __globalAgentList = []
+    __mainAgent = None
+    def __setupMainAgent(self):
+        modelStanding = "models/ralph"
+        modelRunning = "models/ralph-run"
+        modelWalking = "models/ralph-walk"
+        self.__mainAgent = NPC(modelStanding, 
+                            {"run":modelRunning, "walk":modelWalking},
+                            turnRate = 150, 
+                            speed = 25,
+                            agentList = self.__globalAgentList,
+                            collisionMask = BitMask32.bit(1),
+                            rangeFinderCount = 13,
+                            adjacencySensorThreshold = 5,
+                            radarSlices = 5,
+                            radarLength = 25,
+                            scale = 1.0,
+                            massKg = 35.0,
+                            collisionTraverser = self.cTrav)                    
+        # Make it visible
+        self.__mainAgent.reparentTo(render)
+        self.__mainAgent.setPos(55, 30, 10)
+        
+        
+        
+    __otherRalphsCount = 0
+    __otherRalphs = []
+    __startingPositions = {}
+    def __setupOtherAgents(self):
+        """
+        This function sets up the other agents' position, scale, radars, etc.
+        """
+        modelStanding = "models/ralph"
+        modelRunning = "models/ralph-run"
+        modelWalking = "models/ralph-walk"
+        self.__otherRalphs = [NPC(modelStanding, 
+                                {"run":modelRunning, "walk":modelWalking},
+                                turnRate = 150, 
+                                speed = 25,
+                                agentList = self.__globalAgentList,
+                                rangeFinderCount = 13,
+                                radarSlices = 5,
+                                collisionMask = BitMask32.bit(i+2),
+                                scale = 1.0,
+                                brain = None,
+                                massKg = 35.0,
+                                collisionTraverser = self.cTrav)
+                                for i in range(self.__otherRalphsCount)]
+        for index, ralph in enumerate(self.__otherRalphs):
+            ralph.reparentTo(render)
+            ralph.setX(random.random() * -100)
+            ralph.setY(random.random() * -100)
+            ralph.setZ(10)
+            self.__startingPositions[ralph] = ralph.getPos()
+            
+    __targetCount = __otherRalphsCount
+    __targets = []
+    __agentToTargetMap = {}
+    def __setupTargets(self):
+        targetCount = self.__otherRalphsCount
+        self.__targets = [loader.loadModel("models/bunny") for i in range(self.__targetCount)]
+        for target in self.__targets:
+            target.setPos(random.randint(1, 500) * 1, random.randint(1, 500) * 1, 0)
+            target.reparentTo(render)
+        for agent,target in zip(self.__otherRalphs, self.__targets):
+            self.__agentToTargetMap[agent] = target
+        
+        # This is for path finding
+        modelStanding = "models/ralph"
+        modelRunning = "models/ralph-run"
+        modelWalking = "models/ralph-walk"
+        self.__mainTarget = NPC(modelStanding, 
+                                {"run":modelRunning, "walk":modelWalking},
+                                turnRate = 150, 
+                                speed = 25,
+                                agentList = self.__globalAgentList,
+                                collisionMask = BitMask32.bit(3),
+                                rangeFinderCount = 13,
+                                adjacencySensorThreshold = 5,
+                                radarSlices = 5,
+                                radarLength = 25,
+                                scale = 1.0,
+                                massKg = 35.0,
+                                collisionTraverser = self.cTrav)
+        self.__mainTarget.setPos(0, -10, 10)
+        self.__mainTarget.reparentTo(render)
+        
     
+    def __setupTasks(self):
+        """
+        This function sets up all the tasks used in the world
+        """
+##        for index, ralph in enumerate(self.__otherRalphs):
+
+            # uncomment this to make Jim happy
+##            taskMgr.add(ralph.sense, "sense" + str(index))
+##            taskMgr.add(ralph.think, "think" + str(index))
+##            taskMgr.add(ralph.act,   "act"   + str(index))
+##            taskMgr.add(ralph.wanderTask, "wander" + str(index))
+##            taskMgr.add(ralph.seekTask, "seekTask" + str(index), extraArgs = [self.__agentToTargetMap[ralph]], appendTask = True)
+            
+        taskMgr.add(self.__printPositionAndHeading, "__printPositionAndHeading")
+        
+##        listOfTargets = [(target.getX(), target.getY()) for target in self.__targets]
+##        agentList = [(ralph.getX(), ralph.getY()) for ralph in self.__otherRalphs]
+##        taskMgr.add(self.neatEvaluateTask, "self.neatEvaluateTask", extraArgs = [listOfTargets, self.__otherRalphs], appendTask = True)
+        
+        self.__setKeymap()
+        taskMgr.add(self.__proccessKey, "processKeyTask")
+##        taskMgr.add(self.__mainAgent.handleCollisionTask, "handleCollisionTask")
+##        taskMgr.add(self.ralph.wanderTask, "wander")
+##        taskMgr.add(self.ralph.sense, "senseTask")
+##        taskMgr.add(self.ralph.think, "thinkTask")
+##        taskMgr.add(self.ralph.act, "actTask")
+
+        # This is for path finding
+        taskMgr.add(self.__mainTarget.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
+
+    def __setupCamera(self):                
 ##        base.oobeCull()
 ##        base.oobe()
         base.disableMouse()
-        base.camera.reparentTo(self.ralph)
+        base.camera.reparentTo(self.__mainAgent.actor)
         base.camera.setPos(0, 30, 10)
-        base.camera.lookAt(self.ralph)
+        base.camera.lookAt(self.__mainAgent)
         base.camera.setP(base.camera.getP() + 15)
         
-        self.__setKeymap()
-        taskMgr.add(self.__processKey, "processKey")
-        
-        # now add the sense loop
-        taskMgr.add(self.ralph.sense, "sense")
-        taskMgr.add(self.__printPositionAndHeading, "__printPositionAndHeading")
-        
-        self.isMoving = False
-        
-        base.setBackgroundColor(r=0, g=0, b=.1, a=1)
-        
+    __keyMap = {"left":False, "right":False, "up":False, "down":False}
     def __setKeymap(self):
+        
         self.accept("escape", sys.exit)
         
-        self.accept("arrow_left", self.__setKey, ["left", True])
-        self.accept("arrow_left-up", self.__setKey, ["left", False])
-        self.accept("arrow_right", self.__setKey, ["right", True])
-        self.accept("arrow_right-up", self.__setKey, ["right", False])
-        self.accept("arrow_up", self.__setKey, ["up", True])
-        self.accept("arrow_up-up", self.__setKey, ["up", False])
-        self.accept("arrow_down", self.__setKey, ["down", True])
-        self.accept("arrow_down-up", self.__setKey, ["down", False])
+        def setKey(key, value):
+            self.__keyMap[key] = value
+        
+        self.accept("arrow_left",     setKey, ["left", True])
+        self.accept("arrow_left-up",  setKey, ["left", False])
+        self.accept("arrow_right",    setKey, ["right", True])
+        self.accept("arrow_right-up", setKey, ["right", False])
+        self.accept("arrow_up",       setKey, ["up", True])
+        self.accept("arrow_up-up",    setKey, ["up", False])
+        self.accept("arrow_down",     setKey, ["down", True])
+        self.accept("arrow_down-up",  setKey, ["down", False])
 
-    def __processKey(self, task):
+    
+    # Keep track of time at previous frame to keep speed consistant on different platforms.
+    __previousTime = 0
+    def __proccessKey(self, task):
         elapsedTime = task.time - self.__previousTime
-        turnAngle = self.ralph.turnRate * elapsedTime
-        distance = self.ralph.speed * elapsedTime
+        turnAngle = self.__mainAgent.turnRate * elapsedTime
+        distance = self.__mainAgent.speed * elapsedTime
+        
+        self.previousPosition = self.__mainAgent.getPos()
         
         if self.__keyMap["left"]:
-            self.ralph.turnLeft(turnAngle)
+            self.__mainAgent.turnLeft(turnAngle)
         if self.__keyMap["right"]:
-            self.ralph.turnRight(turnAngle)
+            self.__mainAgent.turnRight(turnAngle)
         if self.__keyMap["up"]:
-            self.ralph.moveForward(distance)
+            self.__mainAgent.moveForward(distance)
         if self.__keyMap["down"]:
-            self.ralph.moveBackward(distance)
+            self.__mainAgent.moveBackward(distance)
             
         if self.__keyMap["left"] or \
             self.__keyMap["right"] or \
             self.__keyMap["up"] or \
             self.__keyMap["down"]:
-            if not self.isMoving:
-                self.ralph.loop("run")
-                self.isMoving = True
+            if not self.__mainAgent.isMoving:
+                self.__mainAgent.loop("run")
+                self.__mainAgent.isMoving = True
         else:
-            self.ralph.stop()
-            self.ralph.pose("walk", frame = 5)
-            self.isMoving = False
+            self.__mainAgent.stop()
+            self.__mainAgent.pose("walk", frame = 5)
+            self.__mainAgent.isMoving = False
         
         # Store the previous time and continue
         self.__previousTime = task.time
         return Task.cont
-    
-    def __setKey(self, key, value):
-        self.__keyMap[key] = value
         
     positionHeadingText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                    pos=(-1.3,-0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
     def __printPositionAndHeading(self, task):
-        heading = self.ralph.getH()
+        heading = self.__mainAgent.getH()
         while heading > 360.0:
             heading -= 360.0
         while heading < 0.0:
             heading += 360.0
             
         self.positionHeadingText.setText("Position: (" + 
-            str(self.ralph.getPos().getX()) + ", " + 
-            str(self.ralph.getPos().getY()) + ") at heading " + 
+            str(self.__mainAgent.getX()) + ", " + 
+            str(self.__mainAgent.getY()) + ", " +
+            str(self.__mainAgent.getZ()) + ") at heading " + 
             str(heading))
         return Task.cont
+
+    # Every generation, throw out the old brains and put in the new ones. At
+    # this point we can start all over with new nodes.
+    generationCount = 0
+    generationLifetimeTicks = 500
+    neatEvaluateTaskCallCount = 0
+    neuralNetwork = NeuralNetwork()
+    def neatEvaluateTask(self, listOfTargets, agentList, task):
+        self.neatEvaluateTaskCallCount += 1
+        if self.generationLifetimeTicks == self.neatEvaluateTaskCallCount:
+            self.neatEvaluateTaskCallCount = 0
+            oldBrains = [agent.brain for agent in agentList]
+            self.generationCount += 1
+            listOfPositions = [(agent.getX(), agent.getY()) for agent in agentList]
+            newBrains = self.neuralNetwork.nextGeneration(oldBrains, listOfTargets, listOfPositions)
+            
+            for agent, brain in zip(agentList, newBrains):
+                agent.brain = brain
+                agent.setPos(self.startingPositions[agent])
+                
+        return Task.cont    
+        
+    def setWaypoints(self):
+        # TODO FIX THIS!!!!
+        col1 = -17*5
+        col2 = -12*5
+        col3 = -7*5
+        col4 = -2*5
+        col5 = 3*5
+        col6 = 8*5
+        col7 = 13*5
+        col8 = 18*5
+        rowA = 19*5
+        rowB = 14*5
+        
+        rowA = 3*5
+        rowB = -1*5
+
+        waypointPosition = Vec3(col1,rowA,0)
+        self.waypointA1 = Waypoint(waypointPosition, 1)
+        waypointPosition = Vec3(col2,rowA,0)
+        self.waypointA2 = Waypoint(waypointPosition, 2)
+        waypointPosition = Vec3(col3,rowA,0)
+        self.waypointA3 = Waypoint(waypointPosition, 3)
+        waypointPosition = Vec3(col4,rowA,0)
+        self.waypointA4 = Waypoint(waypointPosition, 4)
+        waypointPosition = Vec3(col5,rowA,0)
+        self.waypointA5 = Waypoint(waypointPosition, 5)
+        waypointPosition = Vec3(col6,rowA,0)
+        self.waypointA6 = Waypoint(waypointPosition, 6)
+        waypointPosition = Vec3(col7,rowA,0)
+        self.waypointA7 = Waypoint(waypointPosition, 7)
+        waypointPosition = Vec3(col8,rowA,0)
+        self.waypointA8 = Waypoint(waypointPosition, 8)
+        
+        waypointPosition = Vec3(col1,rowB,0)
+        self.waypointB1 = Waypoint(waypointPosition, 11)
+        waypointPosition = Vec3(col2,rowB,0)
+        self.waypointB2 = Waypoint(waypointPosition, 12)
+        waypointPosition = Vec3(col3,rowB,0)
+        self.waypointB3 = Waypoint(waypointPosition, 13)
+        waypointPosition = Vec3(col4,rowB,0)
+        self.waypointB4 = Waypoint(waypointPosition, 14)
+        waypointPosition = Vec3(col5,rowB,0)
+        self.waypointB5 = Waypoint(waypointPosition, 15)
+        waypointPosition = Vec3(col6,rowB,0)
+        self.waypointB6 = Waypoint(waypointPosition, 16)
+        waypointPosition = Vec3(col7,rowB,0)
+        self.waypointB7 = Waypoint(waypointPosition, 17)
+        waypointPosition = Vec3(col8,rowB,0)
+        self.waypointB8 = Waypoint(waypointPosition, 18)
+        
+        self.waypoints = [self.waypointA1, self.waypointA2, self.waypointA3, self.waypointA4, self.waypointA5, self.waypointA6, self.waypointA7, self.waypointA8]
+        self.waypoints.extend([self.waypointB1, self.waypointB2, self.waypointB3, self.waypointB4, self.waypointB5, self.waypointB6, self.waypointB7, self.waypointB8])
+        
+        #Set paths
+        self.waypointA2.setNeighbors([self.waypointA3, self.waypointB2])
+        self.waypointA3.setNeighbors([self.waypointA2, self.waypointA4])
+        self.waypointA4.setNeighbors([self.waypointA3, self.waypointA5])
+        self.waypointA5.setNeighbors([self.waypointA4, self.waypointA6])
+        self.waypointA6.setNeighbors([self.waypointA5])
+        
+        self.waypointB2.setNeighbors([self.waypointB3, self.waypointA2])
+        self.waypointB3.setNeighbors([self.waypointB2, self.waypointB4])
+        self.waypointB4.setNeighbors([self.waypointB3, self.waypointB5])
+        self.waypointB5.setNeighbors([self.waypointB4, self.waypointB6])
+        self.waypointB6.setNeighbors([self.waypointB5])
+        
+        self.waypoints = [self.waypointA2, self.waypointA3, self.waypointA4, self.waypointA5, self.waypointA6]
+        self.waypoints.extend([self.waypointB2, self.waypointB3, self.waypointB4, self.waypointB5, self.waypointB6])
+        for w in self.waypoints:
+            w.draw()
     
 if __name__ == "__main__":
     w = World()
