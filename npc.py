@@ -134,7 +134,7 @@ class NPC(Agent):
                         relativeRadarLength * math.sin(float(i+1.) * 2. * math.pi / float(circleResolution)), 0)
             np = NodePath(ls.create())
             np.reparentTo(self)        
-		
+
         self.previousTime = 0.0
 
     def sense(self, task):
@@ -151,6 +151,7 @@ class NPC(Agent):
     def act(self, task):
         elapsedTime = task.time - self.previousTime
         if self.currentTarget:
+            #print("Calling seek()")
             self.seek(self.currentTarget.getPos(), elapsedTime)
         self.previousTime = task.time
         return Task.cont
@@ -165,10 +166,11 @@ class NPC(Agent):
                        pos=(-1.3,0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
     def followPath(self, path, task):
         #If there are any waypoints in the path
+        ##print("Attempting to follow path")
         if path:
             self.currentTarget = path[0]
             #if the next waypoint is reached
-            if PathFinder.distance(self, self.currentTarget) < 1:
+            if PathFinder.distance(self, self.currentTarget) < 3: #This number must be greater than distance in seek()
                 path.pop(0)
         return Task.cont
  
@@ -433,7 +435,7 @@ class NPC(Agent):
 
         if(distanceToTarget < self.radarLength):
             #print("Target is in range")
-            if(distanceToTarget < 0.5):
+            if(distanceToTarget < 2.75): #This number must be less than the distance in FollowPath()
                 None#self.moveForward(0)#do nothing
             elif(80 <= angleToTarget and angleToTarget <= 100):
                 self.moveForward(distance)

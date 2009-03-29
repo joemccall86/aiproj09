@@ -28,7 +28,9 @@ class World(DirectObject):
         # TODO move this into NPC's think function
         self.setWaypoints()
         # make the target seek me
-        self.bestPath = PathFinder.AStar(self.__mainTarget, self.__mainAgent, self.waypoints)
+        self.bestPath = PathFinder.AStar(self.__mainTarget, self.__mainAgent, self.waypoints)        
+        #self.bestPath = PathFinder.AStar(self.__mainAgent, self.__mainTarget, self.waypoints)
+        
         print(self.bestPath)
         
         self.__setupTasks()
@@ -192,7 +194,7 @@ class World(DirectObject):
                                 rangeFinderCount = 13,
                                 adjacencySensorThreshold = 5,
                                 radarSlices = 5,
-                                radarLength = 25,
+                                radarLength = 30,
                                 scale = 1.0,
                                 massKg = 35.0,
                                 collisionTraverser = self.cTrav)
@@ -223,9 +225,9 @@ class World(DirectObject):
         taskMgr.add(self.__proccessKey, "processKeyTask")
 ##        taskMgr.add(self.__mainAgent.handleCollisionTask, "handleCollisionTask")
 ##        taskMgr.add(self.ralph.wanderTask, "wander")
-##        taskMgr.add(self.ralph.sense, "senseTask")
+        taskMgr.add(self.__mainTarget.sense, "senseTask")
 ##        taskMgr.add(self.ralph.think, "thinkTask")
-##        taskMgr.add(self.ralph.act, "actTask")
+        taskMgr.add(self.__mainTarget.act, "actTask")
 
         # This is for path finding
         taskMgr.add(self.__mainTarget.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
