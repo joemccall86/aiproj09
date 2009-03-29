@@ -19,7 +19,7 @@ class World(DirectObject):
         self.__setupEnvironment()
         self.__setupCollisions()
         self.__setupGravity()
-        self.__setupWalls()
+        #self.__setupWalls()
         self.__setupMainAgent()
         self.__setupOtherAgents()
         self.__setupTargets()
