@@ -11,9 +11,9 @@ from pandac.PandaModules import NodePath
 from pandac.PandaModules import TextNode
 from direct.task import Task
 from direct.gui.OnscreenText import OnscreenText
-from neat import config, population, chromosome, genome, visualize
-from neat.nn import nn_pure as nn
-from neat.config import Config
+##from neat import config, population, chromosome, genome, visualize
+##from neat.nn import nn_pure as nn
+##from neat.config import Config
 import random
 import math
         
@@ -25,7 +25,7 @@ def RandGenerator():
 RG = RandGenerator()
 
 # needed for neat-python
-config.load('ai_config')
+##config.load('ai_config')
         
 class NPC(Agent):
     collisionCount = 0
@@ -43,9 +43,9 @@ class NPC(Agent):
                 radarLength = 0.0,
                 scale = 1.0,
                 brain = None,
-                weightKg = 0.1,
+                massKg = 0.1,
                 collisionTraverser = None):
-        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList, weightKg, collisionMask, collisionTraverser)
+        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList, massKg, collisionMask, collisionTraverser)
         self.collisionMask = collisionMask
         self.adjacencySensorThreshold = adjacencySensorThreshold
         self.radarSlices = radarSlices
@@ -53,10 +53,10 @@ class NPC(Agent):
         self.scale = scale
         self.brain = brain
         
-        if None == self.brain:
-            self.brain = chromosome.Chromosome.create_fully_connected()
-            if Config.hidden_nodes > 0:
-                self.brain.add_hidden_nodes(Config.hidden_nodes)
+##        if None == self.brain:
+##            self.brain = chromosome.Chromosome.create_fully_connected()
+##            if Config.hidden_nodes > 0:
+##                self.brain.add_hidden_nodes(Config.hidden_nodes)
         
         self.setScale(self.scale)
         

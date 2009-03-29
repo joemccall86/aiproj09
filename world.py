@@ -11,8 +11,6 @@ from neural_network import NeuralNetwork
 import random
 
 class World(DirectObject):                
-
-    
     def __init__(self):
         DirectObject.__init__(self)
         
@@ -37,13 +35,12 @@ class World(DirectObject):
         gravityFN=ForceNode('world-forces')
         gravityFNP=render.attachNewNode(gravityFN)
         gravityForce=LinearVectorForce(0,0,-32.18) #gravity acceleration ft/s^2
+##        gravityForce.setMassDependent(1)
         gravityFN.addForce(gravityForce)
         
 ##        base.cTrav.showCollisions(render)
 
         base.physicsMgr.addLinearForce(gravityForce)
-
-        return 
 
     def __setupEnvironment(self):
         cm = CardMaker("ground")
@@ -68,8 +65,12 @@ class World(DirectObject):
     
     def __setupWalls(self):
         wall = loader.loadModel("models/box")
-        wall.setScale(100, 100, 100)
-        wall.setPos(-100, -100, 0)
+        wall.setScale(200, 5, 5)
+        wall.setPos(-50, -50, 0)
+        
+        wall.setTexGen(TextureStage.getDefault(), TexGenAttrib.MWorldNormal)
+        wall.setTexProjector(TextureStage.getDefault(), render, wall)
+        wall.setTexScale(TextureStage.getDefault(), 1, 1)
         
         stoneTexture = loader.loadTexture("textures/Stones.jpg")
         stoneTexture.setMinfilter(Texture.FTLinearMipmapLinear)
@@ -96,7 +97,7 @@ class World(DirectObject):
                             radarSlices = 5,
                             radarLength = 25,
                             scale = 1.0,
-                            weightKg = 35.0,
+                            massKg = 35.0,
                             collisionTraverser = self.cTrav)                    
         # Make it visible
         self.__mainAgent.reparentTo(render)
@@ -122,6 +123,7 @@ class World(DirectObject):
                                 collisionMask = BitMask32.bit(i+2),
                                 scale = 1.0,
                                 brain = None,
+                                massKg = 35.0,
                                 collisionTraverser = self.cTrav)
                                 for i in range(self.__otherRalphsCount)]
         for index, ralph in enumerate(self.__otherRalphs):
@@ -147,13 +149,13 @@ class World(DirectObject):
         """
         This function sets up all the tasks used in the world
         """
-        for index, ralph in enumerate(self.__otherRalphs):
+##        for index, ralph in enumerate(self.__otherRalphs):
 
             # uncomment this to make Jim happy
 ##            taskMgr.add(ralph.sense, "sense" + str(index))
 ##            taskMgr.add(ralph.think, "think" + str(index))
 ##            taskMgr.add(ralph.act,   "act"   + str(index))
-            taskMgr.add(ralph.wanderTask, "wander" + str(index))
+##            taskMgr.add(ralph.wanderTask, "wander" + str(index))
 ##            taskMgr.add(ralph.seekTask, "seekTask" + str(index), extraArgs = [self.__agentToTargetMap[ralph]], appendTask = True)
             
         taskMgr.add(self.__printPositionAndHeading, "__printPositionAndHeading")
