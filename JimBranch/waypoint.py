@@ -59,9 +59,15 @@ class Waypoint(NodePath):
     def changeToBlue(self):
         self.texture = loader.loadTexture("textures/blue.jpg")
         
+    def changeToSnowish(self):
+        self.texture = loader.loadTexture("textures/snowish.jpg")
+        self.texture.setMinfilter(Texture.FTLinearMipmapLinear)
+        self.setTexture(self.texture, 1)
+        
     def draw(self):        
         torusModel = "models/Torus/Torus.egg"
         torus = loader.loadModel(torusModel)
+        
         torus.setPos(self.position)
         torus.setScale(0.5, 0.5, 0.5)
         torus.setTexture(self.texture, 1)

@@ -13,6 +13,7 @@ from direct.gui.OnscreenText import OnscreenText
 import math
 from math import sqrt
 from waypoint import Waypoint
+from pathFinder import PathFinder
 
 
 class NPC(Agent):
@@ -45,8 +46,7 @@ class NPC(Agent):
         self.rangeFinders = [CollisionRay() for i in range(self.rangeFinderCount)]
         self.persistentRangeFinderData = {}
         
-        self.currentTarget = NodePath()
-        
+        self.currentTarget = None        
         for rangeFinder in self.rangeFinders:
             self.persistentRangeFinderData[rangeFinder] = 0
             
@@ -125,9 +125,10 @@ class NPC(Agent):
     def act(self, task):
         #if(self.agentName == "ralph"):
             #This loop will be replaced with whatever 'think' decides should be sought.
-        print("currentTarget = " + str(self.currentTarget.getNodeID()))
+        #print("currentTarget = " + str(self.currentTarget.getNodeID()))
         elapsedTime = task.time - self.__previousTime
-        self.seek(self.currentTarget.getPos(), elapsedTime)
+        if self.currentTarget:
+            self.seek(self.currentTarget.getPos(), elapsedTime)
 ##        for i in self.agentList:
 ##            if(i.agentName == "bunny"):
 ##                elapsedTime = task.time - self.__previousTime
@@ -138,132 +139,20 @@ class NPC(Agent):
     rangeFinderText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                        pos=(-1.3,0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
     
-    #@classmethod
-    def AStar(self, target, waypoints):
-        infinity = 1E400
-        def getClosestNodeTo(thing):
-            #Find closest Waypoint
-            shortestDistanceFound = infinity
-            closestNodeToSelf = Waypoint(Vec3(0,0,5))
-            closestNodeIndex = 0
-            for i in range(8):
-                #print("distance = " + str(self.distance(self, self.waypoints[i])))
-                if self.distance(thing, waypoints[i]) < shortestDistanceFound:
-                    closestNodeToSelf = waypoints[i]
-                    shortestDistanceFound = self.distance(thing, waypoints[i])
-            return closestNodeToSelf
-                    
-        closestNodeToSelf = getClosestNodeTo(self)
-        closestNodeToSelf.changeToYellow()
-        #print("Starting node = " + str(closestNodeToSelf.getNodeID()) + " exected to be B4 which is 14") 
-        closestNodeToTarget = getClosestNodeTo(target)
-        #print("End node = " + str(closestNodeToTarget.getNodeID()) + "expected to be A6 which is 6")
-        closestNodeToTarget.changeToGreen()
-        
-        
-        #AStar from wiki
-        def reconstructPath(cameFrom, currentNode):            
-            #print("Reconstructing path")
-            pathToTarget = []
-            while cameFrom.has_key(currentNode):
-##                print("ID of currentNode = " + str(currentNode.getNodeID()))
-                pathToTarget.append(cameFrom[currentNode])
-                currentNode = cameFrom[currentNode]
-            pathToTarget.reverse()
-            return pathToTarget
-            
-##            print("Reconstructing path")
-##            pathToTarget = []
-##            if cameFrom.has_key(currentNode):
-##                print("Current Node ID = " + str(currentNode.getNodeID()))
-##                returnValue = reconstructPath(cameFrom,cameFrom[currentNode])
-##                if returnValue != None:
-##                    pathToTarget = returnValue
-##                    print("Returning something != None")
-##                return pathToTarget.append(currentNode)
-##            else:
-##                ##print("reconstuct path returning none")
-##                return None
-
-        closedSet = []
-        openSet = [closestNodeToSelf]
-        gScore = {closestNodeToSelf: 0} # Distance from start along optimal path.
-        hScore = {closestNodeToSelf: self.distance(closestNodeToSelf, closestNodeToTarget)}
-        fScore = {closestNodeToSelf: hScore[closestNodeToSelf]} #Estimated total distance from start to goal
-        
-        infinity = 1E400
-        cameFrom = {}
-        while len(openSet) > 0:
-            #print("size of openSet = " + str(len(openSet)))
-            lowestFScoreFound = infinity 
-            nodeWithLowestFScoreFound = None #Node in openset having lowest fScore[] value
-            for waypoint in openSet:
-                if fScore[waypoint] < lowestFScoreFound:
-                    lowestFScoreFound = fScore[waypoint]
-                    nodeWithLowestFScoreFound = waypoint
-            #Make sure that something was found
-            if(nodeWithLowestFScoreFound == None):
-                print("Something went horribly wrong, no node found with fScore < infinity")
-                
-            if nodeWithLowestFScoreFound == closestNodeToTarget: #If goal is found
-                returnValue = reconstructPath(cameFrom, closestNodeToTarget) #Be sure to define cameFrom
-                if returnValue == None:
-                    print("A* returning None")
-                else:
-                    print("A* is NOT returning None")
-                return returnValue
-            
-            openSet.remove(nodeWithLowestFScoreFound)
-            closedSet.append(nodeWithLowestFScoreFound)
-            #print("Current node has " + str(len(nodeWithLowestFScoreFound.getNeighbors())) + " neighbors")
-            for neighbor in nodeWithLowestFScoreFound.getNeighbors():
-                #print("Checking neighbor " + str(neighbor.getNodeID()))
-                if neighbor in closedSet:
-                    continue
-                neighborGScore = gScore[nodeWithLowestFScoreFound] + self.distance(nodeWithLowestFScoreFound, neighbor)
-                #Assume that neighbor is not better than what we have
-                neighborIsBetter = False
-                if neighbor not in openSet:
-                    openSet.append(neighbor)
-                    hScore[neighbor] = self.distance(neighbor, closestNodeToTarget)
-                    neighborIsBetter = True
-                elif neigborGScore < gScore[neighbor]:
-                    neighborIsBetter = True
-                if neighborIsBetter:
-                    cameFrom[neighbor] = nodeWithLowestFScoreFound
-                    ##print("cameFrom is type " + str(type(cameFrom)))
-                    gScore[neighbor] = neighborGScore
-                    fScore[neighbor] = gScore[neighbor] + hScore[neighbor]
-        print("Returning NONE from A*")
-        return None
-
-    #@staticmethod
-    def distance(self, source, target):
-        xComponent = source.getX() - target.getX()
-        yComponent = source.getY() - target.getY()
-        return math.hypot(xComponent, yComponent)
-
-#########################################
-##########################################
-########################################
-#######################################
-##########################################
-    def followPath(self, path, target, task):
-        if len(path) > 0:
-            nextWaypoint = path[0]
-            #print("followPath() distance = " + str(self.distance(self, nextWaypoint)))
-            if self.distance(self, nextWaypoint) < 1:
-                #print("WAYPOINT FOUND, UPDATING CURRENT TARGET")
+    
+    def followPath(self, path, task):
+        #If there are any waypoints in the path
+        ##if len(path) > 0:
+        if path:
+            self.currentTarget = path[0]
+            ##print("followPath() distance = " + str(PathFinder.distance(self, nextWaypoint)))
+            #if the next waypoint is reached
+            if PathFinder.distance(self, self.currentTarget) < 1:
                 path.pop(0)
-                if len(path) > 0:
-                    nextWaypoint = path[0]
-                #print("Telling Ralph to seek waypoint:" + str(nextWaypoint.getNodeID()))
-                self.currentTarget = nextWaypoint
-                #print("Set self.currentTarget to node " + str(self.currentTarget.getNodeID()) + " at position " + str(self.currentTarget.getX()) + ", " + str(self.currentTarget.getY()))
-                #self.setCurrentTarget(path.pop(0))
-        else:
-            #print("Telling Ralph to seek final Target")
-            self.setCurrentTarget(target)
+        #No waypoints left in path, just try to go to target
+        #else:
+            ##print("Telling Ralph to seek final Target " + str(target.getX()) + ", " + str(target.getY()))
+            #self.setCurrentTarget(target)
         return Task.cont
         
         
@@ -395,8 +284,8 @@ class NPC(Agent):
 
         if(distanceToTarget < self.radarLength):
             #print("Target is in range")
-            if(distanceToTarget < 1):
-                self.moveForward(0)#do nothing
+            if(distanceToTarget < 0.5):
+                None#self.moveForward(0)#do nothing
             elif(80 <= angleToTarget and angleToTarget <= 100):
                 self.moveForward(distance)
             elif(0 <= angleToTarget and angleToTarget < 90):
@@ -419,10 +308,10 @@ class NPC(Agent):
                 #self.moveForward(distance)
                 #self.turnLeft(turnAngle)
                 self.turnRight(turnAngle)
-            else:
-                print("You can start crying now.")
-        else:
-            print("Target is out of range")
+            #else:
+            #    print("You can start crying now.")
+        #else:
+            #print("Target is out of range")
         return
 
 if __name__ == "__main__":

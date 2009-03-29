@@ -5,6 +5,7 @@ from direct.showbase.DirectObject import DirectObject
 from pandac.PandaModules import *
 from npc import NPC
 from waypoint import Waypoint
+from pathFinder import PathFinder
 import sys
 from direct.task import Task
 from direct.gui.OnscreenText import OnscreenText
@@ -79,8 +80,8 @@ class World(DirectObject):
         index = 1 
         for bunny in self.bunnies:
             bunny.reparentTo(render)
-            bunny.setX(5 * index - 5)
-            bunny.setY(-5)
+            bunny.setX(-5 * index + 11)
+            bunny.setY(6)
             index += 1
             taskMgr.add(bunny.sense, "sense" + str(index))
         
@@ -96,18 +97,7 @@ class World(DirectObject):
         #######################################################
         #######################################################
         self.setWaypoints()
-        self.ralph.setCurrentTarget(self.waypointA6)
-        bestPath = self.ralph.AStar(self.waypointA6, self.waypoints)
-##        if bestPath == None:
-##            print("There is no path to target")
-##        else:
-##            print("There IS a path to target")
-##            print("bestPath = ")
-##            for waypoint in bestPath:
-##                print(str(waypoint.getNodeID()))
-##            print(bestPath)
-        #Set initial target.
-        self.ralph.setCurrentTarget(bestPath[0])
+        bestPath = PathFinder.AStar(self.ralph, self.bunnies[0], self.waypoints)
         #######################################################
         #######################################################
         self.draw()
@@ -115,7 +105,7 @@ class World(DirectObject):
         #base.oobeCull()
         base.camera.setPos(0,0,50)
         base.camera.lookAt(0,0,0)
-        #base.oobe()
+        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.ralph)
         base.camera.setPos(0, 30, 10)
@@ -129,7 +119,7 @@ class World(DirectObject):
         #taskMgr.add(self.ralph.sense, "sense")
         taskMgr.add(self.__printPositionAndHeading, "__printPositionAndHeading")
         
-        taskMgr.add(self.ralph.followPath, "followPath", extraArgs = [bestPath, self.waypointA6], appendTask = True)
+        taskMgr.add(self.ralph.followPath, "followPath", extraArgs = [bestPath], appendTask = True)
         
         
         self.isMoving = False
@@ -201,141 +191,13 @@ class World(DirectObject):
         self.waypointB5.setNeighbors([self.waypointB4, self.waypointB6])
         self.waypointB6.setNeighbors([self.waypointB5])
         
-        #self.test = {0:[1,2,3], 2:[3,4,5]}
-        #self.paths = {self.waypointA2:[self.waypointA3, self.waypointB2],
-        #                    self.waypointA3:[self.waypointA2, self.waypointA4]}
-        
-        #hash(self.waypointA2)
-        ## dict({'one': 2, 'two': 3})
         self.waypoints = [self.waypointA2, self.waypointA3, self.waypointA4, self.waypointA5, self.waypointA6]
         self.waypoints.extend([self.waypointB2, self.waypointB3, self.waypointB4, self.waypointB5, self.waypointB6])
-##        self.waypoints = [[Waypoint(Vec3(5*i - 16, 5*j - 16, 0))
-##                    for i in range(8)].append(Waypoint(Vec3(5*i - 16, 5*j - 16, 0)))
-##                        for j in range(8))]
-        
-        #dict({'one': 2, 'two': 3})
-        #for i in range(8):
-        #    for j in range(8):
-        #        self.waypoints[i][j].setNeighbors()
-##        #waypoint.
-##        distance1 = self.waypoints[0].  [0].getPos() - self.waypoints[0][1].getPos()
-##        distance1 = math.sqrt(distance1.getX() * distance1.getX() + distance1.getY * distance1.getY())
-##        distance2 = self.waypoints[0][0].getPos() - self.waypoints[0][1].getPos()
-##        distance2 = math.sqrt(distance2.getX() * distance2.getX() + distance2.getY * distance2.getY())
-##        neighbors = dict({self.waypoints[0][1]: distance1,self.waypoints[1][0]:distance2}) #Supposed to be a set of tuples?
-##        self.waypoints[0][0].setNeighbors(neighbors)
-
-    def AStar(self, actor, target):
-        infinity = 1E400
-        #Find closest Waypoint to Actor (A starting place)
-        shortestDistanceFound = infinity
-        closestNodeToSelf = Waypoint(Vec3(0,0,5))
-        closestNodeIndex = 0
-        for i in range(8):
-            #print("distance = " + str(self.distance(actor, self.waypoints[i])))
-            if self.distance(actor, self.waypoints[i]) < shortestDistanceFound:
-                closestNodeToSelf = self.waypoints[i]
-                shortestDistanceFound = self.distance(actor, self.waypoints[i])
-        closestNodeToSelf.changeToYellow()
-        #self.waypoints[closestNodeIndex].changeToYellow()
-        
-        #Find closest Waypoint to Target (a goal)
-        shortestDistanceFound = infinity
-        closestNodeToTarget = Waypoint(Vec3(0,0,5))
-        for i in range(8):
-            if self.distance(target, self.waypoints[i]) < shortestDistanceFound:
-                closestNodeToTarget = self.waypoints[i]
-                shortestDistanceFound = self.distance(target, self.waypoints[i])
-            #print("distance = " + str(self.distance(target, self.waypoints[i])))
-            #print("shortestDistance = " + str(shortestDistanceFound))
-            
-        closestNodeToTarget.changeToGreen()
-        #self.waypoints[closestNodeIndex].changeToGreen()
-        
-        
-##        self.priorityQueue = [(self.distance(target, self.waypoints[i]),
-##                                self.waypoints[i])
-##                            for i in range(8)]
-        self.priorityQueue = [(self.distance(target, closestNodeToSelf), closestNodeToSelf)]
-#        heapq.heapify(self.priorityQueue)
-        print("Number of nodes in queue " + str(len(self.priorityQueue)))
-##        for i in range(8):
-##            print("Distance in Queue = " + str(self.priorityQueue[i][0]))
-        
-        totalDistanceSoFar = 0
-        while len(self.priorityQueue) > 0:
-            Var = raw_input("Press Enter to Continue")
-            #print("Number of nodes in queue " + str(len(self.priorityQueue)))
-            currentWaypoint = heapq.heappop(self.priorityQueue)
-            currentWaypoint[1].visit()
-            lowestCostFound = infinity
-            shortestDistanceFound = infinity
-            distanceSoFar = totalDistanceSoFar
-            
-##            for i in range(len(currentWaypoint.getNeighbors())):
-##                if not currentWaypint.getNeighbors()[i].wasVisited():
-##                    distanceToNode = self.distance(currentWaypoint.getNeighbors()[i], currentWaypoint)
-##                    distanceToTarget = self.distance(currentWaypoint.getNeighbors()[i], target)
-##                    totalCostForCurrentNode = distanceSoFar + distanceToNode + distanceToTarget
-##                    if totalCostForCurrentNode < lowestCostFound:
-##                        lowestCostFound = totalCostForCurrentNode
-##                        bestNodeFound = currentWaypoint.getNeighbors()[i]
-##                        previousNode = currentWaypoint
-            #print("Got here")
-            #bestNodeFound = None
-            bestNodeFound = Waypoint(Vec3(0,0,10))
-
-            for neighbor in currentWaypoint[1].getNeighbors():
-                if not neighbor.wasVisited():
-                    #Calculate distance from current Node to its neighbor
-                    distanceToNode = self.distance(neighbor, currentWaypoint[1])
-                    #Calculate distance from neighbor to the target
-                    distanceToTarget = self.distance(neighbor, target)
-                    totalCostForCurrentNode = distanceSoFar + distanceToNode + distanceToTarget
-                    if totalCostForCurrentNode < lowestCostFound:
-                        lowestCostFound = totalCostForCurrentNode
-                        bestNodeFound = neighbor        #Remember neighbor is not a tuple here.
-                        previousNode = currentWaypoint
-                        #print("Got here too")
-                        
-            if bestNodeFound.getPos() == closestNodeToTarget:
-                return self.retracePath(closestNodeToSelf, closestNodeToTarget)
-            #Best neighbor has been found, store it in the queue.
-            heapq.heappush(self.priorityQueue, (lowestCostFound, bestNodeFound))
-            #mark neighbor as visited
-            bestNodeFound.visit()
-            #print("distance to next node = ")
-            #break
-        #return self.retracePath(closestNodeToSelf, closestNodeToTarget)
-        return None
-    
-    def followPath(self, task, path, target):
-        while len(path) > 0:
-            if self.distance(self.ralph, path.index(0)) < 1:
-                path.pop(0)
-                self.ralph.setCurrentTarget(path.index(0))
-        self.ralph.setCurrentTarget(target)
-            
-        
-    def retracePath(self, source, target):
-        pathToTarget = []
-        currentNode = target
-        while currentNode != source:
-            pathToTarget.append(currentNode)
-            currentNode = currentNode.getPreviousWaypoint()
-        pathToTarget.append(currentNode)
-        pathToTarget.reverse()
-        return path
-            
 
     
     def draw(self):
         self.drawSky()
         self.drawWalls()
-        #self.waypoint1.draw()
-        #self.waypoint2.draw()
-        #self.waypoint3.draw()
-        #self.waypoint4.draw()
         for waypoint in self.waypoints:
             waypoint.draw()
         
@@ -447,6 +309,7 @@ class World(DirectObject):
         
     positionHeadingText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                    pos=(-1.3,-0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
+                
     def __printPositionAndHeading(self, task):
         heading = self.ralph.getH()
         while heading > 360.0:
