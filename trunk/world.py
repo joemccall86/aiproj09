@@ -110,7 +110,7 @@ class World(DirectObject):
         tempWall.setPos(200, 0, 0)
         
         frame.setPos(-100,  -100, 0)
-##        frame.reparentTo(render)
+        frame.reparentTo(render)
         
         wall.setTexScale(TextureStage.getDefault(), 20, 1, 1)
         maze = NodePath("maze")
