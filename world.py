@@ -1,9 +1,6 @@
 # from the file character.py, import the class character
 #include character.py
 from pandac.PandaModules import loadPrcFileData
-loadPrcFileData("", "fullscreen 1")
-loadPrcFileData("", "win-size 1440 900")
-loadPrcFileData("", "cursor-hidden 1")
 import direct.directbase.DirectStart
 from direct.showbase.DirectObject import DirectObject
 from pandac.PandaModules import *
@@ -248,11 +245,9 @@ class World(DirectObject):
         self.accept("escape", sys.exit)
             
         def dropWp():
-            torus = loader.loadModel("models/box")
-            torus.setScale(5, 5, 5)
+            torus = loader.loadModel("models/Torus/Torus")
             torus.reparentTo(render)
             torus.setPos(self.__mainAgent.getPos())
-            torus.setY(self.__mainAgent, -5)
             self.waypointPositions.append(torus.getPos())
         
         self.accept("space", dropWp)
