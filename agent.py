@@ -6,10 +6,8 @@ from pandac.PandaModules import CollisionSphere
 from pandac.PandaModules import CollisionRay
 from pandac.PandaModules import CollisionNode
 from pandac.PandaModules import CollisionTraverser
-from pandac.PandaModules import CollisionTraverser
 from pandac.PandaModules import CollisionHandlerPusher
 from pandac.PandaModules import PhysicsCollisionHandler
-from pandac.PandaModules import CollisionHandlerFloor
 from pandac.PandaModules import BitMask32
 from pandac.PandaModules import ForceNode, LinearVectorForce
 from direct.task import Task
@@ -79,7 +77,7 @@ class Agent(NodePath):
         fromObject = self.attachNewNode(CollisionNode("agentCollisionNode"))
         fromObject.setCollideMask(BitMask32.allOn())
         fromObject.node().addSolid(CollisionSphere(0, 0, 2.5, 2.5))
-        fromObject.show()
+##        fromObject.show()
         
         pusher = PhysicsCollisionHandler()
         pusher.setDynamicFrictionCoef(0.5)

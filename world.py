@@ -1,5 +1,9 @@
 # from the file character.py, import the class character
 #include character.py
+from pandac.PandaModules import loadPrcFileData
+loadPrcFileData("", "fullscreen 1")
+loadPrcFileData("", "win-size 1440 900")
+loadPrcFileData("", "cursor-hidden 1")
 import direct.directbase.DirectStart
 from direct.showbase.DirectObject import DirectObject
 from pandac.PandaModules import *
@@ -19,19 +23,22 @@ class World(DirectObject):
         self.__setupEnvironment()
         self.__setupCollisions()
         self.__setupGravity()
-        self.__setupWalls()
+##        self.__setupWalls()
         self.__setupMainAgent()
         self.__setupOtherAgents()
         self.__setupTargets()
         self.__setupCamera()
         
-        # TODO move this into NPC's think function
-        self.setWaypoints()
-        # make the target seek me
-        self.bestPath = PathFinder.AStar(self.__mainTarget, self.__mainAgent, self.waypoints)        
-        #self.bestPath = PathFinder.AStar(self.__mainAgent, self.__mainTarget, self.waypoints)
+        frame = loader.loadModel("models/room1")
+        frame.setScale(10)
+        frame.setTexScale(TextureStage.getDefault(), 10)
+        frame.reparentTo(render)
         
-        print(self.bestPath)
+        # TODO move this into NPC's think function
+##        self.setWaypoints()
+        # make the target seek me
+##        self.bestPath = PathFinder.AStar(self.__mainTarget, self.__mainAgent, self.waypoints)        
+        #self.bestPath = PathFinder.AStar(self.__mainAgent, self.__mainTarget, self.waypoints)
         
         self.__setupTasks()
         
@@ -93,7 +100,7 @@ class World(DirectObject):
         for scale, pos in zip(frameScales, framePositions):
             tempWall = frame.attachNewNode("frameWall")
             wall.instanceTo(tempWall)
-            tempWall.setScale(scale[0], scale[1], 5)
+            tempWall.setScale(scale[0], scale[1], 20)
             tempWall.setPos(pos[0], pos[1], 0)
         frame.setPos(-100, -100, 0)
         frame.reparentTo(render)
@@ -130,11 +137,11 @@ class World(DirectObject):
                             collisionTraverser = self.cTrav)                    
         # Make it visible
         self.__mainAgent.reparentTo(render)
-        self.__mainAgent.setPos(55, 30, 10)
+        self.__mainAgent.setPos(15, 40, 300)
         
         
         
-    __otherRalphsCount = 0
+    __otherRalphsCount = 1
     __otherRalphs = []
     __startingPositions = {}
     def __setupOtherAgents(self):
@@ -159,12 +166,10 @@ class World(DirectObject):
                                 for i in range(self.__otherRalphsCount)]
         for index, ralph in enumerate(self.__otherRalphs):
             ralph.reparentTo(render)
-            ralph.setX(random.random() * -100)
-            ralph.setY(random.random() * -100)
-            ralph.setZ(10)
+            ralph.setZ(200)
             self.__startingPositions[ralph] = ralph.getPos()
             
-    __targetCount = __otherRalphsCount
+    __targetCount = 0
     __targets = []
     __agentToTargetMap = {}
     def __setupTargets(self):
@@ -176,38 +181,38 @@ class World(DirectObject):
         for agent,target in zip(self.__otherRalphs, self.__targets):
             self.__agentToTargetMap[agent] = target
         
-        # This is for path finding
-        modelStanding = "models/ralph"
-        modelRunning = "models/ralph-run"
-        modelWalking = "models/ralph-walk"
-        self.__mainTarget = NPC(modelStanding, 
-                                {"run":modelRunning, "walk":modelWalking},
-                                turnRate = 150, 
-                                speed = 25,
-                                agentList = self.__globalAgentList,
-                                collisionMask = BitMask32.bit(3),
-                                rangeFinderCount = 13,
-                                adjacencySensorThreshold = 5,
-                                radarSlices = 5,
-                                radarLength = 30,
-                                scale = 1.0,
-                                massKg = 35.0,
-                                collisionTraverser = self.cTrav)
-        self.__mainTarget.setPos(0, -10, 10)
-        self.__mainTarget.reparentTo(render)
+##        # This is for path finding
+##        modelStanding = "models/ralph"
+##        modelRunning = "models/ralph-run"
+##        modelWalking = "models/ralph-walk"
+##        self.__mainTarget = NPC(modelStanding, 
+##                                {"run":modelRunning, "walk":modelWalking},
+##                                turnRate = 150, 
+##                                speed = 25,
+##                                agentList = self.__globalAgentList,
+##                                collisionMask = BitMask32.bit(3),
+##                                rangeFinderCount = 13,
+##                                adjacencySensorThreshold = 5,
+##                                radarSlices = 5,
+##                                radarLength = 30,
+##                                scale = 1.0,
+##                                massKg = 35.0,
+##                                collisionTraverser = self.cTrav)
+##        self.__mainTarget.setPos(0, -10, 10)
+##        self.__mainTarget.reparentTo(render)
         
     
     def __setupTasks(self):
         """
         This function sets up all the tasks used in the world
         """
-##        for index, ralph in enumerate(self.__otherRalphs):
+        for index, ralph in enumerate(self.__otherRalphs):
 
             # uncomment this to make Jim happy
 ##            taskMgr.add(ralph.sense, "sense" + str(index))
 ##            taskMgr.add(ralph.think, "think" + str(index))
 ##            taskMgr.add(ralph.act,   "act"   + str(index))
-##            taskMgr.add(ralph.wanderTask, "wander" + str(index))
+            taskMgr.add(ralph.wanderTask, "wander" + str(index))
 ##            taskMgr.add(ralph.seekTask, "seekTask" + str(index), extraArgs = [self.__agentToTargetMap[ralph]], appendTask = True)
             
         taskMgr.add(self.__printPositionAndHeading, "__printPositionAndHeading")
@@ -219,27 +224,38 @@ class World(DirectObject):
         self.__setKeymap()
         taskMgr.add(self.__proccessKey, "processKeyTask")
 ##        taskMgr.add(self.__mainAgent.handleCollisionTask, "handleCollisionTask")
-##        taskMgr.add(self.ralph.wanderTask, "wander")
-        taskMgr.add(self.__mainTarget.sense, "senseTask")
+##        taskMgr.add(self.__mainTarget.wanderTask, "wander")
+##        taskMgr.add(self.__mainTarget.sense, "senseTask")
 ##        taskMgr.add(self.ralph.think, "thinkTask")
-        taskMgr.add(self.__mainTarget.act, "actTask")
+##        taskMgr.add(self.__mainTarget.act, "actTask")
 
         # This is for path finding
-        taskMgr.add(self.__mainTarget.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
+##        taskMgr.add(self.__mainTarget.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
 
     def __setupCamera(self):                
 ##        base.oobeCull()
 ##        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.__mainAgent.actor)
-        base.camera.setPos(0, 30, 10)
+        base.camera.setPos(0, 60, 60)
         base.camera.lookAt(self.__mainAgent)
-        base.camera.setP(base.camera.getP() + 15)
+        base.camera.setP(base.camera.getP() + 10)
         
+    waypointPositions = []
     __keyMap = {"left":False, "right":False, "up":False, "down":False}
     def __setKeymap(self):
         
         self.accept("escape", sys.exit)
+            
+        def dropWp():
+            torus = loader.loadModel("models/box")
+            torus.setScale(5, 5, 5)
+            torus.reparentTo(render)
+            torus.setPos(self.__mainAgent.getPos())
+            torus.setY(self.__mainAgent, -5)
+            self.waypointPositions.append(torus.getPos())
+        
+        self.accept("space", dropWp)
         
         def setKey(key, value):
             self.__keyMap[key] = value
@@ -337,6 +353,7 @@ class World(DirectObject):
         col8 = 18*5
         rowA = 19*5
         rowB = 14*5
+            
         
         rowA = 3*5
         rowB = -1*5
