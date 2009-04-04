@@ -13,6 +13,8 @@ class Waypoint(NodePath):
         self.neighbors = []
         self.ID = ID
         self.previousWaypoint = None
+        torusModel = "models/Torus/Torus.egg"
+        self.torus = loader.loadModel(torusModel)
 
     def getNodeID(self):
         return self.ID
@@ -55,7 +57,6 @@ class Waypoint(NodePath):
         self.torus.setTexture(self.texture, 1)
 
     def changeToYellow(self):
-        print("Changing waypoint To Yellow")
         self.texture = loader.loadTexture("textures/yellow.jpg")
         self.torus.setTexture(self.texture, 1)
         
@@ -69,8 +70,7 @@ class Waypoint(NodePath):
         self.torus.setTexture(self.texture, 1)
         
     def draw(self):        
-        torusModel = "models/Torus/Torus.egg"
-        self.torus = torus = loader.loadModel(torusModel)
+        torus = self.torus
         
         torus.setPos(self.position)
         torus.setScale(2.5, 2.5, 2.5)

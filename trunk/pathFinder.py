@@ -18,14 +18,14 @@ class PathFinder():
 
     @classmethod
     def AStar(self, source, target, waypoints):
-        print "AStar called"
+##        print "AStar called"
         infinity = 1E400
         def getClosestNodeTo(thing):
             #Find closest Waypoint
             shortestDistanceFound = infinity
             closestNodeToSource = Waypoint(Vec3(0,0,5))
             closestNodeIndex = 0
-            print("number of waypoints = " + str(len(waypoints)))
+##            print("number of waypoints = " + str(len(waypoints)))
             for i in range(len(waypoints)):
                 #print("distance = " + str(self.distance(self, self.waypoints[i])))
                 if self.distance(thing, waypoints[i]) < shortestDistanceFound:
@@ -33,10 +33,10 @@ class PathFinder():
                     shortestDistanceFound = self.distance(thing, waypoints[i])
             return closestNodeToSource
         
-        print("Got here")
+##        print("Got here")
         closestNodeToSource = getClosestNodeTo(source)
         
-        print("Closest Node = " + str(closestNodeToSource.getNodeID()) + " at pos (" + str(closestNodeToSource.getX()) + ", " + str(closestNodeToSource.getY())) + ")"
+##        print("Closest Node = " + str(closestNodeToSource.getNodeID()) + " at pos (" + str(closestNodeToSource.getX()) + ", " + str(closestNodeToSource.getY())) + ")"
         closestNodeToSource.changeToYellow()
         #print("Starting node = " + str(closestNodeToSelf.getNodeID()) + " exected to be B4 which is 14") 
         closestNodeToTarget = getClosestNodeTo(target)
@@ -117,7 +117,7 @@ class PathFinder():
                     ##print("cameFrom is type " + str(type(cameFrom)))
                     gScore[neighbor] = neighborGScore
                     fScore[neighbor] = gScore[neighbor] + hScore[neighbor]
-        print("Returning NONE from A*")
+##        print("Returning NONE from A*")
         return None
     
     @staticmethod
