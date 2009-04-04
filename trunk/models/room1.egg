@@ -12,7 +12,7 @@
   <Scalar> shininess {12.5}
 }
 <Texture> Stones.jpg {
-  "/c/src/aiproj09/textures/Stones.jpg"
+  "../textures/Stones.jpg"
   <Scalar> envtype { MODULATE }
   <Scalar> minfilter { LINEAR }
   <Scalar> magfilter { LINEAR }
