@@ -1,6 +1,5 @@
 # from the file character.py, import the class character
 #include character.py
-from pandac.PandaModules import loadPrcFileData
 import direct.directbase.DirectStart
 from direct.showbase.DirectObject import DirectObject
 from pandac.PandaModules import *
@@ -20,16 +19,12 @@ class World(DirectObject):
         self.__setupEnvironment()
         self.__setupCollisions()
         self.__setupGravity()
-        self.__setupWalls()
+        self.__setupLevel()
         self.__setupMainAgent()
         self.__setupOtherAgents()
         self.__setupTargets()
         self.__setupCamera()
         
-##        frame = loader.loadModel("models/room1")
-##        frame.setScale(10)
-##        frame.setTexScale(TextureStage.getDefault(), 10)
-##        frame.reparentTo(render)
         # TODO move this into NPC's think function
         waypoints = self.setWaypoints()
         # make the target seek me.
@@ -77,40 +72,11 @@ class World(DirectObject):
         
         base.setBackgroundColor(r=0, g=0, b=.1, a=1)
     
-    def __setupWalls(self):
-        wall = loader.loadModel("models/box")
-##        wall.setScale(5, 5, 5)
-##        wall.setPos(-5, -5, 0)
-##        wall.setTexGen(TextureStage.getDefault(), TexGenAttrib.MWorldPosition)
-        
-        stoneTexture = loader.loadTexture('textures/Stones.jpg')
-        stoneTexture.setMinfilter(Texture.FTLinearMipmapLinear)
-        wall.setTexture(stoneTexture, 1)
-        
-        wall.find("/Box").setCollideMask(BitMask32.allOn())
-
-        wall.setTexScale(TextureStage.getDefault(), 40, 1, 1)
-        frame = NodePath("frame")
-        frameScales =    ((200, 5), (200, 5), (5, 200), (5, 200))
-        framePositions = ((0, 0),   (0, 200), (0, 0),   (200, 0))
-        for scale, pos in zip(frameScales, framePositions):
-            tempWall = frame.attachNewNode("frameWall")
-            wall.instanceTo(tempWall)
-            tempWall.setScale(scale[0], scale[1], 5)
-            tempWall.setPos(pos[0], pos[1], 0)
-        frame.setPos(-100, -100, 0)
+    def __setupLevel(self):
+        frame = loader.loadModel("models/room1")
+        frame.setScale(10)
+        frame.setTexScale(TextureStage.getDefault(), 10)
         frame.reparentTo(render)
-        
-        wall.setTexScale(TextureStage.getDefault(), 20, 1, 1)
-        maze = NodePath("maze")
-        mazeScales =    ((100, 5),   (100, 5), (5, 100))
-        mazePositions = ((-50, -50), (-50, 0), (50, -50))
-        for scale, pos in zip(mazeScales, mazePositions):
-            tempWall = maze.attachNewNode("mazeWall")
-            wall.instanceTo(tempWall)
-            tempWall.setScale(scale[0], scale[1], 5)
-            tempWall.setPos(pos[0], pos[1], 0)
-        maze.reparentTo(render)
         
     __globalAgentList = []
     __mainAgent = None
