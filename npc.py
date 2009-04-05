@@ -150,8 +150,8 @@ class NPC(Agent):
     def act(self, task):
         if self.currentTarget:
             #print("Calling seek()")
-##            self.seekTarget(self.currentTarget, taskTimer.elapsedTime)
-            self.seek(self.currentTarget.getPos(), taskTimer.elapsedTime)
+##            self.seekTarget(self.currentTarget)
+            self.seek(self.currentTarget.getPos())
         return Task.cont
     
     rangeFinderText = OnscreenText(text="", style=1, fg=(1,1,1,1),
@@ -339,7 +339,7 @@ class NPC(Agent):
         self.annMovementRequests["up"]      = (outputs[2] > 0.5)
         self.annMovementRequests["down"]    = (outputs[3] > 0.5)
     
-    def ANNAct(self, elapsedTime):
+    def ANNAct(self):
         """
         This method acts upon the movement requests that were calculated in ANNThink.
         """
@@ -368,7 +368,7 @@ class NPC(Agent):
             self.isMoving = False
 
                 
-    def seekTarget(self, seekTarget, elapsedTime):
+    def seekTarget(self, seekTarget):
         moveDistance = self.speed * taskTimer.elapsedTime
         moveAngle = self.turnRate * taskTimer.elapsedTime
         
@@ -405,7 +405,7 @@ class NPC(Agent):
             
         return Task.cont
 
-    def seek(self, position, elapsedTime):
+    def seek(self, position):
         #print("Seeking position " + str(position.getX()) + ", " + str(position.getY()))
         #print("Current position " + str(self.getX())     + ", " + str(position.getY()))
         worldPosition = self.getPos()
@@ -429,7 +429,7 @@ class NPC(Agent):
                 self.isMoving = True
             if(80 <= angleToTarget and angleToTarget <= 100):
                 self.moveForward(distance)
-            elif(0 <= angleToTarget < 90):
+            if(0 <= angleToTarget < 90):
                 #self.moveForward(0)#do nothing
                 #self.moveForward(distance)
                 #self.turnLeft(turnAngle)
