@@ -161,7 +161,7 @@ class NPC(Agent):
                        pos=(-1.3,0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
     def followPath(self, path, task):
         #If there are any waypoints in the path
-        ##print("Attempting to follow path")
+        #print("Attempting to follow path")
         if path:
             self.currentTarget = path[0]
             #if the next waypoint is reached

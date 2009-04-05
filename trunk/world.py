@@ -31,8 +31,8 @@ class World(DirectObject):
 ##        frame.setTexScale(TextureStage.getDefault(), 10)
 ##        frame.reparentTo(render)
         # TODO move this into NPC's think function
-        self.setWaypoints()
-        # make the target seek me
+        waypoints = self.setWaypoints()
+        # make the target seek me.
         self.bestPath = PathFinder.AStar(self.__mainTarget, self.__mainAgent, self.waypoints)        
         #self.bestPath = PathFinder.AStar(self.__mainAgent, self.__mainTarget, self.waypoints)
         
@@ -133,7 +133,7 @@ class World(DirectObject):
                             collisionTraverser = self.cTrav)                    
         # Make it visible
         self.__mainAgent.reparentTo(render)
-        self.__mainAgent.setPos(15, 40, 300)
+        self.__mainAgent.setPos(15, 40, 3)
         
         
         
@@ -336,76 +336,11 @@ class World(DirectObject):
         return Task.cont    
         
     def setWaypoints(self):
-        # TODO FIX THIS!!!!
-        col1 = -17*5
-        col2 = -12*5
-        col3 = -7*5
-        col4 = -2*5
-        col5 = 3*5
-        col6 = 8*5
-        col7 = 13*5
-        col8 = 18*5
-        rowA = 19*5
-        rowB = 14*5
-            
         
-        rowA = 3*5
-        rowB = -1*5
-
-        waypointPosition = Vec3(col1,rowA,0)
-        self.waypointA1 = Waypoint(waypointPosition, 1)
-        waypointPosition = Vec3(col2,rowA,0)
-        self.waypointA2 = Waypoint(waypointPosition, 2)
-        waypointPosition = Vec3(col3,rowA,0)
-        self.waypointA3 = Waypoint(waypointPosition, 3)
-        waypointPosition = Vec3(col4,rowA,0)
-        self.waypointA4 = Waypoint(waypointPosition, 4)
-        waypointPosition = Vec3(col5,rowA,0)
-        self.waypointA5 = Waypoint(waypointPosition, 5)
-        waypointPosition = Vec3(col6,rowA,0)
-        self.waypointA6 = Waypoint(waypointPosition, 6)
-        waypointPosition = Vec3(col7,rowA,0)
-        self.waypointA7 = Waypoint(waypointPosition, 7)
-        waypointPosition = Vec3(col8,rowA,0)
-        self.waypointA8 = Waypoint(waypointPosition, 8)
-        
-        waypointPosition = Vec3(col1,rowB,0)
-        self.waypointB1 = Waypoint(waypointPosition, 11)
-        waypointPosition = Vec3(col2,rowB,0)
-        self.waypointB2 = Waypoint(waypointPosition, 12)
-        waypointPosition = Vec3(col3,rowB,0)
-        self.waypointB3 = Waypoint(waypointPosition, 13)
-        waypointPosition = Vec3(col4,rowB,0)
-        self.waypointB4 = Waypoint(waypointPosition, 14)
-        waypointPosition = Vec3(col5,rowB,0)
-        self.waypointB5 = Waypoint(waypointPosition, 15)
-        waypointPosition = Vec3(col6,rowB,0)
-        self.waypointB6 = Waypoint(waypointPosition, 16)
-        waypointPosition = Vec3(col7,rowB,0)
-        self.waypointB7 = Waypoint(waypointPosition, 17)
-        waypointPosition = Vec3(col8,rowB,0)
-        self.waypointB8 = Waypoint(waypointPosition, 18)
-        
-        self.waypoints = [self.waypointA1, self.waypointA2, self.waypointA3, self.waypointA4, self.waypointA5, self.waypointA6, self.waypointA7, self.waypointA8]
-        self.waypoints.extend([self.waypointB1, self.waypointB2, self.waypointB3, self.waypointB4, self.waypointB5, self.waypointB6, self.waypointB7, self.waypointB8])
-        
-        #Set paths
-        self.waypointA2.setNeighbors([self.waypointA3, self.waypointB2])
-        self.waypointA3.setNeighbors([self.waypointA2, self.waypointA4])
-        self.waypointA4.setNeighbors([self.waypointA3, self.waypointA5])
-        self.waypointA5.setNeighbors([self.waypointA4, self.waypointA6])
-        self.waypointA6.setNeighbors([self.waypointA5])
-        
-        self.waypointB2.setNeighbors([self.waypointB3, self.waypointA2])
-        self.waypointB3.setNeighbors([self.waypointB2, self.waypointB4])
-        self.waypointB4.setNeighbors([self.waypointB3, self.waypointB5])
-        self.waypointB5.setNeighbors([self.waypointB4, self.waypointB6])
-        self.waypointB6.setNeighbors([self.waypointB5])
-        
-        self.waypoints = [self.waypointA2, self.waypointA3, self.waypointA4, self.waypointA5, self.waypointA6]
-        self.waypoints.extend([self.waypointB2, self.waypointB3, self.waypointB4, self.waypointB5, self.waypointB6])
+        execfile("rooms/room1.py")
         for w in self.waypoints:
             w.draw()
+            
     
 if __name__ == "__main__":
     w = World()
