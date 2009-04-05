@@ -52,7 +52,6 @@ class World(DirectObject):
         gravityFN=ForceNode('world-forces')
         gravityFNP=render.attachNewNode(gravityFN)
         gravityForce=LinearVectorForce(0,0,-32.18) #gravity acceleration ft/s^2
-##        gravityForce.setMassDependent(1)
         gravityFN.addForce(gravityForce)
         
 ##        base.cTrav.showCollisions(render)
@@ -81,10 +80,18 @@ class World(DirectObject):
         base.setBackgroundColor(r=0, g=0, b=.1, a=1)
     
     def __setupLevel(self):
-        frame = loader.loadModel("models/room1")
-        frame.setScale(10)
-        frame.setTexScale(TextureStage.getDefault(), 10)
-        frame.reparentTo(render)
+        room = loader.loadModel("rooms/room1")
+        room.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        room.setScale(10)
+        room.setTexScale(TextureStage.getDefault(), 10)
+        room.reparentTo(render)
+        
+        room2 = loader.loadModel("rooms/room2")
+        room2.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        room2.setScale(10)
+        room2.setTexScale(TextureStage.getDefault(), 10)
+        room2.reparentTo(render)
+        room2.setY(-200)
         
     __globalAgentList = []
     __mainAgent = None
@@ -107,7 +114,7 @@ class World(DirectObject):
                             collisionTraverser = self.cTrav)                    
         # Make it visible
         self.__mainAgent.reparentTo(render)
-        self.__mainAgent.setPos(31, 35, 3)
+        self.__mainAgent.setPos(31, 35, 50)
         
         
         
@@ -230,7 +237,7 @@ class World(DirectObject):
             self.waypointPositions.append(torus.getPos())
             wpFile.write(str((int(self.__mainAgent.getX()), int(self.__mainAgent.getY()))) + "\r\n")
         
-            self.accept("space", dropWp)
+        self.accept("space", dropWp)
         
         def setKey(key, value):
             self.__keyMap[key] = value
