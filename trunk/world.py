@@ -20,21 +20,20 @@ class World(DirectObject):
         self.__setupEnvironment()
         self.__setupCollisions()
         self.__setupGravity()
-##        self.__setupWalls()
+        self.__setupWalls()
         self.__setupMainAgent()
         self.__setupOtherAgents()
         self.__setupTargets()
         self.__setupCamera()
         
-        frame = loader.loadModel("models/room1")
-        frame.setScale(10)
-        frame.setTexScale(TextureStage.getDefault(), 10)
-        frame.reparentTo(render)
-        
+##        frame = loader.loadModel("models/room1")
+##        frame.setScale(10)
+##        frame.setTexScale(TextureStage.getDefault(), 10)
+##        frame.reparentTo(render)
         # TODO move this into NPC's think function
-##        self.setWaypoints()
+        self.setWaypoints()
         # make the target seek me
-##        self.bestPath = PathFinder.AStar(self.__mainTarget, self.__mainAgent, self.waypoints)        
+        self.bestPath = PathFinder.AStar(self.__mainTarget, self.__mainAgent, self.waypoints)        
         #self.bestPath = PathFinder.AStar(self.__mainAgent, self.__mainTarget, self.waypoints)
         
         self.__setupTasks()
@@ -97,7 +96,7 @@ class World(DirectObject):
         for scale, pos in zip(frameScales, framePositions):
             tempWall = frame.attachNewNode("frameWall")
             wall.instanceTo(tempWall)
-            tempWall.setScale(scale[0], scale[1], 20)
+            tempWall.setScale(scale[0], scale[1], 5)
             tempWall.setPos(pos[0], pos[1], 0)
         frame.setPos(-100, -100, 0)
         frame.reparentTo(render)
@@ -138,7 +137,7 @@ class World(DirectObject):
         
         
         
-    __otherRalphsCount = 1
+    __otherRalphsCount = 0
     __otherRalphs = []
     __startingPositions = {}
     def __setupOtherAgents(self):
@@ -178,25 +177,25 @@ class World(DirectObject):
         for agent,target in zip(self.__otherRalphs, self.__targets):
             self.__agentToTargetMap[agent] = target
         
-##        # This is for path finding
-##        modelStanding = "models/ralph"
-##        modelRunning = "models/ralph-run"
-##        modelWalking = "models/ralph-walk"
-##        self.__mainTarget = NPC(modelStanding, 
-##                                {"run":modelRunning, "walk":modelWalking},
-##                                turnRate = 150, 
-##                                speed = 25,
-##                                agentList = self.__globalAgentList,
-##                                collisionMask = BitMask32.bit(3),
-##                                rangeFinderCount = 13,
-##                                adjacencySensorThreshold = 5,
-##                                radarSlices = 5,
-##                                radarLength = 30,
-##                                scale = 1.0,
-##                                massKg = 35.0,
-##                                collisionTraverser = self.cTrav)
-##        self.__mainTarget.setPos(0, -10, 10)
-##        self.__mainTarget.reparentTo(render)
+        # This is for path finding
+        modelStanding = "models/ralph"
+        modelRunning = "models/ralph-run"
+        modelWalking = "models/ralph-walk"
+        self.__mainTarget = NPC(modelStanding, 
+                                {"run":modelRunning, "walk":modelWalking},
+                                turnRate = 150, 
+                                speed = 25,
+                                agentList = self.__globalAgentList,
+                                collisionMask = BitMask32.bit(3),
+                                rangeFinderCount = 13,
+                                adjacencySensorThreshold = 5,
+                                radarSlices = 5,
+                                radarLength = 30,
+                                scale = 1.0,
+                                massKg = 35.0,
+                                collisionTraverser = self.cTrav)
+        self.__mainTarget.setPos(0, -10, 10)
+        self.__mainTarget.reparentTo(render)
         
     
     def __setupTasks(self):
@@ -221,13 +220,13 @@ class World(DirectObject):
         self.__setKeymap()
         taskMgr.add(self.__proccessKey, "processKeyTask")
 ##        taskMgr.add(self.__mainAgent.handleCollisionTask, "handleCollisionTask")
-##        taskMgr.add(self.__mainTarget.wanderTask, "wander")
-##        taskMgr.add(self.__mainTarget.sense, "senseTask")
+##        taskMgr.add(self.ralph.wanderTask, "wander")
+        taskMgr.add(self.__mainTarget.sense, "senseTask")
 ##        taskMgr.add(self.ralph.think, "thinkTask")
-##        taskMgr.add(self.__mainTarget.act, "actTask")
+        taskMgr.add(self.__mainTarget.act, "actTask")
 
         # This is for path finding
-##        taskMgr.add(self.__mainTarget.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
+        taskMgr.add(self.__mainTarget.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
 
     def __setupCamera(self):                
 ##        base.oobeCull()
