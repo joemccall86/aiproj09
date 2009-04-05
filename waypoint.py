@@ -1,6 +1,6 @@
 from pandac.PandaModules import NodePath
 from pandac.PandaModules import Texture
-
+from pandac.PandaModules import LineSegs
 
 class Waypoint(NodePath):
     
@@ -33,6 +33,9 @@ class Waypoint(NodePath):
         
     def setNeighbors(self, neighbors):
         self.neighbors = neighbors
+        
+    def addNeighbor(self, neighbor):
+        self.neighbors.append(neighbor)
         
     def getNeighbors(self):
         return self.neighbors
@@ -68,11 +71,23 @@ class Waypoint(NodePath):
         self.texture = loader.loadTexture("textures/snowish.jpg")
         self.texture.setMinfilter(Texture.FTLinearMipmapLinear)
         self.torus.setTexture(self.texture, 1)
-        
+    
+
     def draw(self):        
         torus = self.torus
         
         torus.setPos(self.position)
-        torus.setScale(2.5, 2.5, 2.5)
+        torus.setScale(5, 5, 5)
         torus.setTexture(self.texture, 1)
         torus.reparentTo(render)
+        self.drawLineToNeighbors()
+        
+    def drawLineToNeighbors(self):
+        ls = LineSegs()
+        ls.setThickness(1.0)
+        for neighbor in self.neighbors:
+            ls.setColor(1,1,1,1)
+            ls.moveTo(self.getPos())
+            ls.drawTo(neighbor.getPos())
+            np = NodePath(ls.create("aoeu")) 
+            np.reparentTo(render)

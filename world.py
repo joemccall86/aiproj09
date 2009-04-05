@@ -31,7 +31,14 @@ class World(DirectObject):
         # make the target seek me.
         self.bestPath = PathFinder.AStar(self.__mainTarget, self.__mainAgent, self.waypoints)        
         #self.bestPath = PathFinder.AStar(self.__mainAgent, self.__mainTarget, self.waypoints)
-        
+        ls = LineSegs()
+        ls.setThickness(10.0)
+        for i in range(len(self.bestPath) - 1):
+            ls.setColor(0,0,1,1)
+            ls.moveTo(self.bestPath[i].getPos())
+            ls.drawTo(self.bestPath[i+1].getPos())
+            np = NodePath(ls.create("aoeu"))
+            np.reparentTo(render)
         self.__setupTasks()
         
     def __setupCollisions(self):
@@ -157,7 +164,7 @@ class World(DirectObject):
                                 rangeFinderCount = 13,
                                 adjacencySensorThreshold = 5,
                                 radarSlices = 5,
-                                radarLength = 30,
+                                radarLength = 40,
                                 scale = 1.0,
                                 massKg = 35.0,
                                 collisionTraverser = self.cTrav)
@@ -198,9 +205,11 @@ class World(DirectObject):
         # This is for path finding
         taskMgr.add(self.__mainTarget.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
 
-    def __setupCamera(self):                
+    def __setupCamera(self):
+        base.camera.setPos(0,0,250) #This is debug camera position.     
+        base.camera.lookAt(0,0,0)    
 ##        base.oobeCull()
-##        base.oobe()
+        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.__mainAgent.actor)
         base.camera.setPos(0, 60, 60)
@@ -219,9 +228,9 @@ class World(DirectObject):
             torus.reparentTo(render)
             torus.setPos(self.__mainAgent.getPos())
             self.waypointPositions.append(torus.getPos())
-            wpFile.write(str((self.__mainAgent.getX(), self.__mainAgent.getY())) + "\r\n")
+            wpFile.write(str((int(self.__mainAgent.getX()), int(self.__mainAgent.getY()))) + "\r\n")
         
-        self.accept("space", dropWp)
+            self.accept("space", dropWp)
         
         def setKey(key, value):
             self.__keyMap[key] = value

@@ -115,26 +115,26 @@ class NPC(Agent):
         self.adjacentAgents = []
 
         # Set up visualizations for radar
-##        ls = LineSegs()
-##        ls.setThickness(5.0)
-##        relativeRadarLength = float(self.radarLength) / self.scale
-##        ls.setColor(0, 0, 1, 1)
+        ls = LineSegs()
+        ls.setThickness(2.0)
+        relativeRadarLength = float(self.radarLength) / self.scale
+        ls.setColor(0, 0, 1, 1)
 ##        for i in range(radarSlices):
 ##            ls.moveTo(0, 0, 0)            
 ##            ls.drawTo(relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(radarSlices)), 
 ##                      relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(radarSlices)), 0)
 ##            np = NodePath(ls.create())
 ##            np.reparentTo(self)
-##            
-##        # Draw a circle around NPC
-##        circleResolution = 100
-##        for i in range(circleResolution):
-##            ls.drawTo(relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(circleResolution)), 
-##                        relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(circleResolution)), 0)
-##            ls.drawTo(relativeRadarLength * math.cos(float(i+1.) * 2. * math.pi / float(circleResolution)), 
-##                        relativeRadarLength * math.sin(float(i+1.) * 2. * math.pi / float(circleResolution)), 0)
-##            np = NodePath(ls.create())
-##            np.reparentTo(self)        
+            
+        # Draw a circle around NPC
+        circleResolution = 100
+        for i in range(circleResolution):
+            ls.drawTo(relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(circleResolution)), 
+                        relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(circleResolution)), 0)
+            ls.drawTo(relativeRadarLength * math.cos(float(i+1.) * 2. * math.pi / float(circleResolution)), 
+                        relativeRadarLength * math.sin(float(i+1.) * 2. * math.pi / float(circleResolution)), 0)
+            np = NodePath(ls.create())
+            np.reparentTo(self)        
 
     def sense(self, task):
         self.rangeFinderSense()
@@ -156,15 +156,7 @@ class NPC(Agent):
     
     rangeFinderText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                        pos=(-1.3,0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
-    def followPath(self, path, task):
-        #If there are any waypoints in the path
-        #print("Attempting to follow path")
-        if path:
-            self.currentTarget = path[0]
-            #if the next waypoint is reached
-            if PathFinder.distance(self, self.currentTarget) < 3: #This number must be greater than distance in seek()
-                path.pop(0)
-        return Task.cont
+
  
     def rangeFinderSense(self):
         self.traverser.traverse(render)
@@ -241,12 +233,6 @@ class NPC(Agent):
                 else:
                     transformAngle = math.atan2(transform.getY(), transform.getX())
                         
-##                ls = LineSegs()
-##                ls.setThickness(5.0)
-##                ls.moveTo(self.getPos())
-##                ls.drawTo(transform.length() * math.cos(transformAngle) / self.scale, transform.length() * math.sin(transformAngle) / self.scale, 0)
-##                np = NodePath(ls.create("arst"))
-##                np.reparentTo(render)
             
 ##                self.transformAngleText.setText("transformAngle = " + str(math.degrees(transformAngle)))
 ##                self.getHText.setText("self.getH() = " + str(self.getH()))
@@ -404,6 +390,16 @@ class NPC(Agent):
             
             
         return Task.cont
+    
+    def followPath(self, path, task):
+        #If there are any waypoints in the path
+        #print("Attempting to follow path")
+        if path:
+            self.currentTarget = path[0]
+            #if the next waypoint is reached
+            if PathFinder.distance(self, self.currentTarget) < 2: #This number must be greater than distance in seek()
+                path.pop(0)
+        return Task.cont
 
     def seek(self, position):
         #print("Seeking position " + str(position.getX()) + ", " + str(position.getY()))
@@ -422,7 +418,7 @@ class NPC(Agent):
         turnAngle = self.turnRate * taskTimer.elapsedTime
         distance = self.speed * taskTimer.elapsedTime
 
-        if(2.75 < distanceToTarget < self.radarLength):
+        if(0 < distanceToTarget < self.radarLength):
             #print("Target is in range")
             if not self.isMoving:
                 self.loop("run")
