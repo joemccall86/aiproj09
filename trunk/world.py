@@ -151,7 +151,7 @@ class World(DirectObject):
         self.__mainTarget = NPC(modelStanding, 
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
-                                speed = 25,
+                                speed = 24,
                                 agentList = self.__globalAgentList,
                                 collisionMask = BitMask32.bit(3),
                                 rangeFinderCount = 13,
@@ -170,7 +170,7 @@ class World(DirectObject):
         This function sets up all the tasks used in the world
         """
         
-        taskMgr.add(taskTimer, "taskTimer World")
+        taskMgr.add(taskTimer, "taskTimer")
         
         for index, ralph in enumerate(self.__otherRalphs):
 
