@@ -10,6 +10,7 @@ from direct.gui.OnscreenText import OnscreenText
 ##from neural_network import NeuralNetwork
 from waypoint import Waypoint
 from pathFinder import PathFinder
+from tasktimer import taskTimer
 import random
 
 class World(DirectObject):                
@@ -99,7 +100,7 @@ class World(DirectObject):
                             collisionTraverser = self.cTrav)                    
         # Make it visible
         self.__mainAgent.reparentTo(render)
-        self.__mainAgent.setPos(15, 40, 3)
+        self.__mainAgent.setPos(31, 35, 3)
         
         
         
@@ -168,6 +169,9 @@ class World(DirectObject):
         """
         This function sets up all the tasks used in the world
         """
+        
+        taskMgr.add(taskTimer, "taskTimer World")
+        
         for index, ralph in enumerate(self.__otherRalphs):
 
             # uncomment this to make Jim happy
@@ -231,13 +235,9 @@ class World(DirectObject):
         self.accept("arrow_down",     setKey, ["down", True])
         self.accept("arrow_down-up",  setKey, ["down", False])
 
-    
-    # Keep track of time at previous frame to keep speed consistant on different platforms.
-    __previousTime = 0
     def __proccessKey(self, task):
-        elapsedTime = task.time - self.__previousTime
-        turnAngle = self.__mainAgent.turnRate * elapsedTime
-        distance = self.__mainAgent.speed * elapsedTime
+        turnAngle = self.__mainAgent.turnRate * taskTimer.elapsedTime
+        distance = self.__mainAgent.speed * taskTimer.elapsedTime
         
         self.previousPosition = self.__mainAgent.getPos()
         
@@ -304,7 +304,6 @@ class World(DirectObject):
         return Task.cont    
         
     def setWaypoints(self):
-        
         execfile("rooms/room1.py")
         for w in self.waypoints:
             w.draw()
