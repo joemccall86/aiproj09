@@ -127,14 +127,14 @@ class NPC(Agent):
 ##            np.reparentTo(self)
             
         # Draw a circle around NPC
-        circleResolution = 100
-        for i in range(circleResolution):
-            ls.drawTo(relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(circleResolution)), 
-                        relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(circleResolution)), 0)
-            ls.drawTo(relativeRadarLength * math.cos(float(i+1.) * 2. * math.pi / float(circleResolution)), 
-                        relativeRadarLength * math.sin(float(i+1.) * 2. * math.pi / float(circleResolution)), 0)
-            np = NodePath(ls.create())
-            np.reparentTo(self)        
+##        circleResolution = 100
+##        for i in range(circleResolution):
+##            ls.drawTo(relativeRadarLength * math.cos(float(i) * 2. * math.pi / float(circleResolution)), 
+##                        relativeRadarLength * math.sin(float(i) * 2. * math.pi / float(circleResolution)), 0)
+##            ls.drawTo(relativeRadarLength * math.cos(float(i+1.) * 2. * math.pi / float(circleResolution)), 
+##                        relativeRadarLength * math.sin(float(i+1.) * 2. * math.pi / float(circleResolution)), 0)
+##            np = NodePath(ls.create())
+##            np.reparentTo(self)        
 
     def sense(self, task):
         self.rangeFinderSense()
@@ -417,8 +417,8 @@ class NPC(Agent):
         angleToTarget = angleToTarget % 360
         turnAngle = self.turnRate * taskTimer.elapsedTime
         distance = self.speed * taskTimer.elapsedTime
-
-        if(0 < distanceToTarget < self.radarLength):
+        #To limit seek range, check against self.radarLength
+        if(0 < distanceToTarget):
             #print("Target is in range")
             if not self.isMoving:
                 self.loop("run")
