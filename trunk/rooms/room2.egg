@@ -19,6 +19,7 @@
   <Scalar> wrap { REPEAT }
 }
 <Group> Cube {
+  <Collide> wall_collide { Polyset keep descend }
   <Transform> {
     <Matrix4> {
       1.000000 0.000000 0.000000 0.000000
