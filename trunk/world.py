@@ -114,7 +114,7 @@ class World(DirectObject):
                             collisionTraverser = self.cTrav)                    
         # Make it visible
         self.__mainAgent.reparentTo(render)
-        self.__mainAgent.setPos(31, 35, 50)
+        self.__mainAgent.setPos(31, -235, 50)
         
         
         
@@ -175,7 +175,7 @@ class World(DirectObject):
                                 scale = 1.0,
                                 massKg = 35.0,
                                 collisionTraverser = self.cTrav)
-        self.__mainTarget.setPos(0, -10, 10)
+        self.__mainTarget.setPos(20, -150, 10)
         self.__mainTarget.reparentTo(render)
         
     
@@ -213,8 +213,8 @@ class World(DirectObject):
         taskMgr.add(self.__mainTarget.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
 
     def __setupCamera(self):
-        base.camera.setPos(0,0,250) #This is debug camera position.     
-        base.camera.lookAt(0,0,0)    
+        base.camera.setPos(0,-200,400) #This is debug camera position.     
+        base.camera.lookAt(0,-200,0)    
 ##        base.oobeCull()
         base.oobe()
         base.disableMouse()
@@ -320,7 +320,8 @@ class World(DirectObject):
         return Task.cont    
         
     def setWaypoints(self):
-        execfile("rooms/room1.py")
+        #execfile("rooms/room1.py")
+        execfile("rooms/room2.py")
         for w in self.waypoints:
             w.draw()
             
