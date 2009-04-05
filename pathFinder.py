@@ -104,13 +104,15 @@ class PathFinder():
                 if neighbor in closedSet:
                     continue
                 neighborGScore = gScore[nodeWithLowestFScoreFound] + self.distance(nodeWithLowestFScoreFound, neighbor)
+                print("neighborGScore = " + str(neighborGScore))
+                #print("gScore[neighbor] = " + str(gScore[neighbor]))
                 #Assume that neighbor is not better than what we have
                 neighborIsBetter = False
                 if neighbor not in openSet:
                     openSet.append(neighbor)
                     hScore[neighbor] = self.distance(neighbor, closestNodeToTarget)
                     neighborIsBetter = True
-                elif neigborGScore < gScore[neighbor]:
+                elif neighborGScore < gScore[neighbor]:
                     neighborIsBetter = True
                 if neighborIsBetter:
                     cameFrom[neighbor] = nodeWithLowestFScoreFound
