@@ -20,6 +20,7 @@ import math
 from math import sqrt
 from waypoint import Waypoint
 from pathFinder import PathFinder
+from tasktimer import taskTimer
         
 def RandGenerator():
     while True:
@@ -135,8 +136,6 @@ class NPC(Agent):
 ##            np = NodePath(ls.create())
 ##            np.reparentTo(self)        
 
-        self.previousTime = 0.0
-
     def sense(self, task):
         self.rangeFinderSense()
         self.adjacencySense()
@@ -149,12 +148,10 @@ class NPC(Agent):
     
     isMoving = False
     def act(self, task):
-        elapsedTime = task.time - self.previousTime
         if self.currentTarget:
             #print("Calling seek()")
-##            self.seekTarget(self.currentTarget, elapsedTime)
-            self.seek(self.currentTarget.getPos(), elapsedTime)
-        self.previousTime = task.time
+##            self.seekTarget(self.currentTarget, taskTimer.elapsedTime)
+            self.seek(self.currentTarget.getPos(), taskTimer.elapsedTime)
         return Task.cont
     
     rangeFinderText = OnscreenText(text="", style=1, fg=(1,1,1,1),
@@ -298,9 +295,8 @@ class NPC(Agent):
         relativeX = (wanderCircleRadius * math.cos(theta))
         relativeY = (wanderCircleRadius * math.sin(theta)) - wanderDistance
         targetLocal = Vec2(relativeX, relativeY)        
-        elapsedTime = task.time - self.previousTime
-        distance = self.speed * elapsedTime
-        turnAngle = self.turnRate * elapsedTime
+        distance = self.speed * taskTimer.elapsedTime
+        turnAngle = self.turnRate * taskTimer.elapsedTime
         
         # Now we have a relative target. We should go there.
         heading = math.atan2(targetLocal.getY(), targetLocal.getX())
@@ -316,8 +312,6 @@ class NPC(Agent):
         if not self.isMoving:
             self.loop("run")
             self.isMoving = True
-        
-        self.previousTime = task.time
         return Task.cont    
 
 
@@ -349,8 +343,8 @@ class NPC(Agent):
         """
         This method acts upon the movement requests that were calculated in ANNThink.
         """
-        turnAngle = self.turnRate * elapsedTime
-        distance = self.speed * elapsedTime
+        turnAngle = self.turnRate * taskTimer.elapsedTime
+        distance = self.speed * taskTimer.elapsedTime
         
         if self.annMovementRequests["left"]:
             self.turnLeft(turnAngle)
@@ -375,8 +369,8 @@ class NPC(Agent):
 
                 
     def seekTarget(self, seekTarget, elapsedTime):
-        moveDistance = self.speed * elapsedTime
-        moveAngle = self.turnRate * elapsedTime
+        moveDistance = self.speed * taskTimer.elapsedTime
+        moveAngle = self.turnRate * taskTimer.elapsedTime
         
         oldHeadingDegrees = self.getH()
         self.lookAt(seekTarget)
@@ -425,11 +419,14 @@ class NPC(Agent):
         #print("distanceToTarget = " + str(distanceToTarget))
         angleToTarget = worldDirectionToTarget - worldHeading + 180
         angleToTarget = angleToTarget % 360
-        turnAngle = self.turnRate * elapsedTime
-        distance = self.speed * elapsedTime
+        turnAngle = self.turnRate * taskTimer.elapsedTime
+        distance = self.speed * taskTimer.elapsedTime
 
         if(2.75 < distanceToTarget < self.radarLength):
             #print("Target is in range")
+            if not self.isMoving:
+                self.loop("run")
+                self.isMoving = True
             if(80 <= angleToTarget and angleToTarget <= 100):
                 self.moveForward(distance)
             elif(0 <= angleToTarget < 90):
@@ -454,7 +451,11 @@ class NPC(Agent):
                 self.turnRight(turnAngle)
             #else:
             #    print("You can start crying now.")
-        #else:
+        else:
+            if self.isMoving:
+                self.stop()
+                self.pose("walk", 5)
+                self.isMoving = False
             #print("Target is out of range")
         return
 
