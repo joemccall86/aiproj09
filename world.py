@@ -208,12 +208,14 @@ class World(DirectObject):
     def __setKeymap(self):
         
         self.accept("escape", sys.exit)
-            
+        
+        wpFile = open("waypoints.txt", "w")
         def dropWp():
             torus = loader.loadModel("models/Torus/Torus")
             torus.reparentTo(render)
             torus.setPos(self.__mainAgent.getPos())
             self.waypointPositions.append(torus.getPos())
+            wpFile.write(str((self.__mainAgent.getX(), self.__mainAgent.getY())) + "\r\n")
         
         self.accept("space", dropWp)
         
