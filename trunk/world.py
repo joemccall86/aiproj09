@@ -76,8 +76,6 @@ class World(DirectObject):
         environment.setTexGen(TextureStage.getDefault(), TexGenAttrib.MWorldPosition) 
         environment.setTexScale(TextureStage.getDefault(), 0.02, 0.02)
         environment.setTexture(texture, 1)
-        
-        base.setBackgroundColor(r=0, g=0, b=.1, a=1)
     
     def __setupLevel(self):
         room = loader.loadModel("rooms/room1")
@@ -92,6 +90,14 @@ class World(DirectObject):
         room2.setTexScale(TextureStage.getDefault(), 10)
         room2.reparentTo(render)
         room2.setY(-200)
+        
+        box = loader.loadModel("models/box")
+        box.setPos(80, -100, 0)
+        box.setScale(10)
+        box.reparentTo(render)
+        box.hide()
+        
+        self.box = box
         
     __globalAgentList = []
     __mainAgent = None
@@ -114,8 +120,9 @@ class World(DirectObject):
                             collisionTraverser = self.cTrav)                    
         # Make it visible
         self.__mainAgent.reparentTo(render)
-        self.__mainAgent.setPos(31, -235, 50)
-        
+##        self.__mainAgent.setPos(31, -235, 50)
+        self.__mainAgent.setPos(75, -115, 0)
+        self.box.setCollideMask(~self.__mainAgent.collisionMask)
         
         
     __otherRalphsCount = 0
@@ -213,10 +220,10 @@ class World(DirectObject):
         taskMgr.add(self.__mainTarget.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
 
     def __setupCamera(self):
-        base.camera.setPos(0,-200,400) #This is debug camera position.     
-        base.camera.lookAt(0,-200,0)    
+##        base.camera.setPos(0,-200,400) #This is debug camera position.     
+##        base.camera.lookAt(0,-200,0)    
 ##        base.oobeCull()
-        base.oobe()
+##        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.__mainAgent.actor)
         base.camera.setPos(0, 60, 60)
