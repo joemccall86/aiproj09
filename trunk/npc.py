@@ -73,6 +73,8 @@ class NPC(Agent):
         self.currentTarget = None
         self.player = None
         self.bestPath = None
+        self.key = NodePath("Room1Key")#Location that key is supposed to be
+        self.key.setPos(Vec3(0, 0, 0))
         for rangeFinder in self.rangeFinders:
             self.persistentRangeFinderData[rangeFinder] = 0
             
@@ -186,6 +188,15 @@ class NPC(Agent):
         if self.npcState == "retriveKey":
             if self.currentTarget:
                 self.seek(self.currentTarget.getPos())
+            if self.distanceToPlayer() < 3:#If collided with Player
+                self.handleTransition("gotKey")
+        if self.npcState == "returnKey":
+            if self.currentTarget:
+                self.seek(self.currentTarget.getPos())
+            offesetFromKey = self.key.getPos() - self.getPos()
+            print("Distance from key = " + str(offesetFromKey.length()))
+            if offesetFromKey.length() < 3:
+                self.handleTransition("keyReturned")
         return Task.cont
     
     rangeFinderText = OnscreenText(text="", style=1, fg=(1,1,1,1),
@@ -209,7 +220,7 @@ class NPC(Agent):
                         np = NodePath(ls.create("aoeu"))
                         np.reparentTo(render)
                 print("Changing from wander to seek with AStar")
-                self.npcState = "seek"
+                self.npcState = "retriveKey"
             elif(transition == "withinRange"):
                 print("Changing from wander to Seek")
                 print("NPC position = " + str(self.getPos()))
@@ -220,9 +231,20 @@ class NPC(Agent):
                 print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "retriveKey"):
             if(transition == "leftRoom"):
+                print("Changing from retrive key to wander due to player leaving")
                 self.npcState = "wander"
             elif(transition == "gotKey"):
                 print("Changing from gotKey to returnKey")
+                self.bestPath = PathFinder.AStar(self, self.key, self.waypoints)
+                if self.bestPath != None:
+                    ls = LineSegs()
+                    ls.setThickness(10.0)
+                    for i in range(len(self.bestPath) - 1):
+                        ls.setColor(0,0,1,1)
+                        ls.moveTo(self.bestPath[i].getPos())
+                        ls.drawTo(self.bestPath[i+1].getPos())
+                        np = NodePath(ls.create("aoeu"))
+                        np.reparentTo(render)
                 self.npcState = "returnKey"
             else:
                 print(transition + " is an undefined transition from " + self.npcState)
@@ -245,9 +267,12 @@ class NPC(Agent):
                         np.reparentTo(render)
             else:
                 print(transition + " is an undefined transition from " + self.npcState)
-        elif(npcState == "returnKey"):
-            if(transition == "keyReturn"):
+        elif(self.npcState == "returnKey"):
+            if(transition == "keyReturned"):
+                print("Changeing from returnKey to wander due to a keyReturn")
                 self.npcState = "wander"
+            else:
+                print(transition + " is an undefined transition from " + self.npcState)
                 
     def manageState():
         if(npcState == "wander"):

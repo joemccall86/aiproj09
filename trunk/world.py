@@ -24,9 +24,7 @@ class World(DirectObject):
         self.__setupOtherAgents()
         self.__setupTargets()
         self.__setupCamera()
-        
-        # TODO move this into NPC's think function
-        assert(self.waypoints != None)
+        #Many things within the NPC are dependant on the level it is in.
         # make the target seek me.
         self.bestPath = PathFinder.AStar(self.__room1NPC, self.__mainAgent, self.waypoints)
         if self.bestPath != None:
@@ -77,7 +75,6 @@ class World(DirectObject):
         environment.setTexture(texture, 1)
     
     def __setupLevel(self):
-        
         self.setWaypoints()
         room = loader.loadModel("rooms/room1")
         room.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
@@ -227,7 +224,7 @@ class World(DirectObject):
         base.camera.setPos(0,0*-200,400) #This is debug camera position.     
         base.camera.lookAt(0,0*-200,0)    
 ##        base.oobeCull()
-##        base.oobe()
+        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.__mainAgent.actor)
         base.camera.setPos(0, 60, 60)
@@ -266,12 +263,10 @@ class World(DirectObject):
         self.accept("arrow_up-up",    setKey, ["up", False])
         self.accept("arrow_down",     setKey, ["down", True])
         self.accept("arrow_down-up",  setKey, ["down", False])
-        self.accept("k",              setKey, ["keyTaken", True])
-        self.accept("k",              setKey, ["gotKey", False])
-        self.accept("k-up",           setKey, ["down", False])
-        self.accept("d",              setKey, ["keyTaken", False])
-        self.accept("d",              setKey, ["gotKey", True])
-        self.accept("d-up",           setKey, ["down", False])
+        self.accept("a",              setKey, ["keyTaken", True])
+        self.accept("a-up",           setKey, ["keyTaken", False])
+        self.accept("b",              setKey, ["gotKey", True])
+        self.accept("b-up",           setKey, ["gotKey", False])
 
     def __proccessKey(self, task):
         turnAngle = self.__mainAgent.turnRate * taskTimer.elapsedTime
