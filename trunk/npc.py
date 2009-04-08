@@ -35,7 +35,7 @@ RG = RandGenerator()
         
 class NPC(Agent):
     collisionCount = 0
-    
+    npcState = None
     def __init__(self, 
                 modelStanding, 
                 modelAnimationDict, 
@@ -50,7 +50,8 @@ class NPC(Agent):
                 scale = 1.0,
                 brain = None,
                 massKg = 0.1,
-                collisionTraverser = None):
+                collisionTraverser = None,
+                waypoints = None):
         Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList, massKg, collisionMask, collisionTraverser)
         self.collisionMask = collisionMask
         self.adjacencySensorThreshold = adjacencySensorThreshold
@@ -58,19 +59,20 @@ class NPC(Agent):
         self.radarLength = radarLength
         self.scale = scale
         self.brain = brain
-        
+        self.npcState = "wander"
+        self.waypoints = waypoints
 ##        if None == self.brain:
 ##            self.brain = chromosome.Chromosome.create_fully_connected()
 ##            if Config.hidden_nodes > 0:
 ##                self.brain.add_hidden_nodes(Config.hidden_nodes)
         
         self.setScale(self.scale)
-        
         self.rangeFinderCount = rangeFinderCount
         self.rangeFinders = [CollisionRay() for i in range(self.rangeFinderCount)]
         self.persistentRangeFinderData = {}
-        
-        self.currentTarget = None        
+        self.currentTarget = None
+        self.player = None
+        self.bestPath = None
         for rangeFinder in self.rangeFinders:
             self.persistentRangeFinderData[rangeFinder] = 0
             
@@ -144,20 +146,128 @@ class NPC(Agent):
     
     def think(self, task):
 #        self.ANNThink()
+        self.bestPath = PathFinder.AStar(self.__room1NPC, self.__mainAgent, self.waypoints)
+        if self.bestPath != None:
+            ls = LineSegs()
+            ls.setThickness(10.0)
+            for i in range(len(self.bestPath) - 1):
+                ls.setColor(0,0,1,1)
+                ls.moveTo(self.bestPath[i].getPos())
+                ls.drawTo(self.bestPath[i+1].getPos())
+                np = NodePath(ls.create("aoeu"))
+                np.reparentTo(render)
         return Task.cont
     
     isMoving = False
     def act(self, task):
-        if self.currentTarget:
-            #print("Calling seek()")
-##            self.seekTarget(self.currentTarget)
-            self.seek(self.currentTarget.getPos())
+        
+##        if self.currentTarget:
+##            self.seek(self.currentTarget.getPos())
+        #print("Called act")
+        self.followPath()
+        if self.npcState == "wander":
+            self.wander()
+            if self.player != None:
+                #print("distanceToPlayer = " + str(self.distanceToPlayer()) + " radarLength = " + str(self.radarLength))
+                if self.distanceToPlayer() < self.radarLength:
+                    #print("Changeing from wander to seek")
+                    #self.npcState = "seek"
+                    #self.currentTarget = self.player
+                    #self.bestPath = [self.player]
+                    self.handleTransition("withinRange")
+        if self.npcState == "seek":
+            #print("Seeking")
+            if self.currentTarget:
+                #print("Valid current Target")
+                self.seek(self.currentTarget.getPos())
+            if self.distanceToPlayer() > self.radarLength:
+                #self.npcState = "wander"
+                self.handleTransition("outOfRange")
+        if self.npcState == "retriveKey":
+            if self.currentTarget:
+                self.seek(self.currentTarget.getPos())
         return Task.cont
     
     rangeFinderText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                        pos=(-1.3,0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
 
- 
+    def setPlayer(self, player):
+        self.player = player
+        
+    def handleTransition(self, transition):
+        if(self.npcState == "wander"):
+            if(transition == "keyTaken"):
+                print("Changing from wander to retriveKey")
+                self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
+                if self.bestPath != None:
+                    ls = LineSegs()
+                    ls.setThickness(10.0)
+                    for i in range(len(self.bestPath) - 1):
+                        ls.setColor(0,0,1,1)
+                        ls.moveTo(self.bestPath[i].getPos())
+                        ls.drawTo(self.bestPath[i+1].getPos())
+                        np = NodePath(ls.create("aoeu"))
+                        np.reparentTo(render)
+                print("Changing from wander to seek with AStar")
+                self.npcState = "seek"
+            elif(transition == "withinRange"):
+                print("Changing from wander to Seek")
+                print("NPC position = " + str(self.getPos()))
+                print("player position = " + str(self.player.getPos()))
+                self.bestPath = [self.player]
+                self.npcState = "seek"
+            else:
+                print(transition + " is an undefined transition from " + self.npcState)
+        elif(self.npcState == "retriveKey"):
+            if(transition == "leftRoom"):
+                self.npcState = "wander"
+            elif(transition == "gotKey"):
+                print("Changing from gotKey to returnKey")
+                self.npcState = "returnKey"
+            else:
+                print(transition + " is an undefined transition from " + self.npcState)
+        elif(self.npcState == "seek"):
+            if(transition == "outOfRange"):
+                print("Changing from seek to wander")
+                self.npcState = "wander"
+            elif(transition == "leftRoom"):
+                self.npcState = "wander"
+            elif(transition  == "keyTaken"):
+                self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
+                if self.bestPath != None:
+                    ls = LineSegs()
+                    ls.setThickness(10.0)
+                    for i in range(len(self.bestPath) - 1):
+                        ls.setColor(0,0,1,1)
+                        ls.moveTo(self.bestPath[i].getPos())
+                        ls.drawTo(self.bestPath[i+1].getPos())
+                        np = NodePath(ls.create("aoeu"))
+                        np.reparentTo(render)
+            else:
+                print(transition + " is an undefined transition from " + self.npcState)
+        elif(npcState == "returnKey"):
+            if(transition == "keyReturn"):
+                self.npcState = "wander"
+                
+    def manageState():
+        if(npcState == "wander"):
+            self.wander()
+            if(distanceToPlayer() < radarLength):
+                changeState("withinRange")
+            elif(ralphTookKey):
+                changeState("keyTaken")
+        if(npcState == "retriveKey"):
+            None
+                
+    def distanceToPlayer(self):
+        ownPosition = self.getPos()
+        #TODO: Make sure there is always
+        if self.player != None:
+            playerPosition = self.player.getPos()
+        
+        vectorToPlayer = playerPosition - ownPosition
+        return vectorToPlayer.length()
+    
     def rangeFinderSense(self):
         self.traverser.traverse(render)
         for rangeFinder in self.rangeFinders:
@@ -262,7 +372,7 @@ class NPC(Agent):
             
     wanderTarget = Vec2(0.0, 0.0)
     callCount = 0
-    def wanderTask(self, task):
+    def wander(self):
         self.callCount += 1
         wanderCircleRadius = 2.5
         if self.callCount == 5:
@@ -298,7 +408,7 @@ class NPC(Agent):
         if not self.isMoving:
             self.loop("run")
             self.isMoving = True
-        return Task.cont    
+        return    
 
 
     
@@ -391,14 +501,14 @@ class NPC(Agent):
             
         return Task.cont
     
-    def followPath(self, path, task):
+    def followPath(self):
         #If there are any waypoints in the path
         #print("Attempting to follow path")
-        if path:
-            self.currentTarget = path[0]
+        if self.bestPath:
+            self.currentTarget = self.bestPath[0]
             #if the next waypoint is reached
             if PathFinder.distance(self, self.currentTarget) < 2: #This number must be greater than distance in seek()
-                path.pop(0)
+                self.bestPath.pop(0)
         return Task.cont
 
     def seek(self, position):
@@ -423,7 +533,7 @@ class NPC(Agent):
             if not self.isMoving:
                 self.loop("run")
                 self.isMoving = True
-            if(80 <= angleToTarget and angleToTarget <= 100):
+            if(45 <= angleToTarget <= 135):
                 self.moveForward(distance)
             if(0 <= angleToTarget < 90):
                 #self.moveForward(0)#do nothing
