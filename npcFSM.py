@@ -9,10 +9,13 @@ class npcFSM(FSM.FSM):
             'seek' : [ 'wander' ],
             'returnKey' : [ 'wander' ]
             }
-        self.request('wander')
-        
+
+##    def wander(self, npc)
+##        npc.
+
+
     def enterRetriveKey(self, player, npc, pathfinder, waypoints):
-        makeSureAStarIsCalled()
+        #makeSureAStarIsCalled()
         pass
         
     def exitRetriveKey(self):
@@ -31,9 +34,11 @@ class npcFSM(FSM.FSM):
     def defaultFilter(self, request, args):
         key = (self.state, request)
         return self.nextState.get(key)
-
+    
+    
 if __name__ == "__main__":
     myfsm = npcFSM()
+    print("compiled")
 
 
 
@@ -65,4 +70,4 @@ if __name__ == "__main__":
 ##                changeState("withinRange")
 ##            elif(ralphTookKey):
 ##                changeState("keyTaken")
-                
+

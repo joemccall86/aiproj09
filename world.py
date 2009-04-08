@@ -13,10 +13,9 @@ from pathFinder import PathFinder
 from tasktimer import taskTimer
 import random
 
-class World(DirectObject):                
+class World(DirectObject):     
     def __init__(self):
         DirectObject.__init__(self)
-        
         self.__setupEnvironment()
         self.__setupCollisions()
         self.__setupGravity()
@@ -27,18 +26,18 @@ class World(DirectObject):
         self.__setupCamera()
         
         # TODO move this into NPC's think function
-        waypoints = self.setWaypoints()
+        assert(self.waypoints != None)
         # make the target seek me.
-        self.bestPath = PathFinder.AStar(self.__mainTarget, self.__mainAgent, self.waypoints)        
-        #self.bestPath = PathFinder.AStar(self.__mainAgent, self.__mainTarget, self.waypoints)
-        ls = LineSegs()
-        ls.setThickness(10.0)
-        for i in range(len(self.bestPath) - 1):
-            ls.setColor(0,0,1,1)
-            ls.moveTo(self.bestPath[i].getPos())
-            ls.drawTo(self.bestPath[i+1].getPos())
-            np = NodePath(ls.create("aoeu"))
-            np.reparentTo(render)
+        self.bestPath = PathFinder.AStar(self.__room1NPC, self.__mainAgent, self.waypoints)
+        if self.bestPath != None:
+            ls = LineSegs()
+            ls.setThickness(10.0)
+            for i in range(len(self.bestPath) - 1):
+                ls.setColor(0,0,1,1)
+                ls.moveTo(self.bestPath[i].getPos())
+                ls.drawTo(self.bestPath[i+1].getPos())
+                np = NodePath(ls.create("aoeu"))
+                np.reparentTo(render)
         self.__setupTasks()
         
     def __setupCollisions(self):
@@ -78,6 +77,8 @@ class World(DirectObject):
         environment.setTexture(texture, 1)
     
     def __setupLevel(self):
+        
+        self.setWaypoints()
         room = loader.loadModel("rooms/room1")
         room.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         room.setScale(10)
@@ -117,11 +118,11 @@ class World(DirectObject):
                             radarLength = 25,
                             scale = 1.0,
                             massKg = 35.0,
-                            collisionTraverser = self.cTrav)                    
+                            collisionTraverser = self.cTrav,
+                            waypoints = self.waypoints)                    
         # Make it visible
         self.__mainAgent.reparentTo(render)
-##        self.__mainAgent.setPos(31, -235, 50)
-        self.__mainAgent.setPos(75, -115, 0)
+        self.__mainAgent.setPos(31, 35, 50)
         self.box.setCollideMask(~self.__mainAgent.collisionMask)
         
         
@@ -146,7 +147,8 @@ class World(DirectObject):
                                 scale = 1.0,
                                 brain = None,
                                 massKg = 35.0,
-                                collisionTraverser = self.cTrav)
+                                collisionTraverser = self.cTrav,
+                                waypoints = self.waypoints)
                                 for i in range(self.__otherRalphsCount)]
         for index, ralph in enumerate(self.__otherRalphs):
             ralph.reparentTo(render)
@@ -169,10 +171,10 @@ class World(DirectObject):
         modelStanding = "models/ralph"
         modelRunning = "models/ralph-run"
         modelWalking = "models/ralph-walk"
-        self.__mainTarget = NPC(modelStanding, 
+        self.__room1NPC = NPC(modelStanding, 
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
-                                speed = 24,
+                                speed = 20,
                                 agentList = self.__globalAgentList,
                                 collisionMask = BitMask32.bit(3),
                                 rangeFinderCount = 13,
@@ -181,9 +183,11 @@ class World(DirectObject):
                                 radarLength = 40,
                                 scale = 1.0,
                                 massKg = 35.0,
-                                collisionTraverser = self.cTrav)
-        self.__mainTarget.setPos(20, -150, 10)
-        self.__mainTarget.reparentTo(render)
+                                collisionTraverser = self.cTrav,
+                            waypoints = self.waypoints)
+        self.__room1NPC.setPos(20, -15, 10)
+        self.__room1NPC.setPlayer(self.__mainAgent)
+        self.__room1NPC.reparentTo(render)
         
     
     def __setupTasks(self):
@@ -212,16 +216,16 @@ class World(DirectObject):
         taskMgr.add(self.__proccessKey, "processKeyTask")
 ##        taskMgr.add(self.__mainAgent.handleCollisionTask, "handleCollisionTask")
 ##        taskMgr.add(self.ralph.wanderTask, "wander")
-        taskMgr.add(self.__mainTarget.sense, "senseTask")
+        taskMgr.add(self.__room1NPC.sense, "senseTask")
 ##        taskMgr.add(self.ralph.think, "thinkTask")
-        taskMgr.add(self.__mainTarget.act, "actTask")
+        taskMgr.add(self.__room1NPC.act, "actTask")
 
         # This is for path finding
-        taskMgr.add(self.__mainTarget.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
+        #taskMgr.add(self.__room1NPC.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
 
     def __setupCamera(self):
-##        base.camera.setPos(0,-200,400) #This is debug camera position.     
-##        base.camera.lookAt(0,-200,0)    
+        base.camera.setPos(0,0*-200,400) #This is debug camera position.     
+        base.camera.lookAt(0,0*-200,0)    
 ##        base.oobeCull()
 ##        base.oobe()
         base.disableMouse()
@@ -231,7 +235,12 @@ class World(DirectObject):
         base.camera.setP(base.camera.getP() + 10)
         
     waypointPositions = []
-    __keyMap = {"left":False, "right":False, "up":False, "down":False}
+    __keyMap = {"left":False,
+                "right":False,
+                "up":False,
+                "down":False,
+                "keyTaken":False,
+                "gotKey":False}
     def __setKeymap(self):
         
         self.accept("escape", sys.exit)
@@ -257,6 +266,12 @@ class World(DirectObject):
         self.accept("arrow_up-up",    setKey, ["up", False])
         self.accept("arrow_down",     setKey, ["down", True])
         self.accept("arrow_down-up",  setKey, ["down", False])
+        self.accept("k",              setKey, ["keyTaken", True])
+        self.accept("k",              setKey, ["gotKey", False])
+        self.accept("k-up",           setKey, ["down", False])
+        self.accept("d",              setKey, ["keyTaken", False])
+        self.accept("d",              setKey, ["gotKey", True])
+        self.accept("d-up",           setKey, ["down", False])
 
     def __proccessKey(self, task):
         turnAngle = self.__mainAgent.turnRate * taskTimer.elapsedTime
@@ -272,6 +287,11 @@ class World(DirectObject):
             self.__mainAgent.moveForward(distance)
         if self.__keyMap["down"]:
             self.__mainAgent.moveBackward(distance)
+        if self.__keyMap["keyTaken"]:
+            self.__room1NPC.handleTransition("keyTaken")
+        if self.__keyMap["gotKey"]:
+            self.__room1NPC.handleTransition("gotKey")
+        
             
         if self.__keyMap["left"] or \
             self.__keyMap["right"] or \
@@ -327,8 +347,8 @@ class World(DirectObject):
         return Task.cont    
         
     def setWaypoints(self):
-        #execfile("rooms/room1.py")
-        execfile("rooms/room2.py")
+        execfile("rooms/room1.py")
+        #execfile("rooms/room2.py")
         for w in self.waypoints:
             w.draw()
             
