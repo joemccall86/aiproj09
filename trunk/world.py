@@ -25,6 +25,7 @@ class World(DirectObject):
         self.__setupTargets()
         self.__setupCamera()
         #Many things within the NPC are dependant on the level it is in.
+        self.__room1NPC.setKeyReference(self.roomKey)
         # make the target seek me.
         self.bestPath = PathFinder.AStar(self.__room1NPC, self.__mainAgent, self.waypoints)
         if self.bestPath != None:
@@ -73,9 +74,28 @@ class World(DirectObject):
         environment.setTexGen(TextureStage.getDefault(), TexGenAttrib.MWorldPosition) 
         environment.setTexScale(TextureStage.getDefault(), 0.02, 0.02)
         environment.setTexture(texture, 1)
+        
+    def animateItems(self, task):
+        self.rotate(self.roomKey)
+        return Task.cont
+            
+    currentAngle = 0
+    def rotate(self, someItem):
+        if someItem != None:
+            self.currentAngle = self.currentAngle + 250 * taskTimer.elapsedTime
+            if self.currentAngle >= 360:
+                self.currentAngle = self.currentAngle - 360
+            someItem.setH(self.currentAngle)
     
     def __setupLevel(self):
         self.setWaypoints()
+        self.roomKey = loader.loadModel("models/redKey")
+        self.roomKey.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        self.roomKey.setScale(10)
+        #roomKey.setTexScale(TextureStage.getDefault(), 10)
+        self.roomKey.setPos(0,0,0)
+        self.roomKey.reparentTo(render)
+        
         room = loader.loadModel("rooms/room1")
         room.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         room.setScale(10)
@@ -216,6 +236,7 @@ class World(DirectObject):
         taskMgr.add(self.__room1NPC.sense, "senseTask")
 ##        taskMgr.add(self.ralph.think, "thinkTask")
         taskMgr.add(self.__room1NPC.act, "actTask")
+        taskMgr.add(self.animateItems, "animateItemsTask")
 
         # This is for path finding
         #taskMgr.add(self.__room1NPC.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
@@ -224,7 +245,7 @@ class World(DirectObject):
         base.camera.setPos(0,0*-200,400) #This is debug camera position.     
         base.camera.lookAt(0,0*-200,0)    
 ##        base.oobeCull()
-        base.oobe()
+        #base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.__mainAgent.actor)
         base.camera.setPos(0, 60, 60)
@@ -237,7 +258,8 @@ class World(DirectObject):
                 "up":False,
                 "down":False,
                 "keyTaken":False,
-                "gotKey":False}
+                "gotKey":False,
+                "leftRoom":False}
     def __setKeymap(self):
         
         self.accept("escape", sys.exit)
@@ -267,6 +289,8 @@ class World(DirectObject):
         self.accept("a-up",           setKey, ["keyTaken", False])
         self.accept("b",              setKey, ["gotKey", True])
         self.accept("b-up",           setKey, ["gotKey", False])
+        self.accept("c",              setKey, ["leftRoom", True])
+        self.accept("c-up",           setKey, ["leftRoom", False])
 
     def __proccessKey(self, task):
         turnAngle = self.__mainAgent.turnRate * taskTimer.elapsedTime
@@ -286,6 +310,8 @@ class World(DirectObject):
             self.__room1NPC.handleTransition("keyTaken")
         if self.__keyMap["gotKey"]:
             self.__room1NPC.handleTransition("gotKey")
+        if self.__keyMap["leftRoom"]:
+            self.__room1NPC.handleTransition("leftRoom")
         
             
         if self.__keyMap["left"] or \

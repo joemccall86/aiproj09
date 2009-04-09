@@ -162,40 +162,33 @@ class NPC(Agent):
     
     isMoving = False
     def act(self, task):
-        
-##        if self.currentTarget:
-##            self.seek(self.currentTarget.getPos())
-        #print("Called act")
         self.followPath()
         if self.npcState == "wander":
             self.wander()
             if self.player != None:
-                #print("distanceToPlayer = " + str(self.distanceToPlayer()) + " radarLength = " + str(self.radarLength))
                 if self.distanceToPlayer() < self.radarLength:
-                    #print("Changeing from wander to seek")
-                    #self.npcState = "seek"
-                    #self.currentTarget = self.player
-                    #self.bestPath = [self.player]
                     self.handleTransition("withinRange")
+                if (self.key.getPos() - self.player.getPos()).length() < 5:#if player collided with key
+                    self.handleTransition("keyTaken")
         if self.npcState == "seek":
-            #print("Seeking")
             if self.currentTarget:
-                #print("Valid current Target")
                 self.seek(self.currentTarget.getPos())
             if self.distanceToPlayer() > self.radarLength:
-                #self.npcState = "wander"
                 self.handleTransition("outOfRange")
+            if (self.key.getPos() - self.player.getPos()).length() < 5:#if player collided with key
+                print("handling keyTaken transition while in seek state")
+                self.handleTransition("keyTaken")
         if self.npcState == "retriveKey":
             if self.currentTarget:
                 self.seek(self.currentTarget.getPos())
-            if self.distanceToPlayer() < 3:#If collided with Player
+            if self.distanceToPlayer() < 5:#If collided with Player
                 self.handleTransition("gotKey")
         if self.npcState == "returnKey":
             if self.currentTarget:
                 self.seek(self.currentTarget.getPos())
-            offesetFromKey = self.key.getPos() - self.getPos()
-            print("Distance from key = " + str(offesetFromKey.length()))
-            if offesetFromKey.length() < 3:
+            offesetFromKey = self.keyOrgin - self.getPos() #Key is returned
+            #print("distance to return point = " + str(offstFrom
+            if offesetFromKey.length() < 5:
                 self.handleTransition("keyReturned")
         return Task.cont
     
@@ -208,8 +201,11 @@ class NPC(Agent):
     def handleTransition(self, transition):
         if(self.npcState == "wander"):
             if(transition == "keyTaken"):
+                #self.speed = self.speed * 2
                 print("Changing from wander to retriveKey")
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
+                self.key.reparentTo(self.player)
+                self.key.setZ(5)
                 if self.bestPath != None:
                     ls = LineSegs()
                     ls.setThickness(10.0)
@@ -219,12 +215,14 @@ class NPC(Agent):
                         ls.drawTo(self.bestPath[i+1].getPos())
                         np = NodePath(ls.create("aoeu"))
                         np.reparentTo(render)
+                    
                 print("Changing from wander to seek with AStar")
                 self.npcState = "retriveKey"
             elif(transition == "withinRange"):
+                #self.speed = self.speed * 2
                 print("Changing from wander to Seek")
-                print("NPC position = " + str(self.getPos()))
-                print("player position = " + str(self.player.getPos()))
+                #print("NPC position = " + str(self.getPos()))
+                #print("player position = " + str(self.player.getPos()))
                 self.bestPath = [self.player]
                 self.npcState = "seek"
             else:
@@ -232,8 +230,10 @@ class NPC(Agent):
         elif(self.npcState == "retriveKey"):
             if(transition == "leftRoom"):
                 print("Changing from retrive key to wander due to player leaving")
+                #self.speed = speed/2
                 self.npcState = "wander"
             elif(transition == "gotKey"):
+                self.key.reparentTo(self)
                 print("Changing from gotKey to returnKey")
                 self.bestPath = PathFinder.AStar(self, self.key, self.waypoints)
                 if self.bestPath != None:
@@ -251,8 +251,11 @@ class NPC(Agent):
         elif(self.npcState == "seek"):
             if(transition == "outOfRange"):
                 print("Changing from seek to wander")
+                #self.speed = self.speed / 2
                 self.npcState = "wander"
             elif(transition == "leftRoom"):
+                print("Changing from seek to wander due to player leaving room")
+                #self.speed = self.speed / 2
                 self.npcState = "wander"
             elif(transition  == "keyTaken"):
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
@@ -265,11 +268,17 @@ class NPC(Agent):
                         ls.drawTo(self.bestPath[i+1].getPos())
                         np = NodePath(ls.create("aoeu"))
                         np.reparentTo(render)
+                self.key.reparentTo(self.player)
+                self.key.setZ(5)
+                self.npcState = "retriveKey"
             else:
                 print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "returnKey"):
             if(transition == "keyReturned"):
+                self.key.reparentTo(render)
+                self.key.setZ(0)
                 print("Changeing from returnKey to wander due to a keyReturn")
+                #self.speed = self.speed / 2
                 self.npcState = "wander"
             else:
                 print(transition + " is an undefined transition from " + self.npcState)
@@ -488,6 +497,9 @@ class NPC(Agent):
             self.pose("walk", frame = 5)
             self.isMoving = False
 
+    def setKeyReference(self, key):
+        self.keyOrgin = key.getPos()
+        self.key = key
                 
     def seekTarget(self, seekTarget):
         moveDistance = self.speed * taskTimer.elapsedTime
