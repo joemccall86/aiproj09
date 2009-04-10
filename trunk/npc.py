@@ -73,8 +73,6 @@ class NPC(Agent):
         self.currentTarget = None
         self.player = None
         self.bestPath = None
-        self.key = NodePath("Room1Key")#Location that key is supposed to be
-        self.key.setPos(Vec3(0, 0, 0))
         for rangeFinder in self.rangeFinders:
             self.persistentRangeFinderData[rangeFinder] = 0
             
@@ -149,15 +147,8 @@ class NPC(Agent):
     def think(self, task):
 #        self.ANNThink()
         self.bestPath = PathFinder.AStar(self.__room1NPC, self.__mainAgent, self.waypoints)
-        if self.bestPath != None:
-            ls = LineSegs()
-            ls.setThickness(10.0)
-            for i in range(len(self.bestPath) - 1):
-                ls.setColor(0,0,1,1)
-                ls.moveTo(self.bestPath[i].getPos())
-                ls.drawTo(self.bestPath[i+1].getPos())
-                np = NodePath(ls.create("aoeu"))
-                np.reparentTo(render)
+        
+        #self.drawBestPath()
         return Task.cont
     
     isMoving = False
@@ -168,14 +159,14 @@ class NPC(Agent):
             if self.player != None:
                 if self.distanceToPlayer() < self.radarLength:
                     self.handleTransition("withinRange")
-                if (self.key.getPos() - self.player.getPos()).length() < 5:#if player collided with key
+                if (self.keyNest.getPos() - self.player.getPos()).length() < 5:#if player collided with keyNest
                     self.handleTransition("keyTaken")
         if self.npcState == "seek":
             if self.currentTarget:
                 self.seek(self.currentTarget.getPos())
             if self.distanceToPlayer() > self.radarLength:
                 self.handleTransition("outOfRange")
-            if (self.key.getPos() - self.player.getPos()).length() < 5:#if player collided with key
+            if (self.keyNest.getPos() - self.player.getPos()).length() < 5:#if player collided with key
                 print("handling keyTaken transition while in seek state")
                 self.handleTransition("keyTaken")
         if self.npcState == "retriveKey":
@@ -186,7 +177,7 @@ class NPC(Agent):
         if self.npcState == "returnKey":
             if self.currentTarget:
                 self.seek(self.currentTarget.getPos())
-            offesetFromKey = self.keyOrgin - self.getPos() #Key is returned
+            offesetFromKey = self.keyNest.getPos() - self.getPos() #Key is returned
             #print("distance to return point = " + str(offstFrom
             if offesetFromKey.length() < 5:
                 self.handleTransition("keyReturned")
@@ -201,22 +192,16 @@ class NPC(Agent):
     def handleTransition(self, transition):
         if(self.npcState == "wander"):
             if(transition == "keyTaken"):
-                #self.speed = self.speed * 2
+                self.speed = self.speed * 2
                 print("Changing from wander to retriveKey")
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                 self.key.reparentTo(self.player)
                 self.key.setZ(5)
-                if self.bestPath != None:
-                    ls = LineSegs()
-                    ls.setThickness(10.0)
-                    for i in range(len(self.bestPath) - 1):
-                        ls.setColor(0,0,1,1)
-                        ls.moveTo(self.bestPath[i].getPos())
-                        ls.drawTo(self.bestPath[i+1].getPos())
-                        np = NodePath(ls.create("aoeu"))
-                        np.reparentTo(render)
-                    
-                print("Changing from wander to seek with AStar")
+                
+                #self.drawBestPath                
+                print("Changing from wander to retriveKey")
+                
+                print("AStar in transition from wander to return retrive = " + str(self.bestPath))
                 self.npcState = "retriveKey"
             elif(transition == "withinRange"):
                 #self.speed = self.speed * 2
@@ -230,21 +215,15 @@ class NPC(Agent):
         elif(self.npcState == "retriveKey"):
             if(transition == "leftRoom"):
                 print("Changing from retrive key to wander due to player leaving")
-                #self.speed = speed/2
+                self.speed = speed/2
                 self.npcState = "wander"
             elif(transition == "gotKey"):
+                self.speed = self.speed/2
                 self.key.reparentTo(self)
                 print("Changing from gotKey to returnKey")
-                self.bestPath = PathFinder.AStar(self, self.key, self.waypoints)
-                if self.bestPath != None:
-                    ls = LineSegs()
-                    ls.setThickness(10.0)
-                    for i in range(len(self.bestPath) - 1):
-                        ls.setColor(0,0,1,1)
-                        ls.moveTo(self.bestPath[i].getPos())
-                        ls.drawTo(self.bestPath[i+1].getPos())
-                        np = NodePath(ls.create("aoeu"))
-                        np.reparentTo(render)
+                self.bestPath = PathFinder.AStar(self, self.keyNest, self.waypoints)
+                #self.drawBestPath()
+                print("AStar in transition from gotKey to return key = " + str(self.bestPath))
                 self.npcState = "returnKey"
             else:
                 print(transition + " is an undefined transition from " + self.npcState)
@@ -258,16 +237,10 @@ class NPC(Agent):
                 #self.speed = self.speed / 2
                 self.npcState = "wander"
             elif(transition  == "keyTaken"):
+                self.speed = self.speed * 2
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
-                if self.bestPath != None:
-                    ls = LineSegs()
-                    ls.setThickness(10.0)
-                    for i in range(len(self.bestPath) - 1):
-                        ls.setColor(0,0,1,1)
-                        ls.moveTo(self.bestPath[i].getPos())
-                        ls.drawTo(self.bestPath[i+1].getPos())
-                        np = NodePath(ls.create("aoeu"))
-                        np.reparentTo(render)
+                #self.drawBestPath()
+                print("AStar in seek from gotKey to returnKey = " + str(self.bestPath))
                 self.key.reparentTo(self.player)
                 self.key.setZ(5)
                 self.npcState = "retriveKey"
@@ -275,13 +248,24 @@ class NPC(Agent):
                 print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "returnKey"):
             if(transition == "keyReturned"):
-                self.key.reparentTo(render)
+                self.key.reparentTo(self.keyNest)
                 self.key.setZ(0)
                 print("Changeing from returnKey to wander due to a keyReturn")
                 #self.speed = self.speed / 2
                 self.npcState = "wander"
             else:
                 print(transition + " is an undefined transition from " + self.npcState)
+                
+    def drawBestPath(self):
+        if self.bestPath != None:
+            ls = LineSegs()
+            ls.setThickness(10.0)
+            for i in range(len(self.bestPath) - 1):
+                ls.setColor(0,0,1,1)
+                ls.moveTo(self.bestPath[i].getPos())
+                ls.drawTo(self.bestPath[i+1].getPos())
+                np = NodePath(ls.create("aoeu"))
+                np.reparentTo(render)
                 
     def manageState():
         if(npcState == "wander"):
@@ -497,8 +481,8 @@ class NPC(Agent):
             self.pose("walk", frame = 5)
             self.isMoving = False
 
-    def setKeyReference(self, key):
-        self.keyOrgin = key.getPos()
+    def setKeyAndNestReference(self, keyNest, key):
+        self.keyNest = keyNest
         self.key = key
                 
     def seekTarget(self, seekTarget):
@@ -546,6 +530,19 @@ class NPC(Agent):
             #if the next waypoint is reached
             if PathFinder.distance(self, self.currentTarget) < 2: #This number must be greater than distance in seek()
                 self.bestPath.pop(0)
+                #while PathFinder.distance(self, self.currentTarget) < 2: #If starting near the first node, skip it.
+                #   self.bestPath.pop(0)
+                if len(self.bestPath) > 1:
+                    print("Final place = " + str(self.waypoints[-1]))
+                    self.bestPath = PathFinder.AStar(self.currentTarget, self.bestPath[-1], self.waypoints)
+                    #self.bestPath.pop(0)
+                    if self.bestPath != None:
+                        #self.drawBestPath()
+                        print("path returned from AStar = " + str(self.bestPath))
+                        while PathFinder.distance(self, self.bestPath[0]) < 2: #If starting near the first node, skip it.
+                            print("Skipping waypoint" + str(self.bestPath[0]))
+                            print("Waypoints left" + str(self.bestPath))
+                            self.bestPath.pop(0)
         return Task.cont
 
     def seek(self, position):

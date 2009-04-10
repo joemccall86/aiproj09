@@ -11,6 +11,7 @@ from direct.gui.OnscreenText import OnscreenText
 from waypoint import Waypoint
 from pathFinder import PathFinder
 from tasktimer import taskTimer
+from direct.gui.DirectEntry import DirectEntry
 import random
 
 class World(DirectObject):     
@@ -25,18 +26,18 @@ class World(DirectObject):
         self.__setupTargets()
         self.__setupCamera()
         #Many things within the NPC are dependant on the level it is in.
-        self.__room1NPC.setKeyReference(self.roomKey)
-        # make the target seek me.
-        self.bestPath = PathFinder.AStar(self.__room1NPC, self.__mainAgent, self.waypoints)
-        if self.bestPath != None:
-            ls = LineSegs()
-            ls.setThickness(10.0)
-            for i in range(len(self.bestPath) - 1):
-                ls.setColor(0,0,1,1)
-                ls.moveTo(self.bestPath[i].getPos())
-                ls.drawTo(self.bestPath[i+1].getPos())
-                np = NodePath(ls.create("aoeu"))
-                np.reparentTo(render)
+        self.__room1NPC.setKeyAndNestReference(self.keyNest, self.roomKey)
+##        # make the target seek me.
+##        self.bestPath = PathFinder.AStar(self.__room1NPC, self.__mainAgent, self.waypoints)
+##        if self.bestPath != None:
+##            ls = LineSegs()
+##            ls.setThickness(10.0)
+##            for i in range(len(self.bestPath) - 1):
+##                ls.setColor(0,0,1,1)
+##                ls.moveTo(self.bestPath[i].getPos())
+##                ls.drawTo(self.bestPath[i+1].getPos())
+##                np = NodePath(ls.create("aoeu"))
+##                np.reparentTo(render)
         self.__setupTasks()
         
     def __setupCollisions(self):
@@ -89,18 +90,38 @@ class World(DirectObject):
     
     def __setupLevel(self):
         self.setWaypoints()
-        self.roomKey = loader.loadModel("models/redKey")
-        self.roomKey.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
-        self.roomKey.setScale(10)
-        #roomKey.setTexScale(TextureStage.getDefault(), 10)
-        self.roomKey.setPos(0,0,0)
-        self.roomKey.reparentTo(render)
         
         room = loader.loadModel("rooms/room1")
         room.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         room.setScale(10)
         room.setTexScale(TextureStage.getDefault(), 10)
         room.reparentTo(render)
+        
+        #place keyNest (Like a birds nest, but for keys!)
+        self.keyNest = loader.loadModel("models/nest")
+        self.keyNest.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        self.keyNest.setScale(5)
+        self.keyNest.setPos(0,0,0.5)
+        self.keyNest.reparentTo(render)
+        
+        self.roomKey = loader.loadModel("models/redKey")
+        self.roomKey.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        self.roomKey.setScale(10)
+        self.roomKey.setPos(self.keyNest.getX(),self.keyNest.getY(),self.keyNest.getZ())
+        self.roomKey.reparentTo(render)
+        
+        self.chatTextDE = DirectEntry( parent=self.waypoints[0],
+                      width=20, numLines=3,
+                      frameColor=(0,0,0,0),
+                      text_fg=(1,1,1,1), #text_shadow=(0,0,0,1),
+                      text_align=TextNode.ACenter,
+                      text='SMILEY', # the name
+                      text_pos=(0,-1.2),
+                      initialText='_____________ press Enter to chat _____________')
+        self.chatTextDE.reparentTo(self.waypoints[0])
+        #waypointIDText = OnscreenText(text="this is a test", style=1, fg=(1,1,1,1))
+        #waypointIDText.setText("This is a test")
+        #waypointIDText.reparentTo(self.waypoints[0])
         
         room2 = loader.loadModel("rooms/room2")
         room2.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
@@ -185,9 +206,9 @@ class World(DirectObject):
             self.__agentToTargetMap[agent] = target
         
         # This is for path finding
-        modelStanding = "models/ralph"
-        modelRunning = "models/ralph-run"
-        modelWalking = "models/ralph-walk"
+        modelStanding = "models/eve"
+        modelRunning = "models/eve-run"
+        modelWalking = "models/eve-walk"
         self.__room1NPC = NPC(modelStanding, 
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
@@ -332,6 +353,9 @@ class World(DirectObject):
         
     positionHeadingText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                    pos=(-1.3,-0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
+    
+                
+
     def __printPositionAndHeading(self, task):
         heading = self.__mainAgent.getH()
         while heading > 360.0:
@@ -370,8 +394,8 @@ class World(DirectObject):
     def setWaypoints(self):
         execfile("rooms/room1.py")
         #execfile("rooms/room2.py")
-        for w in self.waypoints:
-            w.draw()
+        #for w in self.waypoints:
+        #    w.draw()
             
     
 if __name__ == "__main__":
