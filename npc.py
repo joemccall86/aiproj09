@@ -42,6 +42,7 @@ class NPC(Agent):
                 turnRate, 
                 speed, 
                 agentList, 
+                name = "",
                 rangeFinderCount = 13,
                 collisionMask=BitMask32.allOff(),
                 adjacencySensorThreshold = 0,
@@ -50,9 +51,10 @@ class NPC(Agent):
                 scale = 1.0,
                 brain = None,
                 massKg = 0.1,
+                collisionHandler = None,
                 collisionTraverser = None,
                 waypoints = None):
-        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList, massKg, collisionMask, collisionTraverser)
+        Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList, massKg, collisionMask, name, collisionHandler, collisionTraverser)
         self.collisionMask = collisionMask
         self.adjacencySensorThreshold = adjacencySensorThreshold
         self.radarSlices = radarSlices
@@ -167,14 +169,14 @@ class NPC(Agent):
             if self.distanceToPlayer() > self.radarLength:
                 self.handleTransition("outOfRange")
             if (self.keyNest.getPos() - self.player.getPos()).length() < 5:#if player collided with key
-                print("handling keyTaken transition while in seek state")
+##                print("handling keyTaken transition while in seek state")
                 self.handleTransition("keyTaken")
-        if self.npcState == "retriveKey":
+        elif self.npcState == "retriveKey":
             if self.currentTarget:
                 self.seek(self.currentTarget.getPos())
             if self.distanceToPlayer() < 5:#If collided with Player
                 self.handleTransition("gotKey")
-        if self.npcState == "returnKey":
+        elif self.npcState == "returnKey":
             if self.currentTarget:
                 self.seek(self.currentTarget.getPos())
             offesetFromKey = self.keyNest.getPos() - self.getPos() #Key is returned
@@ -192,69 +194,69 @@ class NPC(Agent):
     def handleTransition(self, transition):
         if(self.npcState == "wander"):
             if(transition == "keyTaken"):
-                self.speed = self.speed * 2
-                print("Changing from wander to retriveKey")
+##                self.speed = self.speed * 2
+##                print("Changing from wander to retriveKey")
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                 self.key.reparentTo(self.player)
                 self.key.setZ(5)
                 
                 #self.drawBestPath                
-                print("Changing from wander to retriveKey")
+##                print("Changing from wander to retriveKey")
                 
-                print("AStar in transition from wander to return retrive = " + str(self.bestPath))
+##                print("AStar in transition from wander to return retrive = " + str(self.bestPath))
                 self.npcState = "retriveKey"
             elif(transition == "withinRange"):
                 #self.speed = self.speed * 2
-                print("Changing from wander to Seek")
+##                print("Changing from wander to Seek")
                 #print("NPC position = " + str(self.getPos()))
                 #print("player position = " + str(self.player.getPos()))
                 self.bestPath = [self.player]
                 self.npcState = "seek"
-            else:
-                print(transition + " is an undefined transition from " + self.npcState)
+##            else:
+##                print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "retriveKey"):
             if(transition == "leftRoom"):
-                print("Changing from retrive key to wander due to player leaving")
-                self.speed = speed/2
+##                print("Changing from retrive key to wander due to player leaving")
+##                self.speed = speed/2
                 self.npcState = "wander"
             elif(transition == "gotKey"):
-                self.speed = self.speed/2
+##                self.speed = self.speed/2
                 self.key.reparentTo(self)
-                print("Changing from gotKey to returnKey")
+##                print("Changing from gotKey to returnKey")
                 self.bestPath = PathFinder.AStar(self, self.keyNest, self.waypoints)
                 #self.drawBestPath()
-                print("AStar in transition from gotKey to return key = " + str(self.bestPath))
+##                print("AStar in transition from gotKey to return key = " + str(self.bestPath))
                 self.npcState = "returnKey"
-            else:
-                print(transition + " is an undefined transition from " + self.npcState)
+##            else:
+##                print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "seek"):
             if(transition == "outOfRange"):
-                print("Changing from seek to wander")
+##                print("Changing from seek to wander")
                 #self.speed = self.speed / 2
                 self.npcState = "wander"
             elif(transition == "leftRoom"):
-                print("Changing from seek to wander due to player leaving room")
+##                print("Changing from seek to wander due to player leaving room")
                 #self.speed = self.speed / 2
                 self.npcState = "wander"
             elif(transition  == "keyTaken"):
-                self.speed = self.speed * 2
+##                self.speed = self.speed * 2
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                 #self.drawBestPath()
-                print("AStar in seek from gotKey to returnKey = " + str(self.bestPath))
+##                print("AStar in seek from gotKey to returnKey = " + str(self.bestPath))
                 self.key.reparentTo(self.player)
                 self.key.setZ(5)
                 self.npcState = "retriveKey"
-            else:
-                print(transition + " is an undefined transition from " + self.npcState)
+##            else:
+##                print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "returnKey"):
             if(transition == "keyReturned"):
-                self.key.reparentTo(self.keyNest)
-                self.key.setZ(0)
-                print("Changeing from returnKey to wander due to a keyReturn")
+                self.key.reparentTo(render)
+                self.key.setPos(self.keyNest.getPos())
+##                print("Changeing from returnKey to wander due to a keyReturn")
                 #self.speed = self.speed / 2
                 self.npcState = "wander"
-            else:
-                print(transition + " is an undefined transition from " + self.npcState)
+##            else:
+##                print(transition + " is an undefined transition from " + self.npcState)
                 
     def drawBestPath(self):
         if self.bestPath != None:
@@ -484,43 +486,6 @@ class NPC(Agent):
     def setKeyAndNestReference(self, keyNest, key):
         self.keyNest = keyNest
         self.key = key
-                
-    def seekTarget(self, seekTarget):
-        moveDistance = self.speed * taskTimer.elapsedTime
-        moveAngle = self.turnRate * taskTimer.elapsedTime
-        
-        oldHeadingDegrees = self.getH()
-        self.lookAt(seekTarget)
-        newHeadingDegrees = self.getH()
-        self.setH(oldHeadingDegrees)
-        
-        oldHeadingDegrees %= 360.0
-        newHeadingDegrees += 180.0
-        newHeadingDegrees %= 360.0
-        
-        deltaHeadingDegrees = math.fabs(oldHeadingDegrees - newHeadingDegrees)
-        negSwitch = deltaHeadingDegrees < 180.0 and 1.0 or -1.0
-        if oldHeadingDegrees < newHeadingDegrees:
-            self.turnLeft(negSwitch * moveAngle)
-        if oldHeadingDegrees > newHeadingDegrees:
-            self.turnRight(negSwitch * moveAngle)
-        
-        deltaR = math.hypot(self.getX()-seekTarget.getX(), self.getY() - seekTarget.getY())
-        if deltaR > self.radarLength:
-            self.moveForward(moveDistance)
-            
-        if math.fabs(oldHeadingDegrees - newHeadingDegrees) < 2*moveAngle and deltaR < self.radarLength:
-            if self.isMoving:
-                self.stop()
-                self.pose("walk", frame = 5)
-                self.isMoving = False
-        else:
-            if not self.isMoving:
-                self.loop("run")
-                self.isMoving = True
-            
-            
-        return Task.cont
     
     def followPath(self):
         #If there are any waypoints in the path
@@ -533,15 +498,15 @@ class NPC(Agent):
                 #while PathFinder.distance(self, self.currentTarget) < 2: #If starting near the first node, skip it.
                 #   self.bestPath.pop(0)
                 if len(self.bestPath) > 1:
-                    print("Final place = " + str(self.waypoints[-1]))
+##                    print("Final place = " + str(self.waypoints[-1]))
                     self.bestPath = PathFinder.AStar(self.currentTarget, self.bestPath[-1], self.waypoints)
                     #self.bestPath.pop(0)
                     if self.bestPath != None:
                         #self.drawBestPath()
-                        print("path returned from AStar = " + str(self.bestPath))
+##                        print("path returned from AStar = " + str(self.bestPath))
                         while PathFinder.distance(self, self.bestPath[0]) < 2: #If starting near the first node, skip it.
-                            print("Skipping waypoint" + str(self.bestPath[0]))
-                            print("Waypoints left" + str(self.bestPath))
+##                            print("Skipping waypoint" + str(self.bestPath[0]))
+##                            print("Waypoints left" + str(self.bestPath))
                             self.bestPath.pop(0)
         return Task.cont
 
@@ -580,12 +545,12 @@ class NPC(Agent):
                 self.turnLeft(turnAngle)
                 #self.turnRight(turnAngle)
             elif(180 <= angleToTarget < 270):
-                self.moveForward(0)#do nothing
+##                self.moveForward(0)#do nothing
                 #self.moveForward(distance)
                 self.turnLeft(turnAngle)
                 #self.turnRight(turnAngle)
             elif(270 <= angleToTarget < 360):
-                self.moveForward(0)#do nothing
+##                self.moveForward(0)#do nothing
                 #self.moveForward(distance)
                 #self.turnLeft(turnAngle)
                 self.turnRight(turnAngle)
