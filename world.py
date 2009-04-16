@@ -2,7 +2,18 @@
 #include character.py
 import direct.directbase.DirectStart
 from direct.showbase.DirectObject import DirectObject
-from pandac.PandaModules import *
+from pandac.PandaModules import BitMask32
+from pandac.PandaModules import CardMaker
+from pandac.PandaModules import CollisionTraverser
+from pandac.PandaModules import ForceNode
+from pandac.PandaModules import LinearVectorForce
+from pandac.PandaModules import LineSegs
+from pandac.PandaModules import NodePath
+from pandac.PandaModules import TexGenAttrib
+from pandac.PandaModules import TextNode
+from pandac.PandaModules import Texture
+from pandac.PandaModules import TextureStage
+from pandac.PandaModules import Vec3
 from npc import NPC
 import sys
 from direct.task import Task
@@ -161,7 +172,7 @@ class World(DirectObject):
         # Make it visible
         self.__mainAgent.reparentTo(render)
         self.__mainAgent.setPos(31, 35, 50)
-        self.box.setCollideMask(~self.__mainAgent.collisionMask)
+        self.box.find("**/Cube;+h").setCollideMask(~self.__mainAgent.collisionMask)
         
         
     __otherRalphsCount = 0
@@ -232,7 +243,6 @@ class World(DirectObject):
         """
         This function sets up all the tasks used in the world
         """
-        
         taskMgr.add(taskTimer, "taskTimer")
         
         for index, ralph in enumerate(self.__otherRalphs):
@@ -346,9 +356,7 @@ class World(DirectObject):
             self.__mainAgent.stop()
             self.__mainAgent.pose("walk", frame = 5)
             self.__mainAgent.isMoving = False
-        
-        # Store the previous time and continue
-        self.__previousTime = task.time
+            
         return Task.cont
         
     positionHeadingText = OnscreenText(text="", style=1, fg=(1,1,1,1),
@@ -358,10 +366,7 @@ class World(DirectObject):
 
     def __printPositionAndHeading(self, task):
         heading = self.__mainAgent.getH()
-        while heading > 360.0:
-            heading -= 360.0
-        while heading < 0.0:
-            heading += 360.0
+        heading %= 360.0
             
         self.positionHeadingText.setText("Position: (" + 
             str(self.__mainAgent.getX()) + ", " + 
