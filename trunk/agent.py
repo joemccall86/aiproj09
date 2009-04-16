@@ -28,8 +28,11 @@ class Agent(NodePath):
                     agentList, 
                     massKg, 
                     collisionMask, 
+                    name="",
+                    collisionHandler = None,
                     collisionTraverser = None):
-        NodePath.__init__(self, ActorNode("actor node"))
+        NodePath.__init__(self, ActorNode(name + " actor node"))
+        self.name = name
         
         self.actor = Actor()
         self.actor.loadModel(modelStanding)
@@ -50,7 +53,7 @@ class Agent(NodePath):
             
         self.actor.reparentTo(self)
         
-        self.__setupCollisionHandling(collisionTraverser)
+        self.__setupCollisionHandling(collisionHandler, collisionTraverser)
 
     
     def turnLeft(self, angle):
@@ -65,7 +68,7 @@ class Agent(NodePath):
     def moveBackward(self, distance):
         self.setFluidY(self, distance)
     
-    def __setupCollisionHandling(self, collisionTraverser):
+    def __setupCollisionHandling(self, collisionHandler, collisionTraverser):
         if not collisionTraverser.getRespectPrevTransform():
             collisionTraverser.setRespectPrevTransform(True)
             
@@ -74,16 +77,14 @@ class Agent(NodePath):
             
         self.node().getPhysicsObject().setMass(self.massKg) 
         base.physicsMgr.attachPhysicalNode(self.node())
-        fromObject = self.attachNewNode(CollisionNode("agentCollisionNode"))
+        fromObject = self.attachNewNode(CollisionNode(self.name + " collision node"))
         fromObject.node().setIntoCollideMask(BitMask32.allOn())
         fromObject.node().setFromCollideMask(self.collisionMask)
         fromObject.node().addSolid(CollisionSphere(0, 0, 2.5, 2.5))
         
-        pusher = PhysicsCollisionHandler()
-        pusher.setDynamicFrictionCoef(0.5)
-        pusher.setStaticFrictionCoef(0.7)
-        pusher.addCollider(fromObject, self)
-        collisionTraverser.addCollider(fromObject, pusher)
+
+        collisionHandler.addCollider(fromObject, self)
+        collisionTraverser.addCollider(fromObject, collisionHandler)
 
 if __name__ == "__main__":
     A = Agent("models/ralph", {"run":"models/ralph-run"}, turnRate = 300, speed = 5, agentList=[], massKg = 0.1, collisionMask = BitMask32.allOff())

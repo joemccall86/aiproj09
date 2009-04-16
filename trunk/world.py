@@ -4,11 +4,16 @@ import direct.directbase.DirectStart
 from direct.showbase.DirectObject import DirectObject
 from pandac.PandaModules import BitMask32
 from pandac.PandaModules import CardMaker
+from pandac.PandaModules import CollisionHandlerEvent
+from pandac.PandaModules import CollisionNode
+from pandac.PandaModules import CollisionPolygon
 from pandac.PandaModules import CollisionTraverser
 from pandac.PandaModules import ForceNode
 from pandac.PandaModules import LinearVectorForce
 from pandac.PandaModules import LineSegs
 from pandac.PandaModules import NodePath
+from pandac.PandaModules import PhysicsCollisionHandler
+from pandac.PandaModules import Point3
 from pandac.PandaModules import TexGenAttrib
 from pandac.PandaModules import TextNode
 from pandac.PandaModules import Texture
@@ -54,6 +59,10 @@ class World(DirectObject):
     def __setupCollisions(self):
         self.cTrav = CollisionTraverser("traverser")
         base.cTrav = self.cTrav
+        
+        self.physicsCollisionHandler = PhysicsCollisionHandler()
+        self.physicsCollisionHandler.setDynamicFrictionCoef(0.5)
+        self.physicsCollisionHandler.setStaticFrictionCoef(0.7)
 
     def __setupGravity(self):
         base.particlesEnabled = True
@@ -147,6 +156,25 @@ class World(DirectObject):
         box.reparentTo(render)
         box.hide()
         
+        doorPad = render.attachNewNode(CollisionNode("doorPad"))
+        doorPad.setPos(box.getPos())
+        doorPad.node().addSolid(CollisionPolygon(Point3(10,-10,0), Point3(10,10,0),
+                                                 Point3(-10,10,0), Point3(-10,-10,0)))
+        doorPad.hide()
+        
+        self.physicsCollisionHandler.addInPattern("%fn-into-%in")
+        self.physicsCollisionHandler.addOutPattern("%fn-out-%in")
+        
+        
+        #### enter/exit code ####
+        def myPrint(a, entry): 
+            pass
+##            print a
+        
+        self.accept("ralph collision node-into-doorPad", myPrint, ["ralph left room"])
+        self.accept("ralph collision node-out-doorPad", myPrint, ["ralph entered room"])
+        #### end enter/exit code ####
+        
         self.box = box
         
     __globalAgentList = []
@@ -161,14 +189,16 @@ class World(DirectObject):
                             speed = 25,
                             agentList = self.__globalAgentList,
                             collisionMask = BitMask32.bit(1),
+                            name="ralph",
                             rangeFinderCount = 13,
                             adjacencySensorThreshold = 5,
                             radarSlices = 5,
                             radarLength = 25,
                             scale = 1.0,
                             massKg = 35.0,
+                            collisionHandler = self.physicsCollisionHandler,
                             collisionTraverser = self.cTrav,
-                            waypoints = self.waypoints)                    
+                            waypoints = self.waypoints)
         # Make it visible
         self.__mainAgent.reparentTo(render)
         self.__mainAgent.setPos(31, 35, 50)
@@ -196,6 +226,7 @@ class World(DirectObject):
                                 scale = 1.0,
                                 brain = None,
                                 massKg = 35.0,
+                                collisionHandler = self.physicsCollisionHandler,
                                 collisionTraverser = self.cTrav,
                                 waypoints = self.waypoints)
                                 for i in range(self.__otherRalphsCount)]
@@ -232,6 +263,7 @@ class World(DirectObject):
                                 radarLength = 40,
                                 scale = 1.0,
                                 massKg = 35.0,
+                                collisionHandler = self.physicsCollisionHandler,
                                 collisionTraverser = self.cTrav,
                             waypoints = self.waypoints)
         self.__room1NPC.setPos(20, -15, 10)
@@ -276,7 +308,7 @@ class World(DirectObject):
         base.camera.setPos(0,0*-200,400) #This is debug camera position.     
         base.camera.lookAt(0,0*-200,0)    
 ##        base.oobeCull()
-        #base.oobe()
+        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.__mainAgent.actor)
         base.camera.setPos(0, 60, 60)
