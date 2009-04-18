@@ -200,15 +200,30 @@ class World(DirectObject):
         self.physicsCollisionHandler.addInPattern("%fn-into-%in")
         self.physicsCollisionHandler.addOutPattern("%fn-out-%in")
         
-        def myPrint(a, entry):
-            print a
-        
-        self.accept("ralph collision node-into-room1Floor", myPrint, ["ralph has entered room 1"])
-        self.accept("ralph collision node-out-room1Floor", myPrint, ["ralph has left room 1"])
-        self.accept("ralph collision node-into-room2Floor", myPrint, ["ralph has entered room 2"])
-        self.accept("ralph collision node-out-room2Floor", myPrint, ["ralph has left room 2"])
-        self.accept("ralph collision node-into-room3Floor", myPrint, ["ralph has entered room 3"])
-        self.accept("ralph collision node-out-room3Floor", myPrint, ["ralph has left room 3"])
+        def orderNPC(parameters, entry):
+            print("orderNPC called")
+            print(parameters)
+            if(parameters == "ralph has entered room 1"):
+                print("playerEnteredRoom1 transition")
+                self.__room1NPC.handleTransition("playerEnteredRoom")
+            elif(parameters == "ralph has left room 1"):
+                print("playerLeftRoom1 transition")
+                self.__room1NPC.handleTransition("playerLeftRoom")
+            elif(parameters == "ralph has entered room 2"):
+                pass
+            elif(parameters == "ralph has left room 2"):
+                pass
+            elif(parameters == "ralph has entered room 3"):
+                pass
+            elif(parameters == "ralph has left room 3"):
+                pass
+            
+        self.accept("ralph collision node-into-room1Floor", orderNPC, ["ralph has entered room 1"])
+        self.accept("ralph collision node-out-room1Floor", orderNPC, ["ralph has left room 1"])
+        self.accept("ralph collision node-into-room2Floor", orderNPC, ["ralph has entered room 2"])
+        self.accept("ralph collision node-out-room2Floor", orderNPC, ["ralph has left room 2"])
+        self.accept("ralph collision node-into-room3Floor", orderNPC, ["ralph has entered room 3"])
+        self.accept("ralph collision node-out-room3Floor", orderNPC, ["ralph has left room 3"])
         
         self.gate = gate
         
