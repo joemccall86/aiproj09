@@ -20,6 +20,7 @@ from pandac.PandaModules import Texture
 from pandac.PandaModules import TextureStage
 from pandac.PandaModules import Vec3
 from npc import NPC
+from player import Player
 import sys
 from direct.task import Task
 from direct.gui.OnscreenText import OnscreenText
@@ -183,22 +184,17 @@ class World(DirectObject):
         modelStanding = "models/ralph"
         modelRunning = "models/ralph-run"
         modelWalking = "models/ralph-walk"
-        self.__mainAgent = NPC(modelStanding, 
+        self.__mainAgent = Player(modelStanding, 
                             {"run":modelRunning, "walk":modelWalking},
                             turnRate = 150, 
                             speed = 25,
                             agentList = self.__globalAgentList,
                             collisionMask = BitMask32.bit(1),
                             name="ralph",
-                            rangeFinderCount = 13,
-                            adjacencySensorThreshold = 5,
-                            radarSlices = 5,
-                            radarLength = 25,
                             scale = 1.0,
                             massKg = 35.0,
                             collisionHandler = self.physicsCollisionHandler,
-                            collisionTraverser = self.cTrav,
-                            waypoints = self.waypoints)
+                            collisionTraverser = self.cTrav)
         # Make it visible
         self.__mainAgent.reparentTo(render)
         self.__mainAgent.setPos(31, 35, 50)
@@ -292,8 +288,8 @@ class World(DirectObject):
 ##        agentList = [(ralph.getX(), ralph.getY()) for ralph in self.__otherRalphs]
 ##        taskMgr.add(self.neatEvaluateTask, "self.neatEvaluateTask", extraArgs = [listOfTargets, self.__otherRalphs], appendTask = True)
         
-        self.__setKeymap()
-        taskMgr.add(self.__proccessKey, "processKeyTask")
+        self.__mainAgent.setKeymap()
+        taskMgr.add(self.__mainAgent.processKey, "processKeyTask")
 ##        taskMgr.add(self.__mainAgent.handleCollisionTask, "handleCollisionTask")
 ##        taskMgr.add(self.ralph.wanderTask, "wander")
         taskMgr.add(self.__room1NPC.sense, "senseTask")
@@ -316,81 +312,6 @@ class World(DirectObject):
         base.camera.setP(base.camera.getP() + 10)
         
     waypointPositions = []
-    __keyMap = {"left":False,
-                "right":False,
-                "up":False,
-                "down":False,
-                "keyTaken":False,
-                "gotKey":False,
-                "leftRoom":False}
-    def __setKeymap(self):
-        
-        self.accept("escape", sys.exit)
-        
-        wpFile = open("waypoints.txt", "w")
-        def dropWp():
-            torus = loader.loadModel("models/Torus/Torus")
-            torus.reparentTo(render)
-            torus.setPos(self.__mainAgent.getPos())
-            self.waypointPositions.append(torus.getPos())
-            wpFile.write(str((int(self.__mainAgent.getX()), int(self.__mainAgent.getY()))) + "\r\n")
-        
-        self.accept("space", dropWp)
-        
-        def setKey(key, value):
-            self.__keyMap[key] = value
-        
-        self.accept("arrow_left",     setKey, ["left", True])
-        self.accept("arrow_left-up",  setKey, ["left", False])
-        self.accept("arrow_right",    setKey, ["right", True])
-        self.accept("arrow_right-up", setKey, ["right", False])
-        self.accept("arrow_up",       setKey, ["up", True])
-        self.accept("arrow_up-up",    setKey, ["up", False])
-        self.accept("arrow_down",     setKey, ["down", True])
-        self.accept("arrow_down-up",  setKey, ["down", False])
-        self.accept("a",              setKey, ["keyTaken", True])
-        self.accept("a-up",           setKey, ["keyTaken", False])
-        self.accept("b",              setKey, ["gotKey", True])
-        self.accept("b-up",           setKey, ["gotKey", False])
-        self.accept("c",              setKey, ["leftRoom", True])
-        self.accept("c-up",           setKey, ["leftRoom", False])
-
-    def __proccessKey(self, task):
-        turnAngle = self.__mainAgent.turnRate * taskTimer.elapsedTime
-        distance = self.__mainAgent.speed * taskTimer.elapsedTime
-        
-        self.previousPosition = self.__mainAgent.getPos()
-        
-        if self.__keyMap["left"]:
-            self.__mainAgent.turnLeft(turnAngle)
-        if self.__keyMap["right"]:
-            self.__mainAgent.turnRight(turnAngle)
-        if self.__keyMap["up"]:
-            self.__mainAgent.moveForward(distance)
-        if self.__keyMap["down"]:
-            self.__mainAgent.moveBackward(distance)
-        if self.__keyMap["keyTaken"]:
-            self.__room1NPC.handleTransition("keyTaken")
-        if self.__keyMap["gotKey"]:
-            self.__room1NPC.handleTransition("gotKey")
-        if self.__keyMap["leftRoom"]:
-            self.__room1NPC.handleTransition("leftRoom")
-        
-            
-        if self.__keyMap["left"] or \
-            self.__keyMap["right"] or \
-            self.__keyMap["up"] or \
-            self.__keyMap["down"]:
-            if not self.__mainAgent.isMoving:
-                self.__mainAgent.loop("run")
-                self.__mainAgent.isMoving = True
-        else:
-            self.__mainAgent.stop()
-            self.__mainAgent.pose("walk", frame = 5)
-            self.__mainAgent.isMoving = False
-            
-        return Task.cont
-        
     positionHeadingText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                    pos=(-1.3,-0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
     
