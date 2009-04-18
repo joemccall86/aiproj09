@@ -151,30 +151,50 @@ class World(DirectObject):
         room2.reparentTo(render)
         room2.setY(-200)
         
+                
+        room3 = loader.loadModel("rooms/room3")
+        room3.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        room3.setScale(10)
+        room3.setTexScale(TextureStage.getDefault(), 10)
+        room3.reparentTo(render)
+        room3.setX(200)
+        room3.setH(90)
+        room3.setP(180)
+        room3.setZ(20)
+        
         box = loader.loadModel("models/box")
         box.setPos(80, -100, 0)
         box.setScale(10)
         box.reparentTo(render)
         box.hide()
         
-        doorPad = render.attachNewNode(CollisionNode("doorPad"))
-        doorPad.setPos(box.getPos())
-        doorPad.node().addSolid(CollisionPolygon(Point3(10,-10,0), Point3(10,10,0),
-                                                 Point3(-10,10,0), Point3(-10,-10,0)))
-        doorPad.hide()
+        room1Floor = room.attachNewNode(CollisionNode("room1Floor"))
+        room1Floor.node().addSolid(CollisionPolygon(Point3(9,-9,0), Point3(9,9,0),
+                                                 Point3(-9,9,0), Point3(-9,-9,0)))
+                                                
+        room2Floor = room2.attachNewNode(CollisionNode("room2Floor"))
+        room2Floor.node().addSolid(CollisionPolygon(Point3(9,-9,0), Point3(9,9,0),
+                                                 Point3(-9,9,0), Point3(-9,-9,0)))        
+
+        # TODO: This is a quick hack because we flipped the room 3
+        room3Floor = render.attachNewNode(CollisionNode("room3Floor"))
+        room3Floor.setPos(room3.getPos())
+        room3Floor.setZ(0)
+        room3Floor.node().addSolid(CollisionPolygon(Point3(90,-90,0), Point3(90,90,0),
+                                                 Point3(-90,90,0), Point3(-90,-90,0)))
         
         self.physicsCollisionHandler.addInPattern("%fn-into-%in")
         self.physicsCollisionHandler.addOutPattern("%fn-out-%in")
         
+        def myPrint(a, entry):
+            print a
         
-        #### enter/exit code ####
-        def myPrint(a, entry): 
-            pass
-##            print a
-        
-        self.accept("ralph collision node-into-doorPad", myPrint, ["ralph left room"])
-        self.accept("ralph collision node-out-doorPad", myPrint, ["ralph entered room"])
-        #### end enter/exit code ####
+        self.accept("ralph collision node-into-room1Floor", myPrint, ["ralph has entered room 1"])
+        self.accept("ralph collision node-out-room1Floor", myPrint, ["ralph has left room 1"])
+        self.accept("ralph collision node-into-room2Floor", myPrint, ["ralph has entered room 2"])
+        self.accept("ralph collision node-out-room2Floor", myPrint, ["ralph has left room 2"])
+        self.accept("ralph collision node-into-room3Floor", myPrint, ["ralph has entered room 3"])
+        self.accept("ralph collision node-out-room3Floor", myPrint, ["ralph has left room 3"])
         
         self.box = box
         
@@ -191,7 +211,6 @@ class World(DirectObject):
                             agentList = self.__globalAgentList,
                             collisionMask = BitMask32.bit(1),
                             name="ralph",
-                            scale = 1.0,
                             massKg = 35.0,
                             collisionHandler = self.physicsCollisionHandler,
                             collisionTraverser = self.cTrav)
@@ -250,7 +269,7 @@ class World(DirectObject):
         self.__room1NPC = NPC(modelStanding, 
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
-                                speed = 20,
+                                speed = 25,
                                 agentList = self.__globalAgentList,
                                 collisionMask = BitMask32.bit(3),
                                 rangeFinderCount = 13,
@@ -304,7 +323,7 @@ class World(DirectObject):
         base.camera.setPos(0,0*-200,400) #This is debug camera position.     
         base.camera.lookAt(0,0*-200,0)    
 ##        base.oobeCull()
-        base.oobe()
+##        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.__mainAgent.actor)
         base.camera.setPos(0, 60, 60)
@@ -347,17 +366,17 @@ class World(DirectObject):
                 agent.brain = brain
                 agent.setPos(self.startingPositions[agent])
                 
-        return Task.cont    
+        return Task.cont
         
     def setWaypoints(self):
         execfile("rooms/room1.py")
-        #execfile("rooms/room2.py")
+##        execfile("rooms/room2.py")
         #for w in self.waypoints:
         #    w.draw()
             
     
 if __name__ == "__main__":
     w = World()
-
+    
     run()
     print("World compiled correctly")
