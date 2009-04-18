@@ -177,6 +177,7 @@ class NPC(Agent):
                 if self.distanceToPlayer() < self.radarLength:
                     self.handleTransition("withinRange")
                 if (self.keyNest.getPos() - self.player.getPos()).length() < 5:#if player collided with keyNest
+                    self.player.addKey(self.key)
                     self.handleTransition("keyTaken")
         if self.npcState == "seek":
             if self.currentTarget:
@@ -198,6 +199,8 @@ class NPC(Agent):
             #print("distance to return point = " + str(offstFrom
             if offesetFromKey.length() < 5:
                 self.handleTransition("keyReturned")
+        elif self.npcState == "playerAbsent":
+            self.wander()
         return Task.cont
     
     rangeFinderText = OnscreenText(text="", style=1, fg=(1,1,1,1),
@@ -206,72 +209,88 @@ class NPC(Agent):
     def setPlayer(self, player):
         self.player = player
         
-    def handleTransition(self, transition):
+    def handleTransition(self, transition, entry = None):
         if(self.npcState == "wander"):
             if(transition == "keyTaken"):
-##                self.speed = self.speed * 2
-##                print("Changing from wander to retriveKey")
+                print("Changing from wander to retriveKey")
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                 self.key.reparentTo(self.player)
                 self.key.setZ(5)
-                
                 #self.drawBestPath                
-##                print("Changing from wander to retriveKey")
-                
-##                print("AStar in transition from wander to return retrive = " + str(self.bestPath))
+                print("AStar in transition from wander to return retrive = " + str(self.bestPath))
+                self.player.addKey(self.key)
                 self.npcState = "retriveKey"
             elif(transition == "withinRange"):
-                #self.speed = self.speed * 2
-##                print("Changing from wander to Seek")
-                #print("NPC position = " + str(self.getPos()))
-                #print("player position = " + str(self.player.getPos()))
+                print("Changing from wander to Seek")
                 self.bestPath = [self.player]
                 self.npcState = "seek"
-##            else:
-##                print(transition + " is an undefined transition from " + self.npcState)
+            elif(transition == "playerLeftRoom"):
+                print("Changing from wander to playerAbsent")
+                self.npcState = "playerAbsent"
+            elif(transition == "playerEnteredRoom"):
+                print("Player entered room while wandering... Do nothing")
+                pass
+            else:
+                print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "retriveKey"):
             if(transition == "leftRoom"):
-##                print("Changing from retrive key to wander due to player leaving")
-##                self.speed = speed/2
+                print("Changing from retrive key to wander due to player leaving")
                 self.npcState = "wander"
             elif(transition == "gotKey"):
-##                self.speed = self.speed/2
                 self.key.reparentTo(self)
-##                print("Changing from gotKey to returnKey")
+                print("Changing from gotKey to returnKey")
                 self.bestPath = PathFinder.AStar(self, self.keyNest, self.waypoints)
-                #self.drawBestPath()
-##                print("AStar in transition from gotKey to return key = " + str(self.bestPath))
+                print("AStar in transition from gotKey to return key = " + str(self.bestPath))
+                self.player.removeKey(self.key)
                 self.npcState = "returnKey"
-##            else:
-##                print(transition + " is an undefined transition from " + self.npcState)
+            elif(transition == "playerLeftRoom"):
+                print("Changing from gotKey to playerAbsent")
+                self.npcState = "playerAbsent"
+            else:
+                print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "seek"):
             if(transition == "outOfRange"):
-##                print("Changing from seek to wander")
-                #self.speed = self.speed / 2
+                print("Changing from seek to wander")
                 self.npcState = "wander"
             elif(transition == "leftRoom"):
-##                print("Changing from seek to wander due to player leaving room")
-                #self.speed = self.speed / 2
+                print("Changing from seek to wander due to player leaving room")
                 self.npcState = "wander"
             elif(transition  == "keyTaken"):
-##                self.speed = self.speed * 2
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                 #self.drawBestPath()
-##                print("AStar in seek from gotKey to returnKey = " + str(self.bestPath))
+                print("AStar in seek from gotKey to returnKey = " + str(self.bestPath))
                 self.key.reparentTo(self.player)
                 self.key.setZ(5)
+                self.player.addKey(self.key)
+                print("Does player have the key?")
+                print(self.player.hasKey(self.key))
                 self.npcState = "retriveKey"
-##            else:
-##                print(transition + " is an undefined transition from " + self.npcState)
+            elif(transition == "playerLeftRoom"):
+                print("Changing from seek to playerAbsent")
+                self.npcState = "playerAbsent"
+            else:
+                print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "returnKey"):
             if(transition == "keyReturned"):
                 self.key.reparentTo(render)
                 self.key.setPos(self.keyNest.getPos())
-##                print("Changeing from returnKey to wander due to a keyReturn")
+                print("Changeing from returnKey to wander due to a keyReturn")
                 #self.speed = self.speed / 2
                 self.npcState = "wander"
-##            else:
-##                print(transition + " is an undefined transition from " + self.npcState)
+        elif(self.npcState == "playerAbsent"):
+            if(transition == "playerEnteredRoom"):
+                if self.player.hasKey(self.key):
+                    print("Changing from PlayerAbsent to retriveKey")
+                    self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
+                    self.npcState = "retriveKey"
+                elif self.distanceToPlayer() < self.radarLength:
+                    print("Changing from playerAbsent to seek")
+                    self.currentTarget = self.player
+                    self.npcState = "seek"
+                else:
+                    print("Changing from playerAbsent to wander")
+                    self.currentTarget = self.player
+                    self.npcState = "wander"
                 
     def drawBestPath(self):
         if self.bestPath != None:

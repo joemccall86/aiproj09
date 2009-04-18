@@ -20,7 +20,20 @@ class Player(Agent, DirectObject):
                 collisionTraverser = None):
         Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList, massKg, collisionMask, name, collisionHandler, collisionTraverser)
             
-            
+    playerKeys = []
+    
+    def addKey(self, key):
+        self.playerKeys.append(key)
+    
+    def hasKey(self, key):
+        return key in self.playerKeys
+    
+    def removeKey(self, key):
+        assert(key in self.playerKeys)
+        if key in self.playerKeys:
+            self.playerKeys.remove(key)
+    
+    
     __keyMap = {"left":False,
             "right":False,
             "up":False,
