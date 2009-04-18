@@ -7,6 +7,7 @@ from pandac.PandaModules import CardMaker
 from pandac.PandaModules import CollisionHandlerEvent
 from pandac.PandaModules import CollisionNode
 from pandac.PandaModules import CollisionPolygon
+from pandac.PandaModules import CollisionSphere
 from pandac.PandaModules import CollisionTraverser
 from pandac.PandaModules import ForceNode
 from pandac.PandaModules import LinearVectorForce
@@ -115,24 +116,26 @@ class World(DirectObject):
     def __setupLevel(self):
         self.setWaypoints()
         
-        room = loader.loadModel("rooms/room1")
-        room.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
-        room.setScale(10)
-        room.setTexScale(TextureStage.getDefault(), 10)
-        room.reparentTo(render)
+        level1 = render.attachNewNode("level 1 node path")
+        
+        room1 = loader.loadModel("rooms/room1")
+        room1.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        room1.setScale(10)
+        room1.setTexScale(TextureStage.getDefault(), 10)
+        room1.reparentTo(level1)
         
         #place keyNest (Like a birds nest, but for keys!)
         self.keyNest = loader.loadModel("models/nest")
         self.keyNest.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         self.keyNest.setScale(5)
         self.keyNest.setPos(0,0,0.5)
-        self.keyNest.reparentTo(render)
+        self.keyNest.reparentTo(level1)
         
         self.roomKey = loader.loadModel("models/redKey")
         self.roomKey.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         self.roomKey.setScale(10)
-        self.roomKey.setPos(self.keyNest.getX(),self.keyNest.getY(),self.keyNest.getZ())
-        self.roomKey.reparentTo(render)
+        self.roomKey.setPos(self.keyNest.getPos())
+        self.roomKey.reparentTo(level1)
         
         self.chatTextDE = DirectEntry( parent=self.waypoints[0],
                       width=20, numLines=3,
@@ -151,21 +154,23 @@ class World(DirectObject):
         room2.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         room2.setScale(10)
         room2.setTexScale(TextureStage.getDefault(), 10)
-        room2.reparentTo(render)
-        room2.setY(-200)
-        
+        room2.reparentTo(level1)
+        room2.setY(room1, -20)
                 
         room3 = loader.loadModel("rooms/room3")
         room3.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         room3.setScale(10)
         room3.setTexScale(TextureStage.getDefault(), 10)
-        room3.reparentTo(render)
-        room3.setX(200)
+        room3.reparentTo(level1)
+        room3.setX(room1, 20)
         room3.setH(90)
         room3.setP(180)
         room3.setZ(20)
         
-        room1Floor = room.attachNewNode(CollisionNode("room1Floor"))
+        room3SphereOfDoom = room3.attachNewNode(CollisionNode("Jim's Hair"))
+        room3SphereOfDoom.node().addSolid(CollisionSphere(-8.9, 2.4, 1.5, .5))
+        
+        room1Floor = room1.attachNewNode(CollisionNode("room1Floor"))
         room1Floor.node().addSolid(CollisionPolygon(Point3(9,-9,0), Point3(9,9,0),
                                                  Point3(-9,9,0), Point3(-9,-9,0)))
                                                 
@@ -182,12 +187,12 @@ class World(DirectObject):
         
         gate = loader.loadModel("models/box")
         
-        gateTo2 = room.attachNewNode("gateTo2")
+        gateTo2 = room1.attachNewNode("gateTo2")
         gate.instanceTo(gateTo2)
         gateTo2.setPos(8, -10, 0)
         gateTo2.hide()
         
-        gateTo3 = room.attachNewNode("gateTo3")
+        gateTo3 = room1.attachNewNode("gateTo3")
         gate.instanceTo(gateTo3)
         gateTo3.setPos(10, 8, 0)
         gateTo3.hide()
