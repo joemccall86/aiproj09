@@ -34,6 +34,9 @@ import random
 class World(DirectObject):     
     def __init__(self):
         DirectObject.__init__(self)
+
+        self.accept("escape", sys.exit)
+        
         self.__setupEnvironment()
         self.__setupCollisions()
         self.__setupGravity()
@@ -162,26 +165,32 @@ class World(DirectObject):
         room3.setP(180)
         room3.setZ(20)
         
-        box = loader.loadModel("models/box")
-        box.setPos(80, -100, 0)
-        box.setScale(10)
-        box.reparentTo(render)
-        box.hide()
-        
         room1Floor = room.attachNewNode(CollisionNode("room1Floor"))
         room1Floor.node().addSolid(CollisionPolygon(Point3(9,-9,0), Point3(9,9,0),
                                                  Point3(-9,9,0), Point3(-9,-9,0)))
                                                 
         room2Floor = room2.attachNewNode(CollisionNode("room2Floor"))
         room2Floor.node().addSolid(CollisionPolygon(Point3(9,-9,0), Point3(9,9,0),
-                                                 Point3(-9,9,0), Point3(-9,-9,0)))        
+                                                 Point3(-9,9,0), Point3(-9,-9,0)))
 
         # TODO: This is a quick hack because we flipped the room 3
         room3Floor = render.attachNewNode(CollisionNode("room3Floor"))
         room3Floor.setPos(room3.getPos())
         room3Floor.setZ(0)
         room3Floor.node().addSolid(CollisionPolygon(Point3(90,-90,0), Point3(90,90,0),
-                                                 Point3(-90,90,0), Point3(-90,-90,0)))
+                                                 Point3(-90,90,0), Point3(-90,-90,0)))        
+        
+        gate = loader.loadModel("models/box")
+        
+        gateTo2 = room.attachNewNode("gateTo2")
+        gate.instanceTo(gateTo2)
+        gateTo2.setPos(8, -10, 0)
+        gateTo2.hide()
+        
+        gateTo3 = room.attachNewNode("gateTo3")
+        gate.instanceTo(gateTo3)
+        gateTo3.setPos(10, 8, 0)
+        gateTo3.hide()
         
         self.physicsCollisionHandler.addInPattern("%fn-into-%in")
         self.physicsCollisionHandler.addOutPattern("%fn-out-%in")
@@ -196,7 +205,7 @@ class World(DirectObject):
         self.accept("ralph collision node-into-room3Floor", myPrint, ["ralph has entered room 3"])
         self.accept("ralph collision node-out-room3Floor", myPrint, ["ralph has left room 3"])
         
-        self.box = box
+        self.gate = gate
         
     __globalAgentList = []
     __mainAgent = None
@@ -217,7 +226,7 @@ class World(DirectObject):
         # Make it visible
         self.__mainAgent.reparentTo(render)
         self.__mainAgent.setPos(31, 35, 50)
-        self.box.find("**/Cube;+h").setCollideMask(~self.__mainAgent.collisionMask)
+        self.gate.find("**/Cube;+h").setCollideMask(~self.__mainAgent.collisionMask)
         
         
     __otherRalphsCount = 0
