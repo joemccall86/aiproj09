@@ -106,7 +106,7 @@ class NPC(Agent):
             
         rangeFinderCollisionNodePath = self.attachNewNode(rangeFinderCollisionNode)
         # Uncomment the following line to show the collision rays
-##        rangeFinderCollisionNodePath.show()
+        #rangeFinderCollisionNodePath.show()
         
         # Create the CollisionTraverser and the CollisionHandlerQueue
         self.traverser = CollisionTraverser()
@@ -139,16 +139,31 @@ class NPC(Agent):
 ##                        relativeRadarLength * math.sin(float(i+1.) * 2. * math.pi / float(circleResolution)), 0)
 ##            np = NodePath(ls.create())
 ##            np.reparentTo(self)        
+        
+        targetTracker = CollisionRay()
+        targetTrackerCollisionNode = CollisionNode("targetTracker")
+        targetTracker.setOrigin(0, 0, 3.5)
+        targetTracker.setDirection(0,1,0)
+        targetTrackerCollisionNode.addSolid(targetTracker)
+        targetTrackerCollisionNode.setIntoCollideMask(BitMask32.allOff())
+        
+        self.targetTrackerCollisionNodePath = self.attachNewNode(targetTrackerCollisionNode)
+        
+        
+        # Uncomment the following line to show the collision rays
+        self.targetTrackerCollisionNodePath.show()
 
     def sense(self, task):
         self.rangeFinderSense()
         self.adjacencySense()
         self.radarSense()
+        self.castRayToNextTarget()
         return Task.cont
     
     def think(self, task):
 #        self.ANNThink()
         self.bestPath = PathFinder.AStar(self.__room1NPC, self.__mainAgent, self.waypoints)
+        
         
         #self.drawBestPath()
         return Task.cont
@@ -482,6 +497,23 @@ class NPC(Agent):
             self.stop()
             self.pose("walk", frame = 5)
             self.isMoving = False
+            
+    def castRayToNextTarget(self):
+        if self.bestPath:
+            if len(self.bestPath) > 1:
+                worldPosition = self.getPos()
+                worldTargetPosition = self.player.getPos()
+                worldHeading = self.getH()
+                worldHeading = worldHeading % 360
+                worldYDirection = worldTargetPosition.getY() - worldPosition.getY()
+                worldXDirection = worldTargetPosition.getX() - worldPosition.getX()
+                worldDirectionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
+                distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
+                #print("distanceToTarget = " + str(distanceToTarget))
+                angleToTarget = worldDirectionToTarget - worldHeading + 180
+                angleToTarget = angleToTarget % 360
+                
+                self.targetTrackerCollisionNodePath.lookAt(self.waypoints[1])
 
     def setKeyAndNestReference(self, keyNest, key):
         self.keyNest = keyNest
@@ -527,6 +559,20 @@ class NPC(Agent):
         turnAngle = self.turnRate * taskTimer.elapsedTime
         distance = self.speed * taskTimer.elapsedTime
         #To limit seek range, check against self.radarLength
+        
+##        self.targetTracker = CollisionRay()
+##        self.targetTrackerCollisionNode = CollisionNode("targetTracker")
+##        self.targetTracker.setOrigin(0, 0, 3.5)
+##        self.targetTracker.setDirection(-math.cos(math.radians(angleToTarget)),
+##                            math.sin(math.radians(angleToTarget)),
+##                            0)
+##        
+##        self.targetTrackerCollisionNode.addSolid(self.targetTracker)
+##    
+##        targetTrackerCollisionNodePath = self.attachNewNode(self.targetTrackerCollisionNode)
+##        # Uncomment the following line to show the collision rays
+##        targetTrackerCollisionNodePath.show()
+        
         if(0 < distanceToTarget):
             #print("Target is in range")
             if not self.isMoving:
