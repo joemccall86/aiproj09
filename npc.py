@@ -518,21 +518,19 @@ class NPC(Agent):
             self.isMoving = False
             
     def castRayToNextTarget(self):
-        if self.bestPath:
-            if len(self.bestPath) > 1:
-                worldPosition = self.getPos()
-                worldTargetPosition = self.player.getPos()
-                worldHeading = self.getH()
-                worldHeading = worldHeading % 360
-                worldYDirection = worldTargetPosition.getY() - worldPosition.getY()
-                worldXDirection = worldTargetPosition.getX() - worldPosition.getX()
-                worldDirectionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
-                distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
-                #print("distanceToTarget = " + str(distanceToTarget))
-                angleToTarget = worldDirectionToTarget - worldHeading + 180
-                angleToTarget = angleToTarget % 360
-                
-                self.targetTrackerCollisionNodePath.lookAt(self.waypoints[1])
+        if self.bestPath and len(self.bestPath) > 1:
+            worldPosition = self.getPos()
+            worldTargetPosition = self.player.getPos()
+            worldHeading = self.getH()
+            worldHeading = worldHeading % 360
+            worldYDirection = worldTargetPosition.getY() - worldPosition.getY()
+            worldXDirection = worldTargetPosition.getX() - worldPosition.getX()
+            worldDirectionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
+            distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
+            #print("distanceToTarget = " + str(distanceToTarget))
+            angleToTarget = worldDirectionToTarget - worldHeading + 180
+            angleToTarget = angleToTarget % 360
+        self.targetTrackerCollisionNodePath.lookAt(self.player)
 
     def setKeyAndNestReference(self, keyNest, key):
         self.keyNest = keyNest
