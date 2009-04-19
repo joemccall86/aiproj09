@@ -67,7 +67,7 @@ class World(DirectObject):
         gravityForce=LinearVectorForce(0,0,-32.18) #gravity acceleration ft/s^2
         gravityFN.addForce(gravityForce)
         
-##        base.cTrav.showCollisions(render)
+        #base.cTrav.showCollisions(render)
 
         base.physicsMgr.addLinearForce(gravityForce)
 
@@ -181,6 +181,7 @@ class World(DirectObject):
         gate = loader.loadModel("models/box")
         
         gateTo2 = room1.attachNewNode("gateTo2")
+        print(room1.getName())
         gate.instanceTo(gateTo2)
         gateTo2.setPos(8, -10, 0)
         gateTo2.hide()
@@ -208,7 +209,8 @@ class World(DirectObject):
                 pass
             elif(parameters == "ralph has left room 3"):
                 pass
-            
+                
+
         self.accept("ralph collision node-into-room1Floor", orderNPC, ["ralph has entered room 1"])
         self.accept("ralph collision node-out-room1Floor", orderNPC, ["ralph has left room 1"])
         self.accept("ralph collision node-into-room2Floor", orderNPC, ["ralph has entered room 2"])
@@ -216,7 +218,9 @@ class World(DirectObject):
         self.accept("ralph collision node-into-room3Floor", orderNPC, ["ralph has entered room 3"])
         self.accept("ralph collision node-out-room3Floor", orderNPC, ["ralph has left room 3"])
         
+        
         self.gate = gate
+        
         
     __globalAgentList = []
     __mainAgent = None

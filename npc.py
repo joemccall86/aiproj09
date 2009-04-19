@@ -21,6 +21,8 @@ from math import sqrt
 from waypoint import Waypoint
 from pathFinder import PathFinder
 from tasktimer import taskTimer
+from direct.showbase.DirectObject import DirectObject
+from pandac.PandaModules import CollisionHandlerEvent
         
 def RandGenerator():
     while True:
@@ -33,7 +35,7 @@ RG = RandGenerator()
 # needed for neat-python
 ##config.load('ai_config')
         
-class NPC(Agent):
+class NPC(Agent, DirectObject):
     collisionCount = 0
     npcState = None
     def __init__(self, 
@@ -114,7 +116,7 @@ class NPC(Agent):
         
         self.traverser.addCollider(rangeFinderCollisionNodePath, self.queue)
         # Uncomment the following line to show the collisions
-##        self.traverser.showCollisions(render)
+        #self.traverser.showCollisions(render)
 
         self.adjacentAgents = []
 
@@ -146,12 +148,18 @@ class NPC(Agent):
         targetTracker.setDirection(0,1,0)
         targetTrackerCollisionNode.addSolid(targetTracker)
         targetTrackerCollisionNode.setIntoCollideMask(BitMask32.allOff())
-        
+        targetTrackerCollisionNode.setFromCollideMask(BitMask32.allOn())
         self.targetTrackerCollisionNodePath = self.attachNewNode(targetTrackerCollisionNode)
+        #collisionHandler.addCollider(fromObject, self)
+        myCollisionHandler = CollisionHandlerEvent()
+        myCollisionHandler.addInPattern("%fn-into-%in")
+        myCollisionHandler.addOutPattern("%fn-out-%in")
+        collisionTraverser.addCollider(self.targetTrackerCollisionNodePath, myCollisionHandler)
         
         
         # Uncomment the following line to show the collision rays
         self.targetTrackerCollisionNodePath.show()
+        self.accept("targetTracker-into-Cube", self.setDistaneToWall)
 
     def sense(self, task):
         self.rangeFinderSense()
@@ -167,6 +175,13 @@ class NPC(Agent):
         
         #self.drawBestPath()
         return Task.cont
+    
+    def setDistaneToWall(self, entry):
+        self.distanceToWall = entry.getSurfacePoint(self).length()
+        
+
+    
+
     
     isMoving = False
     def act(self, task):
@@ -188,6 +203,20 @@ class NPC(Agent):
 ##                print("handling keyTaken transition while in seek state")
                 self.handleTransition("keyTaken")
         elif self.npcState == "retriveKey":
+        #self.accept("targetTracker-into-room1.egg", orderNPC, ["ralph has entered room 1"])
+            #
+            #
+            #
+            #
+            #
+            #
+            #
+            #
+            #
+            #
+            #
+            #
+            #
             if self.currentTarget:
                 self.seek(self.currentTarget.getPos())
             if self.distanceToPlayer() < 5:#If collided with Player
@@ -212,83 +241,84 @@ class NPC(Agent):
     def handleTransition(self, transition, entry = None):
         if(self.npcState == "wander"):
             if(transition == "keyTaken"):
-                print("Changing from wander to retriveKey")
+                #print("Changing from wander to retriveKey")
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                 self.key.reparentTo(self.player)
                 self.key.setZ(5)
                 #self.drawBestPath                
-                print("AStar in transition from wander to return retrive = " + str(self.bestPath))
+                #print("AStar in transition from wander to return retrive = " + str(self.bestPath))
                 self.player.addKey(self.key)
                 self.npcState = "retriveKey"
             elif(transition == "withinRange"):
-                print("Changing from wander to Seek")
+                #print("Changing from wander to Seek")
                 self.bestPath = [self.player]
                 self.npcState = "seek"
             elif(transition == "playerLeftRoom"):
-                print("Changing from wander to playerAbsent")
+                #print("Changing from wander to playerAbsent")
                 self.npcState = "playerAbsent"
             elif(transition == "playerEnteredRoom"):
-                print("Player entered room while wandering... Do nothing")
+                #print("Player entered room while wandering... Do nothing")
                 pass
             else:
                 print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "retriveKey"):
             if(transition == "leftRoom"):
-                print("Changing from retrive key to wander due to player leaving")
+                #print("Changing from retrive key to wander due to player leaving")
                 self.npcState = "wander"
             elif(transition == "gotKey"):
                 self.key.reparentTo(self)
-                print("Changing from gotKey to returnKey")
+                #print("Changing from gotKey to returnKey")
                 self.bestPath = PathFinder.AStar(self, self.keyNest, self.waypoints)
-                print("AStar in transition from gotKey to return key = " + str(self.bestPath))
+                #print("AStar in transition from gotKey to return key = " + str(self.bestPath))
                 self.player.removeKey(self.key)
                 self.npcState = "returnKey"
             elif(transition == "playerLeftRoom"):
-                print("Changing from gotKey to playerAbsent")
+                #print("Changing from gotKey to playerAbsent")
                 self.npcState = "playerAbsent"
             else:
                 print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "seek"):
             if(transition == "outOfRange"):
-                print("Changing from seek to wander")
+                #print("Changing from seek to wander")
                 self.npcState = "wander"
             elif(transition == "leftRoom"):
-                print("Changing from seek to wander due to player leaving room")
+                #print("Changing from seek to wander due to player leaving room")
                 self.npcState = "wander"
             elif(transition  == "keyTaken"):
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                 #self.drawBestPath()
-                print("AStar in seek from gotKey to returnKey = " + str(self.bestPath))
+                #print("AStar in seek from gotKey to returnKey = " + str(self.bestPath))
                 self.key.reparentTo(self.player)
                 self.key.setZ(5)
                 self.player.addKey(self.key)
-                print("Does player have the key?")
-                print(self.player.hasKey(self.key))
+                #print("Does player have the key?")
+                #print(self.player.hasKey(self.key))
                 self.npcState = "retriveKey"
             elif(transition == "playerLeftRoom"):
-                print("Changing from seek to playerAbsent")
+                #print("Changing from seek to playerAbsent")
                 self.npcState = "playerAbsent"
             else:
-                print(transition + " is an undefined transition from " + self.npcState)
+                #print(transition + " is an undefined transition from " + self.npcState)
+                pass
         elif(self.npcState == "returnKey"):
             if(transition == "keyReturned"):
                 self.key.reparentTo(render)
                 self.key.setPos(self.keyNest.getPos())
-                print("Changeing from returnKey to wander due to a keyReturn")
+                #print("Changeing from returnKey to wander due to a keyReturn")
                 #self.speed = self.speed / 2
                 self.npcState = "wander"
         elif(self.npcState == "playerAbsent"):
             if(transition == "playerEnteredRoom"):
                 if self.player.hasKey(self.key):
-                    print("Changing from PlayerAbsent to retriveKey")
+                    #print("Changing from PlayerAbsent to retriveKey")
                     self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                     self.npcState = "retriveKey"
                 elif self.distanceToPlayer() < self.radarLength:
-                    print("Changing from playerAbsent to seek")
+                    #print("Changing from playerAbsent to seek")
                     self.currentTarget = self.player
                     self.npcState = "seek"
                 else:
-                    print("Changing from playerAbsent to wander")
+                    #print("Changing from playerAbsent to wander")
                     self.currentTarget = self.player
                     self.npcState = "wander"
                 
@@ -518,20 +548,23 @@ class NPC(Agent):
             self.isMoving = False
             
     def castRayToNextTarget(self):
-        if self.bestPath and len(self.bestPath) > 1:
-            worldPosition = self.getPos()
-            worldTargetPosition = self.player.getPos()
-            worldHeading = self.getH()
-            worldHeading = worldHeading % 360
-            worldYDirection = worldTargetPosition.getY() - worldPosition.getY()
-            worldXDirection = worldTargetPosition.getX() - worldPosition.getX()
-            worldDirectionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
-            distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
-            #print("distanceToTarget = " + str(distanceToTarget))
-            angleToTarget = worldDirectionToTarget - worldHeading + 180
-            angleToTarget = angleToTarget % 360
-        self.targetTrackerCollisionNodePath.lookAt(self.player)
-
+        if self.bestPath:
+            if len(self.bestPath) > 1:
+                worldPosition = self.getPos()
+                worldTargetPosition = self.player.getPos()
+                worldHeading = self.getH()
+                worldHeading = worldHeading % 360
+                worldYDirection = worldTargetPosition.getY() - worldPosition.getY()
+                worldXDirection = worldTargetPosition.getX() - worldPosition.getX()
+                worldDirectionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
+                distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
+                #print("distanceToTarget = " + str(distanceToTarget))
+                angleToTarget = worldDirectionToTarget - worldHeading + 180
+                angleToTarget = angleToTarget % 360
+                
+                self.targetTrackerCollisionNodePath.lookAt(self.bestPath[1]) 
+                
+                               
     def setKeyAndNestReference(self, keyNest, key):
         self.keyNest = keyNest
         self.key = key
@@ -540,6 +573,8 @@ class NPC(Agent):
         #If there are any waypoints in the path
         #print("Attempting to follow path")
         if self.bestPath:
+            if(len(self.bestPath) > 1 and self.distanceToWall > PathFinder.distance(self, self.bestPath[1])):
+                self.bestPath.pop(0)
             self.currentTarget = self.bestPath[0]
             #if the next waypoint is reached
             if PathFinder.distance(self, self.currentTarget) < 2: #This number must be greater than distance in seek()
@@ -553,10 +588,10 @@ class NPC(Agent):
                     if self.bestPath != None:
                         #self.drawBestPath()
 ##                        print("path returned from AStar = " + str(self.bestPath))
-                        while PathFinder.distance(self, self.bestPath[0]) < 2: #If starting near the first node, skip it.
-##                            print("Skipping waypoint" + str(self.bestPath[0]))
-##                            print("Waypoints left" + str(self.bestPath))
-                            self.bestPath.pop(0)
+                        #while PathFinder.distance(self, self.bestPath[0]) < 2: #If starting near the first node, skip it.
+                        #    self.bestPath.pop(0)
+
+                        self.bestPath.pop(0)
         return Task.cont
 
     def seek(self, position):
