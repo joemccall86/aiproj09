@@ -48,17 +48,6 @@ class World(DirectObject):
         self.__setupCamera()
         #Many things within the NPC are dependant on the level it is in.
         self.__room1NPC.setKeyAndNestReference(self.keyNest, self.roomKey)
-##        # make the target seek me.
-##        self.bestPath = PathFinder.AStar(self.__room1NPC, self.__mainAgent, self.waypoints)
-##        if self.bestPath != None:
-##            ls = LineSegs()
-##            ls.setThickness(10.0)
-##            for i in range(len(self.bestPath) - 1):
-##                ls.setColor(0,0,1,1)
-##                ls.moveTo(self.bestPath[i].getPos())
-##                ls.drawTo(self.bestPath[i+1].getPos())
-##                np = NodePath(ls.create("aoeu"))
-##                np.reparentTo(render)
         self.__setupTasks()
         
     def __setupCollisions(self):
@@ -116,6 +105,12 @@ class World(DirectObject):
     def __setupLevel(self):
         self.setWaypoints()
         
+        #place keyNest (Like a birds nest, but for keys!)
+        keyNest = loader.loadModel("models/nest")
+        keyNest.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        keyNest.setScale(0.5)
+        keyNest.setTexScale(TextureStage.getDefault(), 0.1)
+                
         level1 = render.attachNewNode("level 1 node path")
         
         room1 = loader.loadModel("rooms/room1")
@@ -123,32 +118,18 @@ class World(DirectObject):
         room1.setScale(10)
         room1.setTexScale(TextureStage.getDefault(), 10)
         room1.reparentTo(level1)
+
+        keyNest1 = room1.attachNewNode("key nest 1")
+        keyNest.instanceTo(keyNest1)
+        keyNest1.setPos(0, 0, 0.05)
+        self.keyNest = keyNest1
         
-        #place keyNest (Like a birds nest, but for keys!)
-        self.keyNest = loader.loadModel("models/nest")
-        self.keyNest.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
-        self.keyNest.setScale(5)
-        self.keyNest.setPos(0,0,0.5)
-        self.keyNest.reparentTo(level1)
-        
-        self.roomKey = loader.loadModel("models/redKey")
-        self.roomKey.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
-        self.roomKey.setScale(10)
-        self.roomKey.setPos(self.keyNest.getPos())
-        self.roomKey.reparentTo(level1)
-        
-        self.chatTextDE = DirectEntry( parent=self.waypoints[0],
-                      width=20, numLines=3,
-                      frameColor=(0,0,0,0),
-                      text_fg=(1,1,1,1), #text_shadow=(0,0,0,1),
-                      text_align=TextNode.ACenter,
-                      text='SMILEY', # the name
-                      text_pos=(0,-1.2),
-                      initialText='_____________ press Enter to chat _____________')
-        self.chatTextDE.reparentTo(self.waypoints[0])
-        #waypointIDText = OnscreenText(text="this is a test", style=1, fg=(1,1,1,1))
-        #waypointIDText.setText("This is a test")
-        #waypointIDText.reparentTo(self.waypoints[0])
+        room1Key = loader.loadModel("models/redKey")
+        room1Key.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        room1Key.setPos(keyNest1.getPos())
+        room1Key.setTexScale(TextureStage.getDefault(), 0.1)
+        room1Key.reparentTo(room1)
+        self.roomKey = room1Key
         
         room2 = loader.loadModel("rooms/room2")
         room2.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
@@ -156,19 +137,34 @@ class World(DirectObject):
         room2.setTexScale(TextureStage.getDefault(), 10)
         room2.reparentTo(level1)
         room2.setY(room1, -20)
+        
+        keyNest2 = room2.attachNewNode("key nest 2")
+        keyNest.instanceTo(keyNest2)
+        keyNest2.setPos(-2.5,-2.5,0.05)
+        
+        room2Key = loader.loadModel("models/blueKey")
+        room2Key.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        room2Key.setTexScale(TextureStage.getDefault(), 0.1)
+        room2Key.setPos(keyNest2.getPos())
+        room2Key.reparentTo(room2)
                 
-        room3 = loader.loadModel("rooms/room3")
-        room3.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        # Jim thinks there should be a comment here
+        # he also thinks that the above comment is very useful
+        # TODO: fix this hack by re-creating room3 in blender
+        room3Model = loader.loadModel("rooms/room3")
+        room3Model.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        room3Model.setTexScale(TextureStage.getDefault(), 10)
+        room3Model.setH(90)
+        room3Model.setP(180)
+        room3Model.setZ(2)
+        room3 = level1.attachNewNode("room 3")
+        room3Model.reparentTo(room3)
         room3.setScale(10)
-        room3.setTexScale(TextureStage.getDefault(), 10)
         room3.reparentTo(level1)
         room3.setX(room1, 20)
-        room3.setH(90)
-        room3.setP(180)
-        room3.setZ(20)
         
         room3SphereOfDoom = room3.attachNewNode(CollisionNode("Jim's Hair"))
-        room3SphereOfDoom.node().addSolid(CollisionSphere(-8.9, 2.4, 1.5, .5))
+        room3SphereOfDoom.node().addSolid(CollisionSphere(3, -9, 0.5, .5))
         
         room1Floor = room1.attachNewNode(CollisionNode("room1Floor"))
         room1Floor.node().addSolid(CollisionPolygon(Point3(9,-9,0), Point3(9,9,0),
@@ -178,12 +174,9 @@ class World(DirectObject):
         room2Floor.node().addSolid(CollisionPolygon(Point3(9,-9,0), Point3(9,9,0),
                                                  Point3(-9,9,0), Point3(-9,-9,0)))
 
-        # TODO: This is a quick hack because we flipped the room 3
-        room3Floor = render.attachNewNode(CollisionNode("room3Floor"))
-        room3Floor.setPos(room3.getPos())
-        room3Floor.setZ(0)
-        room3Floor.node().addSolid(CollisionPolygon(Point3(90,-90,0), Point3(90,90,0),
-                                                 Point3(-90,90,0), Point3(-90,-90,0)))        
+        room3Floor = room3.attachNewNode(CollisionNode("room3Floor"))
+        room3Floor.node().addSolid(CollisionPolygon(Point3(9,-9,0), Point3(9,9,0),
+                                                 Point3(-9,9,0), Point3(-9,-9,0)))
         
         gate = loader.loadModel("models/box")
         
@@ -201,8 +194,6 @@ class World(DirectObject):
         self.physicsCollisionHandler.addOutPattern("%fn-out-%in")
         
         def orderNPC(parameters, entry):
-            print("orderNPC called")
-            print(parameters)
             if(parameters == "ralph has entered room 1"):
                 print("playerEnteredRoom1 transition")
                 self.__room1NPC.handleTransition("playerEnteredRoom")
@@ -248,53 +239,13 @@ class World(DirectObject):
         self.__mainAgent.setPos(31, 35, 50)
         self.gate.find("**/Cube;+h").setCollideMask(~self.__mainAgent.collisionMask)
         
-        
-##    __otherRalphsCount = 0
-##    __otherRalphs = []
-##    __startingPositions = {}
-##    def __setupOtherAgents(self):
-##        """
-##        This function sets up the other agents' position, scale, radars, etc.
-##        """
-##        modelStanding = "models/ralph"
-##        modelRunning = "models/ralph-run"
-##        modelWalking = "models/ralph-walk"
-##        self.__otherRalphs = [NPC(modelStanding, 
-##                                {"run":modelRunning, "walk":modelWalking},
-##                                turnRate = 150, 
-##                                speed = 25,
-##                                agentList = self.__globalAgentList,
-##                                rangeFinderCount = 13,
-##                                radarSlices = 5,
-##                                collisionMask = BitMask32.bit(i+2),
-##                                scale = 1.0,
-##                                brain = None,
-##                                massKg = 35.0,
-##                                collisionHandler = self.physicsCollisionHandler,
-##                                collisionTraverser = self.cTrav,
-##                                waypoints = self.waypoints)
-##                                for i in range(self.__otherRalphsCount)]
-##        for index, ralph in enumerate(self.__otherRalphs):
-##            ralph.reparentTo(render)
-##            ralph.setZ(200)
-##            self.__startingPositions[ralph] = ralph.getPos()
-            
     __targetCount = 0
     __targets = []
     __agentToTargetMap = {}
     def __setupNPCs(self):
-        #Joe, can you comment whate these line are doing?
-##        #targetCount = self.__otherRalphsCount
-##        for target in self.__targets:
-##            target.setPos(random.randint(1, 500) * 1, random.randint(1, 500) * 1, 0)
-##            target.reparentTo(render)
-##        for agent,target in zip(self.__otherRalphs, self.__targets):
-##            self.__agentToTargetMap[agent] = target
-        
         modelStanding = "models/eve"
         modelRunning = "models/eve-run"
         modelWalking = "models/eve-walk"
-        
         self.__room1NPC = NPC(modelStanding, 
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
@@ -318,7 +269,7 @@ class World(DirectObject):
         modelStanding = "models/bunny/bunny"
         modelRunning = "models/bunny/bunny"
         modelWalking = "models/bunny/bunny"
-        self.__room2NPC = NPC(modelStanding, 
+        self.__room2NPC = NPC(modelStanding,
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
                                 speed = 25,
@@ -336,11 +287,7 @@ class World(DirectObject):
         self.__room2NPC.setPos(20, -25, 10)
         self.__room2NPC.setPlayer(self.__mainAgent)
         self.__room2NPC.reparentTo(render)
-        
-        print("Room2 NPC created and rendered")
-        modelStanding = "models/gorilla"
-        modelRunning = "models/gorillawalking"
-        modelWalking = "models/gorillawalking"
+
         self.__room3NPC = NPC(modelStanding, 
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
@@ -359,8 +306,6 @@ class World(DirectObject):
         self.__room3NPC.setPos(30, -15, 10)
         self.__room3NPC.setPlayer(self.__mainAgent)
         self.__room3NPC.reparentTo(render)
-        print("Room3 NPC created and rendered")
-        
     
     def __setupTasks(self):
         """
@@ -396,7 +341,7 @@ class World(DirectObject):
         #taskMgr.add(self.__room1NPC.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
 
     def __setupCamera(self):
-        base.camera.setPos(0,0*-200,400) #This is debug camera position.     
+        base.camera.setPos(0,0*-200,400) #This is debug camera position.
         base.camera.lookAt(0,0*-200,0)    
 ##        base.oobeCull()
 ##        base.oobe()
@@ -409,7 +354,6 @@ class World(DirectObject):
     waypointPositions = []
     positionHeadingText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                    pos=(-1.3,-0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
-    
                 
 
     def __printPositionAndHeading(self, task):
