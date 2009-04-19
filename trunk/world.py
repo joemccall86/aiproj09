@@ -43,8 +43,8 @@ class World(DirectObject):
         self.__setupGravity()
         self.__setupLevel()
         self.__setupMainAgent()
-        self.__setupOtherAgents()
-        self.__setupTargets()
+#        self.__setupOtherAgents()
+        self.__setupNPCs()
         self.__setupCamera()
         #Many things within the NPC are dependant on the level it is in.
         self.__room1NPC.setKeyAndNestReference(self.keyNest, self.roomKey)
@@ -249,52 +249,52 @@ class World(DirectObject):
         self.gate.find("**/Cube;+h").setCollideMask(~self.__mainAgent.collisionMask)
         
         
-    __otherRalphsCount = 0
-    __otherRalphs = []
-    __startingPositions = {}
-    def __setupOtherAgents(self):
-        """
-        This function sets up the other agents' position, scale, radars, etc.
-        """
-        modelStanding = "models/ralph"
-        modelRunning = "models/ralph-run"
-        modelWalking = "models/ralph-walk"
-        self.__otherRalphs = [NPC(modelStanding, 
-                                {"run":modelRunning, "walk":modelWalking},
-                                turnRate = 150, 
-                                speed = 25,
-                                agentList = self.__globalAgentList,
-                                rangeFinderCount = 13,
-                                radarSlices = 5,
-                                collisionMask = BitMask32.bit(i+2),
-                                scale = 1.0,
-                                brain = None,
-                                massKg = 35.0,
-                                collisionHandler = self.physicsCollisionHandler,
-                                collisionTraverser = self.cTrav,
-                                waypoints = self.waypoints)
-                                for i in range(self.__otherRalphsCount)]
-        for index, ralph in enumerate(self.__otherRalphs):
-            ralph.reparentTo(render)
-            ralph.setZ(200)
-            self.__startingPositions[ralph] = ralph.getPos()
+##    __otherRalphsCount = 0
+##    __otherRalphs = []
+##    __startingPositions = {}
+##    def __setupOtherAgents(self):
+##        """
+##        This function sets up the other agents' position, scale, radars, etc.
+##        """
+##        modelStanding = "models/ralph"
+##        modelRunning = "models/ralph-run"
+##        modelWalking = "models/ralph-walk"
+##        self.__otherRalphs = [NPC(modelStanding, 
+##                                {"run":modelRunning, "walk":modelWalking},
+##                                turnRate = 150, 
+##                                speed = 25,
+##                                agentList = self.__globalAgentList,
+##                                rangeFinderCount = 13,
+##                                radarSlices = 5,
+##                                collisionMask = BitMask32.bit(i+2),
+##                                scale = 1.0,
+##                                brain = None,
+##                                massKg = 35.0,
+##                                collisionHandler = self.physicsCollisionHandler,
+##                                collisionTraverser = self.cTrav,
+##                                waypoints = self.waypoints)
+##                                for i in range(self.__otherRalphsCount)]
+##        for index, ralph in enumerate(self.__otherRalphs):
+##            ralph.reparentTo(render)
+##            ralph.setZ(200)
+##            self.__startingPositions[ralph] = ralph.getPos()
             
     __targetCount = 0
     __targets = []
     __agentToTargetMap = {}
-    def __setupTargets(self):
-        targetCount = self.__otherRalphsCount
-        self.__targets = [loader.loadModel("models/bunny") for i in range(self.__targetCount)]
-        for target in self.__targets:
-            target.setPos(random.randint(1, 500) * 1, random.randint(1, 500) * 1, 0)
-            target.reparentTo(render)
-        for agent,target in zip(self.__otherRalphs, self.__targets):
-            self.__agentToTargetMap[agent] = target
+    def __setupNPCs(self):
+        #Joe, can you comment whate these line are doing?
+##        #targetCount = self.__otherRalphsCount
+##        for target in self.__targets:
+##            target.setPos(random.randint(1, 500) * 1, random.randint(1, 500) * 1, 0)
+##            target.reparentTo(render)
+##        for agent,target in zip(self.__otherRalphs, self.__targets):
+##            self.__agentToTargetMap[agent] = target
         
-        # This is for path finding
         modelStanding = "models/eve"
         modelRunning = "models/eve-run"
         modelWalking = "models/eve-walk"
+        
         self.__room1NPC = NPC(modelStanding, 
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
@@ -314,6 +314,53 @@ class World(DirectObject):
         self.__room1NPC.setPlayer(self.__mainAgent)
         self.__room1NPC.reparentTo(render)
         
+        
+        modelStanding = "models/bunny/bunny"
+        modelRunning = "models/bunny/bunny"
+        modelWalking = "models/bunny/bunny"
+        self.__room2NPC = NPC(modelStanding, 
+                                {"run":modelRunning, "walk":modelWalking},
+                                turnRate = 150, 
+                                speed = 25,
+                                agentList = self.__globalAgentList,
+                                collisionMask = BitMask32.bit(3),
+                                rangeFinderCount = 13,
+                                adjacencySensorThreshold = 5,
+                                radarSlices = 5,
+                                radarLength = 40,
+                                scale = 1.0,
+                                massKg = 35.0,
+                                collisionHandler = self.physicsCollisionHandler,
+                                collisionTraverser = self.cTrav,
+                            waypoints = self.waypoints)
+        self.__room2NPC.setPos(20, -25, 10)
+        self.__room2NPC.setPlayer(self.__mainAgent)
+        self.__room2NPC.reparentTo(render)
+        
+        print("Room2 NPC created and rendered")
+        modelStanding = "models/gorilla"
+        modelRunning = "models/gorillawalking"
+        modelWalking = "models/gorillawalking"
+        self.__room3NPC = NPC(modelStanding, 
+                                {"run":modelRunning, "walk":modelWalking},
+                                turnRate = 150, 
+                                speed = 25,
+                                agentList = self.__globalAgentList,
+                                collisionMask = BitMask32.bit(3),
+                                rangeFinderCount = 13,
+                                adjacencySensorThreshold = 5,
+                                radarSlices = 5,
+                                radarLength = 40,
+                                scale = 1.0,
+                                massKg = 35.0,
+                                collisionHandler = self.physicsCollisionHandler,
+                                collisionTraverser = self.cTrav,
+                            waypoints = self.waypoints)
+        self.__room3NPC.setPos(30, -15, 10)
+        self.__room3NPC.setPlayer(self.__mainAgent)
+        self.__room3NPC.reparentTo(render)
+        print("Room3 NPC created and rendered")
+        
     
     def __setupTasks(self):
         """
@@ -321,13 +368,13 @@ class World(DirectObject):
         """
         taskMgr.add(taskTimer, "taskTimer")
         
-        for index, ralph in enumerate(self.__otherRalphs):
+        #for index, ralph in enumerate(self.__otherRalphs):
 
             # uncomment this to make Jim happy
 ##            taskMgr.add(ralph.sense, "sense" + str(index))
 ##            taskMgr.add(ralph.think, "think" + str(index))
 ##            taskMgr.add(ralph.act,   "act"   + str(index))
-            taskMgr.add(ralph.wanderTask, "wander" + str(index))
+            #taskMgr.add(ralph.wanderTask, "wander" + str(index))
 ##            taskMgr.add(ralph.seekTask, "seekTask" + str(index), extraArgs = [self.__agentToTargetMap[ralph]], appendTask = True)
             
         taskMgr.add(self.__printPositionAndHeading, "__printPositionAndHeading")
