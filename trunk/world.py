@@ -46,6 +46,7 @@ class World(DirectObject):
 #        self.__setupOtherAgents()
         self.__setupNPCs()
         self.__setupCamera()
+        self.__setupRandomClutter()
         #Many things within the NPC are dependant on the level it is in.
         self.__room1NPC.setKeyAndNestReference(self.keyNest1, self.room1Key)
         self.__room2NPC.setKeyAndNestReference(self.keyNest2, self.room2Key)
@@ -94,9 +95,14 @@ class World(DirectObject):
         environment.setTexture(texture, 1)
         
     def animateItems(self, task):
-        pass
-##        self.rotate(self.roomKey)
-##        return Task.cont
+        #pass
+        if(not self.__mainAgent.hasKey(self.room1Key) and not self.__room1NPC.hasKey()):
+            self.rotate(self.room1Key)
+        if(not self.__mainAgent.hasKey(self.room2Key) and not self.__room2NPC.hasKey()):
+            self.rotate(self.room2Key)
+        if(not self.__mainAgent.hasKey(self.room3Key) and not self.__room3NPC.hasKey()):
+            self.rotate(self.room3Key)
+        return Task.cont
             
     currentAngle = 0
     def rotate(self, someItem):
@@ -136,7 +142,6 @@ class World(DirectObject):
         self.room1Key.setPos(self.keyNest1.getPos())
         self.room1Key.setTexScale(TextureStage.getDefault(), 0.1)
         self.room1Key.reparentTo(room1)
-        self.roomKey = self.room1Key
         
         #self.setWaypoints("room2")
         self.room2waypoints = None
@@ -171,7 +176,6 @@ class World(DirectObject):
         execfile("rooms/room3.py")
         for w in self.room3waypoints:
             w.draw()
-            print(w.getPos())
         room3Model = loader.loadModel("rooms/room3")
         room3Model.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         room3Model.setH(90)
@@ -291,7 +295,7 @@ class World(DirectObject):
                                 turnRate = 150, 
                                 speed = 26,
                                 agentList = self.__globalAgentList,
-                                name = "Eve",
+                                name = "Eve 1",
                                 collisionMask = BitMask32.bit(3),
                                 rangeFinderCount = 13,
                                 adjacencySensorThreshold = 5,
@@ -315,7 +319,7 @@ class World(DirectObject):
                                 turnRate = 150, 
                                 speed = 25,
                                 agentList = self.__globalAgentList,
-                                name = "das Osterhase",
+                                name = "Eve 2",#"das Osterhase",
                                 collisionMask = BitMask32.bit(3),
                                 rangeFinderCount = 13,
                                 adjacencySensorThreshold = 5,
@@ -335,7 +339,7 @@ class World(DirectObject):
                                 turnRate = 150, 
                                 speed = 25,
                                 agentList = self.__globalAgentList,
-                                name = "der Hoppelhaschen",
+                                name = "Eve 3",#"der Hoppelhaschen",
                                 collisionMask = BitMask32.bit(3),
                                 rangeFinderCount = 13,
                                 adjacencySensorThreshold = 5,
@@ -349,6 +353,15 @@ class World(DirectObject):
         self.__room3NPC.setPos(210, 0, 10)
         self.__room3NPC.setPlayer(self.__mainAgent)
         self.__room3NPC.reparentTo(render)
+        
+    def __setupRandomClutter(self):
+##        self.ball1 = loader.loadModel("models/ball")
+##        #self.ball1.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+##        self.ball1.findTexture("hedge.jpg")
+##        self.ball1.setTexScale(TextureStage.getDefault(), 0.1)
+##        self.ball1.setPos(0,0,0)
+##        self.ball1.reparentTo(render)
+        pass
     
     def __setupTasks(self):
         """
@@ -392,7 +405,7 @@ class World(DirectObject):
         base.camera.setPos(100,-100, 795) #This is debug camera position.
         base.camera.lookAt(100,-100,0)
 ##        base.oobeCull()
-        base.oobe()
+#        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.__mainAgent.actor)
         base.camera.setPos(0, 60, 60)
