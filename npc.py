@@ -79,6 +79,7 @@ class NPC(Agent, DirectObject):
         self.player = None
         self.bestPath = None
         self.key = None
+        self.keyInHand = False
         for rangeFinder in self.rangeFinders:
             self.persistentRangeFinderData[rangeFinder] = 0
             
@@ -182,7 +183,8 @@ class NPC(Agent, DirectObject):
         self.distanceToWall = entry.getSurfacePoint(self).length()
         
 
-    
+    def hasKey(self):
+        return self.keyInHand
 
     
     isMoving = False
@@ -268,9 +270,10 @@ class NPC(Agent, DirectObject):
                 self.bestPath = PathFinder.AStar(self, self.keyNest, self.waypoints)
                 #print("AStar in transition from gotKey to return key = " + str(self.bestPath))
                 
-                print("Does player STILL have the key?")
-                print(self.player.hasKey(self.key))
+                #print("Does player STILL have the key?")
+                #print(self.player.hasKey(self.key))
                 self.player.removeKey(self.key)
+                self.keyInHand = True
                 self.npcState = "returnKey"
             elif(transition == "playerLeftRoom"):
                 print("NPC " + self.name + " Says: Changing from retriveKey to playerAbsent")
@@ -315,6 +318,7 @@ class NPC(Agent, DirectObject):
                 self.key.setPos(self.keyNest.getPos())
 ##                self.key.flattenLight()
                 #self.speed = self.speed / 2
+                self.keyInHand = False
                 self.npcState = "wander"
         elif(self.npcState == "playerAbsent"):
             if(transition == "playerEnteredRoom"):

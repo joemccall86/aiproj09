@@ -15,7 +15,6 @@ coords = [ (-75,-135),
 self.room2waypoints = room2waypoints = []
 for i in range(len(coords)):
     coord = coords[i]
-    print("coord = " + str(coord))
     room2waypoint = Waypoint(Vec3(coord[0], coord[1], 0.5), i)
     self.room2waypoints.append(room2waypoint)
 
