@@ -47,9 +47,9 @@ class World(DirectObject):
         self.__setupNPCs()
         self.__setupCamera()
         #Many things within the NPC are dependant on the level it is in.
-        self.__room1NPC.setKeyAndNestReference(self.keyNest, self.roomKey)
-        self.__room2NPC.setKeyAndNestReference(self.keyNest, self.roomKey)
-        self.__room3NPC.setKeyAndNestReference(self.keyNest, self.roomKey)
+        self.__room1NPC.setKeyAndNestReference(self.keyNest1, self.room1Key)
+        self.__room2NPC.setKeyAndNestReference(self.keyNest2, self.room2Key)
+        self.__room3NPC.setKeyAndNestReference(self.keyNest3, self.room3Key)
         self.__setupTasks()
         
     def __setupCollisions(self):
@@ -104,43 +104,7 @@ class World(DirectObject):
             if self.currentAngle >= 360:
                 self.currentAngle = self.currentAngle - 360
             someItem.setH(self.currentAngle)
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
+            
     def __setupLevel(self):
         
         #place keyNest (Like a birds nest, but for keys!)
@@ -161,17 +125,17 @@ class World(DirectObject):
         room1.setTexScale(TextureStage.getDefault(), 10)
         room1.reparentTo(level1)
 
-        keyNest1 = room1.attachNewNode("key nest 1")
-        keyNest.instanceTo(keyNest1)
-        keyNest1.setPos(0, 0, 0.05)
-        self.keyNest = keyNest1
+        self.keyNest1 = room1.attachNewNode("key nest 1")
+        keyNest.instanceTo(self.keyNest1)
+        self.keyNest1.setPos(0, 0, 0.05)
+        self.keyNest = self.keyNest1
         
-        room1Key = loader.loadModel("models/redKey")
-        room1Key.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
-        room1Key.setPos(keyNest1.getPos())
-        room1Key.setTexScale(TextureStage.getDefault(), 0.1)
-        room1Key.reparentTo(room1)
-        self.roomKey = room1Key
+        self.room1Key = loader.loadModel("models/redKey")
+        self.room1Key.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        self.room1Key.setPos(self.keyNest1.getPos())
+        self.room1Key.setTexScale(TextureStage.getDefault(), 0.1)
+        self.room1Key.reparentTo(room1)
+        self.roomKey = self.room1Key
         
         #self.setWaypoints("room2")
         self.room2waypoints = None
@@ -187,15 +151,15 @@ class World(DirectObject):
         room2.reparentTo(level1)
         room2.setY(room1, -20)
         
-        keyNest2 = room2.attachNewNode("key nest 2")
-        keyNest.instanceTo(keyNest2)
-        keyNest2.setPos(-2.5,-2.5,0.05)
+        self.keyNest2 = room2.attachNewNode("key nest 2")
+        keyNest.instanceTo(self.keyNest2)
+        self.keyNest2.setPos(-2.5,-2.5,0.05)
         
-        room2Key = loader.loadModel("models/blueKey")
-        room2Key.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
-        room2Key.setTexScale(TextureStage.getDefault(), 0.1)
-        room2Key.setPos(keyNest2.getPos())
-        room2Key.reparentTo(room2)
+        self.room2Key = loader.loadModel("models/blueKey")
+        self.room2Key.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        self.room2Key.setTexScale(TextureStage.getDefault(), 0.1)
+        self.room2Key.setPos(self.keyNest2.getPos())
+        self.room2Key.reparentTo(room2)
         
         # Jim thinks there should be a comment here
         # he also thinks that the above comment is very useful
@@ -218,15 +182,15 @@ class World(DirectObject):
         room3.reparentTo(level1)
         room3.setX(room1, 20)
         
-        keyNest3 = room3.attachNewNode("key nest 3")
-        keyNest.instanceTo(keyNest3)
-        keyNest3.setPos(0,0,0.05)
+        self.keyNest3 = room3.attachNewNode("key nest 3")
+        self.keyNest.instanceTo(self.keyNest3)
+        self.keyNest3.setPos(0,0,0.05)
         
-        room3Key = loader.loadModel("models/greenKey")
-        room3Key.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
-        room3Key.setTexScale(TextureStage.getDefault(), 0.1)
-        room3Key.setPos(keyNest3.getPos())
-        room3Key.reparentTo(room3)
+        self.room3Key = loader.loadModel("models/greenKey")
+        self.room3Key.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        self.room3Key.setTexScale(TextureStage.getDefault(), 0.1)
+        self.room3Key.setPos(self.keyNest3.getPos())
+        self.room3Key.reparentTo(room3)
         
         
         room3SphereOfDoom = room3.attachNewNode(CollisionNode("Jim's Hair"))
@@ -284,40 +248,7 @@ class World(DirectObject):
         
         self.gate = gate
         
-    
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
-    #
+
     __globalAgentList = []
     __mainAgent = None
     def __setupMainAgent(self):
@@ -449,8 +380,8 @@ class World(DirectObject):
         #taskMgr.add(self.__room1NPC.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
 
     def __setupCamera(self):
-        base.camera.setPos(0,0*-200,400) #This is debug camera position.
-        base.camera.lookAt(0,0*-200,0)    
+        base.camera.setPos(100,-100, 795) #This is debug camera position.
+        base.camera.lookAt(100,-100,0)    
 ##        base.oobeCull()
         base.oobe()
         base.disableMouse()

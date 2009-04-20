@@ -230,8 +230,8 @@ class NPC(Agent, DirectObject):
                 print("NPC " + self.name + " Says: Changing from wander to retriveKey")
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                 self.key.reparentTo(self.player)
-		self.key.setScale(render, 10)
-		self.key.setTexScale(TextureStage.getDefault(), 1)
+                self.key.setScale(render, 10)
+                self.key.setTexScale(TextureStage.getDefault(), 1)
                 self.key.setZ(5)
                 #self.drawBestPath                
                 #print("AStar in transition from wander to return retrive = " + str(self.bestPath))
