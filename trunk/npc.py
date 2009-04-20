@@ -78,6 +78,7 @@ class NPC(Agent, DirectObject):
         self.currentTarget = None
         self.player = None
         self.bestPath = None
+        self.key = None
         for rangeFinder in self.rangeFinders:
             self.persistentRangeFinderData[rangeFinder] = 0
             
@@ -118,7 +119,7 @@ class NPC(Agent, DirectObject):
         self.traverser.addCollider(rangeFinderCollisionNodePath, self.queue)
         # Uncomment the following line to show the collisions
         #self.traverser.showCollisions(render)
-
+        
         self.adjacentAgents = []
 
         # Set up visualizations for radar
@@ -193,7 +194,6 @@ class NPC(Agent, DirectObject):
                 if self.distanceToPlayer() < self.radarLength:
                     self.handleTransition("withinRange")
                 if (self.keyNest.getPos() - self.player.getPos()).length() < 5:#if player collided with keyNest
-                    self.player.addKey(self.key)
                     self.handleTransition("keyTaken")
         if self.npcState == "seek":
             if self.currentTarget:
@@ -201,23 +201,8 @@ class NPC(Agent, DirectObject):
             if self.distanceToPlayer() > self.radarLength:
                 self.handleTransition("outOfRange")
             if (self.keyNest.getPos() - self.player.getPos()).length() < 5:#if player collided with key
-##                print("handling keyTaken transition while in seek state")
                 self.handleTransition("keyTaken")
         elif self.npcState == "retriveKey":
-        #self.accept("targetTracker-into-room1.egg", orderNPC, ["ralph has entered room 1"])
-            #
-            #
-            #
-            #
-            #
-            #
-            #
-            #
-            #
-            #
-            #
-            #
-            #
             if self.currentTarget:
                 self.seek(self.currentTarget.getPos())
             if self.distanceToPlayer() < 5:#If collided with Player
@@ -242,7 +227,7 @@ class NPC(Agent, DirectObject):
     def handleTransition(self, transition, entry = None):
         if(self.npcState == "wander"):
             if(transition == "keyTaken"):
-                #print("Changing from wander to retriveKey")
+                print("NPC " + self.name + " Says: Changing from wander to retriveKey")
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                 self.key.reparentTo(self.player)
 		self.key.setScale(render, 10)
@@ -251,85 +236,92 @@ class NPC(Agent, DirectObject):
                 #self.drawBestPath                
                 #print("AStar in transition from wander to return retrive = " + str(self.bestPath))
                 self.player.addKey(self.key)
+                print("Does player have the key?")
+                print(self.player.hasKey(self.key))
                 self.npcState = "retriveKey"
             elif(transition == "withinRange"):
-                #print("Changing from wander to Seek")
+                print("NPC " + self.name + " Says: Changing from wander to Seek")
                 self.bestPath = [self.player]
                 self.npcState = "seek"
             elif(transition == "playerLeftRoom"):
-                #print("Changing from wander to playerAbsent")
+                print("NPC " + self.name + " Says: Changing from wander to playerAbsent")
                 self.npcState = "playerAbsent"
             elif(transition == "playerEnteredRoom"):
-                #print("Player entered room while wandering... Do nothing")
-                pass
-            else:
+                print("NPC " + self.name + " Says: Player entered room while wandering... Do nothing")
+            else:#Joe pleas don't comment out the else prints. I need to know any time this happens
                 print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "retriveKey"):
-            if(transition == "leftRoom"):
-                #print("Changing from retrive key to wander due to player leaving")
-                self.npcState = "wander"
-            elif(transition == "gotKey"):
+##            if(transition == "leftRoom"):
+##                print("NPC " + self.name + "Says: Changing from retrive key to wander due to player leaving")
+##                self.npcState = "wander"
+            if(transition == "gotKey"):
+                print("NPC " + self.name + " Says: Changing from retriveKey to returnKey")
                 self.key.reparentTo(self)
-		self.key.setScale(render, 10)
-		self.key.setTexScale(TextureStage.getDefault(), 1)
+                self.key.setScale(render, 10)
+                self.key.setTexScale(TextureStage.getDefault(), 1)
                 #print("Changing from gotKey to returnKey")
                 self.bestPath = PathFinder.AStar(self, self.keyNest, self.waypoints)
                 #print("AStar in transition from gotKey to return key = " + str(self.bestPath))
+                
+                print("Does player STILL have the key?")
+                print(self.player.hasKey(self.key))
                 self.player.removeKey(self.key)
                 self.npcState = "returnKey"
             elif(transition == "playerLeftRoom"):
-                #print("Changing from gotKey to playerAbsent")
+                print("NPC " + self.name + " Says: Changing from retriveKey to playerAbsent")
                 self.npcState = "playerAbsent"
-            else:
+            else:#Joe pleas don't comment out the else prints. I need to know any time this happens
                 print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "seek"):
             if(transition == "outOfRange"):
-                #print("Changing from seek to wander")
+                print("NPC " + self.name + " Says: Changing from seek to wander")
                 self.npcState = "wander"
             elif(transition == "leftRoom"):
-                #print("Changing from seek to wander due to player leaving room")
+                print("NPC " + self.name + " Says: Changing from seek to wander due to player leaving room")
                 self.npcState = "wander"
             elif(transition  == "keyTaken"):
+                print("NPC " + self.name + " Says: Changing from seek to retriveKey")
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                 #self.drawBestPath()
                 #print("AStar in seek from gotKey to returnKey = " + str(self.bestPath))
                 self.key.reparentTo(self.player)
-		self.key.setScale(render, 10)
-		self.key.setTexScale(TextureStage.getDefault(), 1)
+                self.key.setScale(render, 10)
+                self.key.setTexScale(TextureStage.getDefault(), 1)
                 self.key.setZ(5)
                 self.player.addKey(self.key)
-                #print("Does player have the key?")
-                #print(self.player.hasKey(self.key))
+                print("Does player have the key?")
+                print(self.player.hasKey(self.key))
                 self.npcState = "retriveKey"
             elif(transition == "playerLeftRoom"):
-                #print("Changing from seek to playerAbsent")
+                print("NPC " + self.name + " Says: Changing from seek to playerAbsent")
                 self.npcState = "playerAbsent"
-            else:
-                #print(transition + " is an undefined transition from " + self.npcState)
-                pass
+            else:#Joe pleas don't comment out the else prints. I need to know any time this happens
+                print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "returnKey"):
             if(transition == "keyReturned"):
+                print("NPC " + self.name + " Says: Changeing from returnKey to wander due to a keyReturn")
                 self.key.reparentTo(render)
-		self.key.setScale(render, 10)
-		self.key.setTexScale(TextureStage.getDefault(), 1)
+                self.key.setScale(render, 10)
+                self.key.setTexScale(TextureStage.getDefault(), 1)
                 self.key.setPos(self.keyNest.getPos())
-                #print("Changeing from returnKey to wander due to a keyReturn")
                 #self.speed = self.speed / 2
                 self.npcState = "wander"
         elif(self.npcState == "playerAbsent"):
             if(transition == "playerEnteredRoom"):
-                if self.player.hasKey(self.key):
-                    #print("Changing from PlayerAbsent to retriveKey")
+                if self.player.hasKey(self.key):    ##Got the error NPC object has no attribute key... How?????
+                    print("NPC " + self.name + " Says: Changing from PlayerAbsent to retriveKey")
                     self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                     self.npcState = "retriveKey"
                 elif self.distanceToPlayer() < self.radarLength:
-                    #print("Changing from playerAbsent to seek")
+                    print("NPC " + self.name + " Says: Changing from playerAbsent to seek")
                     self.currentTarget = self.player
                     self.npcState = "seek"
                 else:
-                    #print("Changing from playerAbsent to wander")
+                    print("NPC " + self.name + " Says: Changing from playerAbsent to wander")
                     self.currentTarget = self.player
                     self.npcState = "wander"
+        else:#Joe pleas don't comment out the else prints. I need to know any time this happens
+            print("Current state undefined for handleTransition" + self.npcState)
                 
     def drawBestPath(self):
         if self.bestPath != None:

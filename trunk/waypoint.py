@@ -89,5 +89,5 @@ class Waypoint(NodePath):
             ls.setColor(1,1,1,1)
             ls.moveTo(self.getPos())
             ls.drawTo(neighbor.getPos())
-            np = NodePath(ls.create("aoeu")) 
+            np = NodePath(ls.create("aoeu"))
             np.reparentTo(render)
