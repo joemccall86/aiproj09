@@ -201,8 +201,8 @@ class World(DirectObject):
         # TODO: fix this hack by re-creating room3 in blender
         
         #self.setWaypoints("room3")
-        execfile("rooms/room1.py")
-        for w in self.room2waypoints:
+        execfile("rooms/room3.py")
+        for w in self.room3waypoints:
             w.draw()
         room3Model = loader.loadModel("rooms/room3")
         room3Model.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
@@ -435,7 +435,7 @@ class World(DirectObject):
 ##        taskMgr.add(self.ralph.wanderTask, "wander")
         
         taskMgr.add(self.__room1NPC.sense, "senseTask")
-        #taskMgr.add(self.__room2NPC.sense, "senseTask")
+        taskMgr.add(self.__room2NPC.sense, "senseTask")
 ##        taskMgr.add(self.ralph.think, "thinkTask")
         taskMgr.add(self.__room1NPC.act, "actTask")
         #taskMgr.add(self.__room2NPC.act, "actTask")
