@@ -143,7 +143,7 @@ class World(DirectObject):
 #        print(len(self.room2waypoints))
         for w in self.room2waypoints:
             w.draw()
-            print(w.getPos())
+            #print(w.getPos())
         room2 = loader.loadModel("rooms/room2")
         room2.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         room2.setScale(10)
@@ -170,6 +170,7 @@ class World(DirectObject):
         execfile("rooms/room3.py")
         for w in self.room3waypoints:
             w.draw()
+            print(w.getPos())
         room3Model = loader.loadModel("rooms/room3")
         room3Model.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         room3Model.setH(90)
@@ -390,7 +391,6 @@ class World(DirectObject):
         base.camera.lookAt(self.__mainAgent)
         base.camera.setP(base.camera.getP() + 10)
         
-    waypointPositions = []
     positionHeadingText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                    pos=(-1.3,-0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
                 
