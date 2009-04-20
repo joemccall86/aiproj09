@@ -73,16 +73,18 @@ class Waypoint(NodePath):
         self.torus.setTexture(self.texture, 1)
     
 
-    def draw(self):        
+    def draw(self):       
+        return  
         torus = self.torus
-        
         torus.setPos(self.position)
         torus.setScale(5, 5, 5)
         torus.setTexture(self.texture, 1)
         torus.reparentTo(render)
+        torus.hide()
         self.drawLineToNeighbors()
         
     def drawLineToNeighbors(self):
+        return 
         ls = LineSegs()
         ls.setThickness(1.0)
         for neighbor in self.neighbors:
@@ -91,3 +93,4 @@ class Waypoint(NodePath):
             ls.drawTo(neighbor.getPos())
             np = NodePath(ls.create("aoeu"))
             np.reparentTo(render)
+            np.hide()
