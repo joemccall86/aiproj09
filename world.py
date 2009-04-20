@@ -153,15 +153,26 @@ class World(DirectObject):
         # TODO: fix this hack by re-creating room3 in blender
         room3Model = loader.loadModel("rooms/room3")
         room3Model.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
-        room3Model.setTexScale(TextureStage.getDefault(), 10)
         room3Model.setH(90)
         room3Model.setP(180)
         room3Model.setZ(2)
         room3 = level1.attachNewNode("room 3")
         room3Model.reparentTo(room3)
         room3.setScale(10)
+        room3.setTexScale(TextureStage.getDefault(), 10)
         room3.reparentTo(level1)
         room3.setX(room1, 20)
+        
+        keyNest3 = room3.attachNewNode("key nest 3")
+        keyNest.instanceTo(keyNest3)
+        keyNest3.setPos(0,0,0.05)
+        
+        room3Key = loader.loadModel("models/greenKey")
+        room3Key.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        room3Key.setTexScale(TextureStage.getDefault(), 0.1)
+        room3Key.setPos(keyNest3.getPos())
+        room3Key.reparentTo(room3)
+        
         
         room3SphereOfDoom = room3.attachNewNode(CollisionNode("Jim's Hair"))
         room3SphereOfDoom.node().addSolid(CollisionSphere(3, -9, 0.5, .5))
