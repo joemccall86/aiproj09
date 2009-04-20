@@ -10,6 +10,7 @@ from pandac.PandaModules import BitMask32
 from pandac.PandaModules import LineSegs
 from pandac.PandaModules import NodePath
 from pandac.PandaModules import TextNode
+from pandac.PandaModules import TextureStage
 from direct.task import Task
 from direct.gui.OnscreenText import OnscreenText
 ##from neat import config, population, chromosome, genome, visualize
@@ -244,6 +245,8 @@ class NPC(Agent, DirectObject):
                 #print("Changing from wander to retriveKey")
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                 self.key.reparentTo(self.player)
+		self.key.setScale(render, 10)
+		self.key.setTexScale(TextureStage.getDefault(), 1)
                 self.key.setZ(5)
                 #self.drawBestPath                
                 #print("AStar in transition from wander to return retrive = " + str(self.bestPath))
@@ -267,6 +270,8 @@ class NPC(Agent, DirectObject):
                 self.npcState = "wander"
             elif(transition == "gotKey"):
                 self.key.reparentTo(self)
+		self.key.setScale(render, 10)
+		self.key.setTexScale(TextureStage.getDefault(), 1)
                 #print("Changing from gotKey to returnKey")
                 self.bestPath = PathFinder.AStar(self, self.keyNest, self.waypoints)
                 #print("AStar in transition from gotKey to return key = " + str(self.bestPath))
@@ -289,6 +294,8 @@ class NPC(Agent, DirectObject):
                 #self.drawBestPath()
                 #print("AStar in seek from gotKey to returnKey = " + str(self.bestPath))
                 self.key.reparentTo(self.player)
+		self.key.setScale(render, 10)
+		self.key.setTexScale(TextureStage.getDefault(), 1)
                 self.key.setZ(5)
                 self.player.addKey(self.key)
                 #print("Does player have the key?")
@@ -303,6 +310,8 @@ class NPC(Agent, DirectObject):
         elif(self.npcState == "returnKey"):
             if(transition == "keyReturned"):
                 self.key.reparentTo(render)
+		self.key.setScale(render, 10)
+		self.key.setTexScale(TextureStage.getDefault(), 1)
                 self.key.setPos(self.keyNest.getPos())
                 #print("Changeing from returnKey to wander due to a keyReturn")
                 #self.speed = self.speed / 2
