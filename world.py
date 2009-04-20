@@ -76,11 +76,11 @@ class World(DirectObject):
 
     def __setupEnvironment(self):
         cm = CardMaker("ground")
-        size = 1000
+        size = 200
         cm.setFrame(-size, size, -size, size)
         environment = render.attachNewNode(cm.generate())
-        environment.setPos(0, 0, 0)
         environment.lookAt(0, 0, -1)
+        environment.setPos(100, -100, 0)
         environment.setCollideMask(BitMask32.allOn())
         environment.reparentTo(render)
         
@@ -94,8 +94,9 @@ class World(DirectObject):
         environment.setTexture(texture, 1)
         
     def animateItems(self, task):
-        self.rotate(self.roomKey)
-        return Task.cont
+        pass
+##        self.rotate(self.roomKey)
+##        return Task.cont
             
     currentAngle = 0
     def rotate(self, someItem):
@@ -271,6 +272,13 @@ class World(DirectObject):
         self.__mainAgent.setPos(31, 35, 50)
         self.gate.find("**/Cube;+h").setCollideMask(~self.__mainAgent.collisionMask)
         
+##        # What am I doing now? Why, I'm making Ralph hold the key!
+##        key = loader.loadModel("models/redKey")
+##        key.setScale(10)
+##        key.setPosHpr(.11,-1.99,.06, 0,-90,0)
+##        rightHand = self.__mainAgent.actor.exposeJoint(None, 'modelRoot', 'RightHand')
+##        key.reparentTo(rightHand)
+        
     __targetCount = 0
     __targets = []
     __agentToTargetMap = {}
@@ -382,7 +390,7 @@ class World(DirectObject):
 
     def __setupCamera(self):
         base.camera.setPos(100,-100, 795) #This is debug camera position.
-        base.camera.lookAt(100,-100,0)    
+        base.camera.lookAt(100,-100,0)
 ##        base.oobeCull()
         base.oobe()
         base.disableMouse()
@@ -399,12 +407,12 @@ class World(DirectObject):
         heading = self.__mainAgent.getH()
         heading %= 360.0
             
-        self.positionHeadingText.setText("Position: (" + 
-            str(self.__mainAgent.getX()) + ", " + 
-            str(self.__mainAgent.getY()) + ", " +
-            str(self.__mainAgent.getZ()) + ") at heading " + 
-            str(heading))
-        return Task.cont
+##        self.positionHeadingText.setText("Position: (" + 
+##            str(self.__mainAgent.getX()) + ", " + 
+##            str(self.__mainAgent.getY()) + ", " +
+##            str(self.__mainAgent.getZ()) + ") at heading " + 
+##            str(heading))
+##        return Task.cont
 
     # Every generation, throw out the old brains and put in the new ones. At
     # this point we can start all over with new nodes.
