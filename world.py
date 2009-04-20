@@ -49,6 +49,7 @@ class World(DirectObject):
         #Many things within the NPC are dependant on the level it is in.
         self.__room1NPC.setKeyAndNestReference(self.keyNest, self.roomKey)
         self.__room2NPC.setKeyAndNestReference(self.keyNest, self.roomKey)
+        self.__room3NPC.setKeyAndNestReference(self.keyNest, self.roomKey)
         self.__setupTasks()
         
     def __setupCollisions(self):
@@ -201,6 +202,7 @@ class World(DirectObject):
         # TODO: fix this hack by re-creating room3 in blender
         
         #self.setWaypoints("room3")
+        
         execfile("rooms/room3.py")
         for w in self.room3waypoints:
             w.draw()
@@ -365,9 +367,9 @@ class World(DirectObject):
         self.__room1NPC.reparentTo(render)
         
         
-        modelStanding = "models/bunny/bunny"
-        modelRunning = "models/bunny/bunny"
-        modelWalking = "models/bunny/bunny"
+##        modelStanding = "models/bunny/bunny"
+##        modelRunning = "models/bunny/bunny"
+##        modelWalking = "models/bunny/bunny"
         self.__room2NPC = NPC(modelStanding,
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
@@ -436,9 +438,11 @@ class World(DirectObject):
         
         taskMgr.add(self.__room1NPC.sense, "senseTask")
         taskMgr.add(self.__room2NPC.sense, "senseTask")
+        taskMgr.add(self.__room3NPC.sense, "senseTask")
 ##        taskMgr.add(self.ralph.think, "thinkTask")
         taskMgr.add(self.__room1NPC.act, "actTask")
-        #taskMgr.add(self.__room2NPC.act, "actTask")
+        taskMgr.add(self.__room2NPC.act, "actTask")
+        taskMgr.add(self.__room3NPC.act, "actTask")
         taskMgr.add(self.animateItems, "animateItemsTask")
 
         # This is for path finding
