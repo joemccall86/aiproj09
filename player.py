@@ -41,16 +41,17 @@ class Player(Agent, DirectObject):
             "keyTaken":False,
             "gotKey":False,
             "leftRoom":False}
-            
+    
+    waypointPositions = []
     def setKeymap(self):
         
         wpFile = open("waypoints.txt", "w")
         def dropWp():
             torus = loader.loadModel("models/Torus/Torus")
             torus.reparentTo(render)
-            torus.setPos(self.__mainAgent.getPos())
+            torus.setPos(self.getPos())
             self.waypointPositions.append(torus.getPos())
-            wpFile.write(str((int(self.__mainAgent.getX()), int(self.__mainAgent.getY()))) + "\r\n")
+            wpFile.write(str((int(self.getX()), int(self.getY()))) + "\r\n")
         
         self.accept("space", dropWp)
         
