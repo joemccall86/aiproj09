@@ -200,7 +200,7 @@ class World(DirectObject):
         
         
         room3SphereOfDoom = room3.attachNewNode(CollisionNode("Jim's Hair"))
-        room3SphereOfDoom.node().addSolid(CollisionSphere(3, -9, 0.5, .5))
+        room3SphereOfDoom.node().addSolid(CollisionSphere(3, -9, 0.5, 1.0))
         
         room1Floor = room1.attachNewNode(CollisionNode("room1Floor"))
         room1Floor.node().addSolid(CollisionPolygon(Point3(9,-9,0), Point3(9,9,0),
@@ -275,13 +275,6 @@ class World(DirectObject):
         self.__mainAgent.reparentTo(render)
         self.__mainAgent.setPos(31, 35, 50)
         self.gate.find("**/Cube;+h").setCollideMask(~self.__mainAgent.collisionMask)
-        
-##        # What am I doing now? Why, I'm making Ralph hold the key!
-##        key = loader.loadModel("models/redKey")
-##        key.setScale(10)
-##        key.setPosHpr(.11,-1.99,.06, 0,-90,0)
-##        rightHand = self.__mainAgent.actor.exposeJoint(None, 'modelRoot', 'RightHand')
-##        key.reparentTo(rightHand)
         
     __targetCount = 0
     __targets = []
@@ -405,7 +398,7 @@ class World(DirectObject):
         base.camera.setPos(100,-100, 795) #This is debug camera position.
         base.camera.lookAt(100,-100,0)
 ##        base.oobeCull()
-#        base.oobe()
+##        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.__mainAgent.actor)
         base.camera.setPos(0, 60, 60)
