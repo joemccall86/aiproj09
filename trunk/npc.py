@@ -161,7 +161,8 @@ class NPC(Agent, DirectObject):
         
         
         # Uncomment the following line to show the collision rays
-##        self.targetTrackerCollisionNodePath.show()
+        # Lets keep the visual uncommented until it is fixed so we don't forget it's a problem.
+        self.targetTrackerCollisionNodePath.show() 
         self.accept("targetTracker-into-Cube", self.setDistaneToWall)
 
     def sense(self, task):
@@ -285,8 +286,8 @@ class NPC(Agent, DirectObject):
                 print("NPC " + self.name + " Says: Changing from seek to wander")
                 self.npcState = "wander"
             elif(transition == "leftRoom"):
-                print("NPC " + self.name + " Says: Changing from seek to wander due to player leaving room")
-                self.npcState = "wander"
+                print("NPC " + self.name + " Says: Changing from seek to playerAbsent")
+                self.npcState = "playerAbsent"
             elif(transition  == "keyTaken"):
                 print("NPC " + self.name + " Says: Changing from seek to retriveKey")
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
@@ -299,8 +300,8 @@ class NPC(Agent, DirectObject):
                 self.key.setPosHpr(.11,-1.99,.06, 0,-90,0)
 ##                self.key.flattenLight()
                 self.player.addKey(self.key)
-                print("Does player have the key?")
-                print(self.player.hasKey(self.key))
+##                print("Does player have the key?")
+##                print(self.player.hasKey(self.key))
                 self.npcState = "retriveKey"
             elif(transition == "playerLeftRoom"):
                 print("NPC " + self.name + " Says: Changing from seek to playerAbsent")
@@ -310,7 +311,7 @@ class NPC(Agent, DirectObject):
                 print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "returnKey"):
             if(transition == "keyReturned"):
-##                print("NPC " + self.name + " Says: Changeing from returnKey to wander due to a keyReturn")
+                print("NPC " + self.name + " Says: Changeing from returnKey to wander due to a keyReturn")
                 self.key.reparentTo(render)
                 self.key.setPosHpr(0,0,0,0,0,0)
                 self.key.setScale(render, 10)
@@ -588,8 +589,9 @@ class NPC(Agent, DirectObject):
         #If there are any waypoints in the path
         #print("Attempting to follow path")
         if self.bestPath:
-            if(len(self.bestPath) > 1 and self.distanceToWall > PathFinder.distance(self, self.bestPath[1])):
-                self.bestPath.pop(0)
+            #Comment out next two lines to disable AStar cheat.
+##            if(len(self.bestPath) > 1 and self.distanceToWall > PathFinder.distance(self, self.bestPath[1])):
+##                self.bestPath.pop(0)
             self.currentTarget = self.bestPath[0]
             #if the next waypoint is reached
             if PathFinder.distance(self, self.currentTarget) < 2: #This number must be greater than distance in seek()
