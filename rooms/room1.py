@@ -1,4 +1,4 @@
-
+#Gotta love the magic numbers!
 coords = [ (-15,45),
         (9,63),
         (27,42),
