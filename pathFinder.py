@@ -124,6 +124,6 @@ class PathFinder():
     
     @staticmethod
     def distance(source, target):
-        xComponent = source.getX() - target.getX()
-        yComponent = source.getY() - target.getY()
+        xComponent = source.getX(render) - target.getX(render)
+        yComponent = source.getY(render) - target.getY(render)
         return math.hypot(xComponent, yComponent)
