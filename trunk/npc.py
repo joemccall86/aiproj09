@@ -200,19 +200,19 @@ class NPC(Agent, DirectObject):
                     self.handleTransition("keyTaken")
         if self.npcState == "seek":
             if self.currentTarget:
-                self.seek(self.currentTarget.getPos())
+                self.seek(self.currentTarget.getPos(render))
             if self.distanceToPlayer() > self.radarLength:
                 self.handleTransition("outOfRange")
             if (self.keyNest.getPos(render) - self.player.getPos(render)).length() < 5:#if player collided with key
                 self.handleTransition("keyTaken")
         elif self.npcState == "retriveKey":
             if self.currentTarget:
-                self.seek(self.currentTarget.getPos())
+                self.seek(self.currentTarget.getPos(render))
             if self.distanceToPlayer() < 5:#If collided with Player
                 self.handleTransition("gotKey")
         elif self.npcState == "returnKey":
             if self.currentTarget:
-                self.seek(self.currentTarget.getPos())
+                self.seek(self.currentTarget.getPos(render))
             offesetFromKey = self.keyNest.getPos(render) - self.getPos(render) #Key is returned
             #print("distance to return point = " + str(offstFrom
             if offesetFromKey.length() < 5:
@@ -314,9 +314,9 @@ class NPC(Agent, DirectObject):
                 print("NPC " + self.name + " Says: Changeing from returnKey to wander due to a keyReturn")
                 self.key.setPosHpr(0,0,0,0,0,0)
                 self.key.setScale(render, 10)
-                self.key.setTexScale(TextureStage.getDefault(), 1)
                 self.key.reparentTo(self.keyNest)
                 self.key.setScale(render, 10)
+                self.key.setTexScale(TextureStage.getDefault(), 0.1)
 ##                self.key.flattenLight()
                 #self.speed = self.speed / 2
                 self.keyInHand = False
@@ -360,13 +360,13 @@ class NPC(Agent, DirectObject):
             None
                 
     def distanceToPlayer(self):
-        ownPosition = self.getPos()
+        #ownPosition = self.getPos()
         #TODO: Make sure there is always
-        if self.player != None:
-            playerPosition = self.player.getPos()
+        #if self.player != None:
+        #    playerPosition = self.player.getPos()
         
-        vectorToPlayer = playerPosition - ownPosition
-        return vectorToPlayer.length()
+        #vectorToPlayer = playerPosition - ownPosition
+        return self.getDistance(self.player)
     
     def rangeFinderSense(self):
         self.traverser.traverse(render)
@@ -566,19 +566,17 @@ class NPC(Agent, DirectObject):
     def castRayToNextTarget(self):
         if self.bestPath:
             if len(self.bestPath) > 1:
-                worldPosition = self.getPos()
-                worldTargetPosition = self.player.getPos()
-                worldHeading = self.getH()
+                worldPosition = self.getPos(render)
+                worldTargetPosition = self.player.getPos(render)
+                worldHeading = self.getH(render)
                 worldHeading = worldHeading % 360
                 worldYDirection = worldTargetPosition.getY() - worldPosition.getY()
                 worldXDirection = worldTargetPosition.getX() - worldPosition.getX()
                 worldDirectionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
-                distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
-                #print("distanceToTarget = " + str(distanceToTarget))
                 angleToTarget = worldDirectionToTarget - worldHeading + 180
                 angleToTarget = angleToTarget % 360
                 
-                self.targetTrackerCollisionNodePath.lookAt(self.bestPath[1]) 
+                self.targetTrackerCollisionNodePath.lookAt(render, self.bestPath[1].getPos()) 
                 
                                
     def setKeyAndNestReference(self, keyNest, key):
@@ -590,8 +588,8 @@ class NPC(Agent, DirectObject):
         #print("Attempting to follow path")
         if self.bestPath:
             #Comment out next two lines to disable AStar cheat.
-##            if(len(self.bestPath) > 1 and self.distanceToWall > PathFinder.distance(self, self.bestPath[1])):
-##                self.bestPath.pop(0)
+            if(len(self.bestPath) > 1 and self.distanceToWall > PathFinder.distance(self, self.bestPath[1])):
+                self.bestPath.pop(0)
             self.currentTarget = self.bestPath[0]
             #if the next waypoint is reached
             if PathFinder.distance(self, self.currentTarget) < 2: #This number must be greater than distance in seek()
@@ -614,14 +612,14 @@ class NPC(Agent, DirectObject):
     def seek(self, position):
         #print("Seeking position " + str(position.getX()) + ", " + str(position.getY()))
         #print("Current position " + str(self.getX())     + ", " + str(position.getY()))
-        worldPosition = self.getPos()
+        worldPosition = self.getPos(render)
         worldTargetPosition = position
-        worldHeading = self.getH()
+        worldHeading = self.getH(render)
         worldHeading = worldHeading % 360
         worldYDirection = worldTargetPosition.getY() - worldPosition.getY()
         worldXDirection = worldTargetPosition.getX() - worldPosition.getX()
         worldDirectionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
-        distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
+        distanceToTarget = math.hypot(worldYDirection, worldXDirection)
         #print("distanceToTarget = " + str(distanceToTarget))
         angleToTarget = worldDirectionToTarget - worldHeading + 180
         angleToTarget = angleToTarget % 360

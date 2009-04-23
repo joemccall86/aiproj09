@@ -62,7 +62,6 @@ class Waypoint(NodePath):
         self.texture = loader.loadTexture("textures/snowish.jpg")
         self.texture.setMinfilter(Texture.FTLinearMipmapLinear)
         self.torus.setTexture(self.texture, 1)
-    
 
     def draw(self):       
         torus = self.torus
