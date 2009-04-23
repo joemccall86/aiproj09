@@ -130,17 +130,21 @@ class World(DirectObject):
         room1.setTexScale(TextureStage.getDefault(), 10)
         room1.reparentTo(level1)
 
+        keyNest = loader.loadModel("models/nest")
+        keyNest.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        keyNest.setScale(0.5)
+        keyNest.setTexScale(TextureStage.getDefault(), 0.1)
+
         #place keyNest (Like a birds nest, but for keys!)
-        self.keyNest1 = loader.loadModel("models/nest")
-        self.keyNest1.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
-        self.keyNest1.setScale(0.5)
-        self.keyNest1.setTexScale(TextureStage.getDefault(), 0.1)
+        self.keyNest1 = room1.attachNewNode("key nest 1")
+        keyNest.instanceTo(self.keyNest1)
         self.keyNest1.setPos(0, 0, 0.05)
-        self.keyNest1.reparentTo(room1)
 
         self.room1Key = loader.loadModel("models/redKey")
+        self.room1Key.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         self.room1Key.reparentTo(self.keyNest1)
         self.room1Key.setScale(render, 10)
+        self.room1Key.setTexScale(TextureStage.getDefault(), 0.1)
         
         #self.setWaypoints("room2")
         self.room2waypoints = None
@@ -156,17 +160,15 @@ class World(DirectObject):
         room2.reparentTo(level1)
         room2.setY(room1, -20)
         
-        self.keyNest2 = loader.loadModel("models/nest")
-        self.keyNest2.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
-        self.keyNest2.setScale(0.5)
-        self.keyNest2.setTexScale(TextureStage.getDefault(), 0.1)
-        self.keyNest2.reparentTo(room2)
+        self.keyNest2 = room2.attachNewNode("key nest 2")
+        keyNest.instanceTo(self.keyNest2)
         self.keyNest2.setPos(-2.5, -2.5, 0.05)
         
         self.room2Key = loader.loadModel("models/blueKey")
         self.room2Key.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         self.room2Key.reparentTo(self.keyNest2)
         self.room2Key.setScale(render, 10)
+        self.room2Key.setTexScale(TextureStage.getDefault(), 0.1)
         
         # Jim thinks there should be a comment here
         # he also thinks that the above comment is very useful
@@ -196,11 +198,8 @@ class World(DirectObject):
 ##        self.keyNest2.setPos(0, -150, 0.05)
 ##        self.keyNest2.reparentTo(render)
         
-        self.keyNest3 = loader.loadModel("models/nest")
-        self.keyNest3.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
-        self.keyNest3.setScale(0.5)
-        self.keyNest3.setTexScale(TextureStage.getDefault(), 0.1)
-        self.keyNest3.reparentTo(room3)
+        self.keyNest3 = room3.attachNewNode("room 3 keynest") 
+        keyNest.instanceTo(self.keyNest3)
         self.keyNest3.setPos(0, 0, 0.05)
         
 ##        self.keyNest3 = room3.attachNewNode("key nest 3")
@@ -211,6 +210,7 @@ class World(DirectObject):
         self.room3Key.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         self.room3Key.reparentTo(self.keyNest3)
         self.room3Key.setScale(render, 10)
+        self.room3Key.setTexScale(TextureStage.getDefault(), 0.1)
         
         
         room3SphereOfDoom = room3.attachNewNode(CollisionNode("Jim's Hair"))
