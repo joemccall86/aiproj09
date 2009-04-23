@@ -57,10 +57,10 @@ class Agent(NodePath):
 
     
     def turnLeft(self, angle):
-        self.setH(self.getH() + angle)
+        self.setH(self, angle)
     
     def turnRight(self, angle):
-        self.setH(self.getH() - angle)
+        self.setH(self, -angle)
     
     def moveForward(self, distance):
         self.setFluidY(self, -distance)

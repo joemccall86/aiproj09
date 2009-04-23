@@ -196,14 +196,14 @@ class NPC(Agent, DirectObject):
             if self.player != None:
                 if self.distanceToPlayer() < self.radarLength:
                     self.handleTransition("withinRange")
-                if (self.keyNest.getPos() - self.player.getPos()).length() < 5:#if player collided with keyNest
+                if (self.keyNest.getPos(render) - self.player.getPos(render)).length() < 5:#if player collided with keyNest
                     self.handleTransition("keyTaken")
         if self.npcState == "seek":
             if self.currentTarget:
                 self.seek(self.currentTarget.getPos())
             if self.distanceToPlayer() > self.radarLength:
                 self.handleTransition("outOfRange")
-            if (self.keyNest.getPos() - self.player.getPos()).length() < 5:#if player collided with key
+            if (self.keyNest.getPos(render) - self.player.getPos(render)).length() < 5:#if player collided with key
                 self.handleTransition("keyTaken")
         elif self.npcState == "retriveKey":
             if self.currentTarget:
@@ -213,7 +213,7 @@ class NPC(Agent, DirectObject):
         elif self.npcState == "returnKey":
             if self.currentTarget:
                 self.seek(self.currentTarget.getPos())
-            offesetFromKey = self.keyNest.getPos() - self.getPos() #Key is returned
+            offesetFromKey = self.keyNest.getPos(render) - self.getPos(render) #Key is returned
             #print("distance to return point = " + str(offstFrom
             if offesetFromKey.length() < 5:
                 self.handleTransition("keyReturned")
@@ -312,11 +312,11 @@ class NPC(Agent, DirectObject):
         elif(self.npcState == "returnKey"):
             if(transition == "keyReturned"):
                 print("NPC " + self.name + " Says: Changeing from returnKey to wander due to a keyReturn")
-                self.key.reparentTo(render)
                 self.key.setPosHpr(0,0,0,0,0,0)
                 self.key.setScale(render, 10)
                 self.key.setTexScale(TextureStage.getDefault(), 1)
-                self.key.setPos(self.keyNest.getPos())
+                self.key.reparentTo(self.keyNest)
+                self.key.setScale(render, 10)
 ##                self.key.flattenLight()
                 #self.speed = self.speed / 2
                 self.keyInHand = False

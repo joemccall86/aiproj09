@@ -6,7 +6,7 @@ class Waypoint(NodePath):
     
     def __init__(self, position, ID = -1):
         NodePath.__init__(self, "Waypoint " + str(ID))
-        self.position = position
+        self.setPos(position)
         self.texture = loader.loadTexture("textures/blue.jpg")
         self.costToThisNode = 0
         self.visited = False
@@ -46,15 +46,6 @@ class Waypoint(NodePath):
     def getCostToNode(self):
         return self.costToThisNode
     
-    def getPos(self):
-        return self.position
-    
-    def getX(self):
-        return self.position.getX()
-    
-    def getY(self):
-        return self.position.getY()
-    
     def changeToGreen(self):
         self.texture = loader.loadTexture("textures/green.jpg")
         self.torus.setTexture(self.texture, 1)
@@ -74,17 +65,14 @@ class Waypoint(NodePath):
     
 
     def draw(self):       
-        return  
         torus = self.torus
-        torus.setPos(self.position)
         torus.setScale(5, 5, 5)
         torus.setTexture(self.texture, 1)
         torus.reparentTo(render)
-        torus.hide()
+        torus.setPos(render, self.getPos())
         self.drawLineToNeighbors()
         
     def drawLineToNeighbors(self):
-        return 
         ls = LineSegs()
         ls.setThickness(1.0)
         for neighbor in self.neighbors:
@@ -93,4 +81,3 @@ class Waypoint(NodePath):
             ls.drawTo(neighbor.getPos())
             np = NodePath(ls.create("aoeu"))
             np.reparentTo(render)
-            np.hide()
