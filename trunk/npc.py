@@ -64,7 +64,7 @@ class NPC(Agent, DirectObject):
         self.radarLength = radarLength
         self.scale = scale
         self.brain = brain
-        self.npcState = "wander"
+        self.npcState = "playerAbsent"
         self.waypoints = waypoints
 ##        if None == self.brain:
 ##            self.brain = chromosome.Chromosome.create_fully_connected()
@@ -190,6 +190,18 @@ class NPC(Agent, DirectObject):
     
     isMoving = False
     def act(self, task):
+        #HACK!
+        pushAmount = 0.2
+        pushArea = 88 #Distance from center of room to begin pushing
+        if self.getX() > pushArea:
+            self.setFluidX(self.getX() - pushAmount)
+        if self.getX() < -pushArea:
+            self.setFluidX(self.getX() + pushAmount)
+        if self.getY() > pushArea:
+            self.setFluidY(self.getY() - pushAmount)
+        if self.getY() < -pushArea:
+            self.setFluidY(self.getY() + pushAmount)
+            
         self.followPath()
         if self.npcState == "wander":
             self.wander()
@@ -228,6 +240,8 @@ class NPC(Agent, DirectObject):
         self.player = player
         
     def handleTransition(self, transition, entry = None):
+        if(self.getZ() < -100):
+            print(self.name + "Says: Aieee! I've fallen through the floor!! I'm at " + str(self.getPos()))
         if(self.npcState == "wander"):
             if(transition == "keyTaken"):
                 print("NPC " + self.name + " Says: Changing from wander to retriveKey")
@@ -256,9 +270,6 @@ class NPC(Agent, DirectObject):
             else:#Joe pleas don't comment out the else prints. I need to know any time this happens
                 print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "retriveKey"):
-##            if(transition == "leftRoom"):
-##                print("NPC " + self.name + "Says: Changing from retrive key to wander due to player leaving")
-##                self.npcState = "wander"
             if(transition == "gotKey"):
                 print("NPC " + self.name + " Says: Changing from retriveKey to returnKey")
                 rightHand = self.actor.exposeJoint(None, 'modelRoot', 'RightHand')
@@ -285,7 +296,7 @@ class NPC(Agent, DirectObject):
             if(transition == "outOfRange"):
                 print("NPC " + self.name + " Says: Changing from seek to wander")
                 self.npcState = "wander"
-            elif(transition == "leftRoom"):
+            elif(transition == "playerLeftRoom"):
                 print("NPC " + self.name + " Says: Changing from seek to playerAbsent")
                 self.npcState = "playerAbsent"
             elif(transition  == "keyTaken"):
@@ -563,6 +574,7 @@ class NPC(Agent, DirectObject):
             self.pose("walk", frame = 5)
             self.isMoving = False
             
+    #I am 
     def castRayToNextTarget(self):
         if self.bestPath:
             if len(self.bestPath) > 1:
@@ -587,7 +599,7 @@ class NPC(Agent, DirectObject):
         #If there are any waypoints in the path
         #print("Attempting to follow path")
         if self.bestPath:
-            #Comment out next two lines to disable AStar cheat.
+            #Comment out next two lines to disable path smoothening.
             if(len(self.bestPath) > 1 and self.distanceToWall > PathFinder.distance(self, self.bestPath[1])):
                 self.bestPath.pop(0)
             self.currentTarget = self.bestPath[0]

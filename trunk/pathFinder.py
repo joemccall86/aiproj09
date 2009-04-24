@@ -20,17 +20,64 @@ class PathFinder():
     def AStar(self, source, target, waypoints):
 ##        print "AStar called"
         infinity = 1E400
+        
+##  def castRayToNextTarget(self):
+##        if self.bestPath:
+##            if len(self.bestPath) > 1:
+##                worldPosition = self.getPos()
+##                worldTargetPosition = self.player.getPos()
+##                worldHeading = self.getH()
+##                worldHeading = worldHeading % 360
+##                worldYDirection = worldTargetPosition.getY() - worldPosition.getY()
+##                worldXDirection = worldTargetPosition.getX() - worldPosition.getX()
+##                worldDirectionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
+##                distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
+##                #print("distanceToTarget = " + str(distanceToTarget))
+##                angleToTarget = worldDirectionToTarget - worldHeading + 180
+##                angleToTarget = angleToTarget % 360
+##                
+##                self.targetTrackerCollisionNodePath.lookAt(self.bestPath[1])         
+# self.distanceToWall = entry.getSurfacePoint(self).length()
+        def waypointIsReachable(thing, waypoint):
+            #Calculate distance between waypoint and thing.
+##            thingPosition = thing.getPos()
+##            waypointPosition = waypoint.getPos()
+##            worldYDirection = waypointPosition.getY() - thingPosition.getY()
+##            worldXDirection = waypoint.getX() - thingPosition.getX()
+##            distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
+            distanceToTarget = thing.getDistance(waypoint)
+
+            
+            #Calculate direction from thing to waypoint
+            worldYDirection = waypoint.getY() - thing.getY()
+            worldXDirection = waypoint.getX() - thing.getX()
+            directionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
+            directionToTarget = directionToTarget % 360
+            
+            #Calculate distance to wall
+            distanceToWall = 1E400 #This represnts infinity... Replace with actual value once calculated.
+            
+            
+            #Compare "distance to thing" to "distance to wall" to decide if there is a wall in the way.
+            if(distanceToTarget < distanceToWall):
+                return True
+            else:
+                return False
+        
         def getClosestNodeTo(thing):
+            #Make sure there is a direct path between thing and the nearestWaypoint.
+            possiblyReachableWaypoints = waypoints
+            
             #Find closest Waypoint
             shortestDistanceFound = infinity
             closestNodeToSource = Waypoint(Vec3(0,0,5))
             closestNodeIndex = 0
-##            print("number of waypoints = " + str(len(waypoints)))
             for i in range(len(waypoints)):
                 #print("distance = " + str(self.distance(self, self.waypoints[i])))
-                if self.distance(thing, waypoints[i]) < shortestDistanceFound:
-                    closestNodeToSource = waypoints[i]
-                    shortestDistanceFound = self.distance(thing, waypoints[i])
+                if self.distance(thing, possiblyReachableWaypoints[i]) < shortestDistanceFound \
+                                            and waypointIsReachable(thing, possiblyReachableWaypoints[i]):
+                    closestNodeToSource = possiblyReachableWaypoints[i]
+                    shortestDistanceFound = self.distance(thing, possiblyReachableWaypoints[i])
             return closestNodeToSource
         
 ##        print("Got here")

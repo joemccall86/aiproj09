@@ -63,7 +63,7 @@ class Waypoint(NodePath):
         self.texture.setMinfilter(Texture.FTLinearMipmapLinear)
         self.torus.setTexture(self.texture, 1)
 
-    def draw(self):       
+    def draw(self):  
         torus = self.torus
         torus.setScale(5, 5, 5)
         torus.setTexture(self.texture, 1)
