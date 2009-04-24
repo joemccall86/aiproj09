@@ -50,7 +50,9 @@ class World(DirectObject):
         #Many things within the NPC are dependant on the level it is in.
         self.__room1NPC.setKeyAndNestReference(self.keyNest1, self.room1Key)
         self.__room2NPC.setKeyAndNestReference(self.keyNest2, self.room2Key)
+        #self.__room2NPC.handleTransition("playerLeftRoom")
         self.__room3NPC.setKeyAndNestReference(self.keyNest3, self.room3Key)
+        #self.__room3NPC.handleTransition("playerLeftRoom")
         self.__setupTasks()
         
     def __setupCollisions(self):
@@ -99,7 +101,6 @@ class World(DirectObject):
 #        skyBox.reparentTo(render)
         
     def animateItems(self, task):
-        #pass
         if(not (self.__mainAgent.hasKey(self.room1Key) or self.__room1NPC.hasKey())):
             self.rotate(self.room1Key)
         if(not self.__mainAgent.hasKey(self.room2Key) and not self.__room2NPC.hasKey()):
