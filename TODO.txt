@@ -8,3 +8,8 @@ List of things to do (No particular order)
 6) Call A* when a collision between NPC and wall happens during retrieveKey
 7) Fix walking through walls/floor problem
 8) Figure out what room3 NPC's problem is.
+
+Aesthetic TODO's
+1) Merge this in with the issue tracker
+2) Place keys in upper right hand corner when grabbed.
+3) Map a key to toggle debug output
