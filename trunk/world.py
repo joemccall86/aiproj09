@@ -54,6 +54,7 @@ class World(DirectObject):
         self.__room3NPC.setKeyAndNestReference(self.keyNest3, self.room3Key)
         #self.__room3NPC.handleTransition("playerLeftRoom")
         self.__setupTasks()
+
         
     def __setupCollisions(self):
         self.cTrav = CollisionTraverser("traverser")
@@ -123,11 +124,11 @@ class World(DirectObject):
         execfile("rooms/room1.py")
         for w in self.room1waypoints:
             w.draw()
-        room1 = loader.loadModel("rooms/room1")
-        room1.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
-        room1.setScale(10)
-        room1.setTexScale(TextureStage.getDefault(), 10)
-        room1.reparentTo(level1)
+        self.room1 = loader.loadModel("rooms/room1")
+        self.room1.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        self.room1.setScale(10)
+        self.room1.setTexScale(TextureStage.getDefault(), 10)
+        self.room1.reparentTo(render)
 
         keyNest = loader.loadModel("models/nest")
         keyNest.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
@@ -135,7 +136,7 @@ class World(DirectObject):
         keyNest.setTexScale(TextureStage.getDefault(), 0.1)
 
         #place keyNest (Like a birds nest, but for keys!)
-        self.keyNest1 = room1.attachNewNode("key nest 1")
+        self.keyNest1 = self.room1.attachNewNode("key nest 1")
         keyNest.instanceTo(self.keyNest1)
         self.keyNest1.setPos(0, 0, 0.05)
 
@@ -152,14 +153,14 @@ class World(DirectObject):
         for w in self.room2waypoints:
             w.draw()
             #print(w.getPos())
-        room2 = loader.loadModel("rooms/room2")
-        room2.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
-        room2.setScale(10)
-        room2.setTexScale(TextureStage.getDefault(), 10)
-        room2.reparentTo(level1)
-        room2.setY(room1, -20)
+        self.room2 = loader.loadModel("rooms/room2")
+        self.room2.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
+        self.room2.setScale(10)
+        self.room2.setTexScale(TextureStage.getDefault(), 10)
+        self.room2.reparentTo(level1)
+        self.room2.setY(self.room1, -20)
         
-        self.keyNest2 = room2.attachNewNode("key nest 2")
+        self.keyNest2 = self.room2.attachNewNode("key nest 2")
         keyNest.instanceTo(self.keyNest2)
         self.keyNest2.setPos(-2.5, -2.5, 0.05)
         
@@ -183,12 +184,12 @@ class World(DirectObject):
         room3Model.setH(90)
         room3Model.setP(180)
         room3Model.setZ(2)
-        room3 = level1.attachNewNode("room 3")
-        room3Model.reparentTo(room3)
-        room3.setScale(10)
-        room3.setTexScale(TextureStage.getDefault(), 10)
-        room3.reparentTo(level1)
-        room3.setX(room1, 20)
+        self.room3 = level1.attachNewNode("room 3")
+        room3Model.reparentTo(self.room3)
+        self.room3.setScale(10)
+        self.room3.setTexScale(TextureStage.getDefault(), 10)
+        self.room3.reparentTo(level1)
+        self.room3.setX(self.room1, 20)
         
 ##        self.keyNest2 = loader.loadModel("models/nest")
 ##        self.keyNest2.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
@@ -197,7 +198,7 @@ class World(DirectObject):
 ##        self.keyNest2.setPos(0, -150, 0.05)
 ##        self.keyNest2.reparentTo(render)
         
-        self.keyNest3 = room3.attachNewNode("room 3 keynest") 
+        self.keyNest3 = self.room3.attachNewNode("room 3 keynest") 
         keyNest.instanceTo(self.keyNest3)
         self.keyNest3.setPos(0, 0, 0.05)
         
@@ -212,29 +213,29 @@ class World(DirectObject):
         self.room3Key.setTexScale(TextureStage.getDefault(), 0.1)
         
         
-        room3SphereOfDoom = room3.attachNewNode(CollisionNode("Jim's Hair"))
+        room3SphereOfDoom = self.room3.attachNewNode(CollisionNode("Jim's Hair"))
         room3SphereOfDoom.node().addSolid(CollisionSphere(3, -9, 0.5, 1.0))
         
-        room1Floor = room1.attachNewNode(CollisionNode("room1Floor"))
+        room1Floor = self.room1.attachNewNode(CollisionNode("room1Floor"))
         room1Floor.node().addSolid(CollisionPolygon(Point3(9,-9,0), Point3(9,9,0),
-                                                 Point3(-9,9,0), Point3(-9,-9,0)))
+                                                Point3(-9,9,0), Point3(-9,-9,0)))
                                                 
-        room2Floor = room2.attachNewNode(CollisionNode("room2Floor"))
+        room2Floor = self.room2.attachNewNode(CollisionNode("room2Floor"))
         room2Floor.node().addSolid(CollisionPolygon(Point3(9,-9,0), Point3(9,9,0),
-                                                 Point3(-9,9,0), Point3(-9,-9,0)))
+                                                Point3(-9,9,0), Point3(-9,-9,0)))
 
-        room3Floor = room3.attachNewNode(CollisionNode("room3Floor"))
+        room3Floor = self.room3.attachNewNode(CollisionNode("room3Floor"))
         room3Floor.node().addSolid(CollisionPolygon(Point3(9,-9,0), Point3(9,9,0),
-                                                 Point3(-9,9,0), Point3(-9,-9,0)))
+                                                Point3(-9,9,0), Point3(-9,-9,0)))
         
         gate = loader.loadModel("models/box")
         
-        gateTo2 = room1.attachNewNode("gateTo2")
+        gateTo2 = self.room1.attachNewNode("gateTo2")
         gate.instanceTo(gateTo2)
         gateTo2.setPos(8, -10, 0)
         gateTo2.hide()
         
-        gateTo3 = room1.attachNewNode("gateTo3")
+        gateTo3 = self.room1.attachNewNode("gateTo3")
         gate.instanceTo(gateTo3)
         gateTo3.setPos(10, 8, 0)
         gateTo3.hide()
@@ -304,7 +305,7 @@ class World(DirectObject):
         self.__room1NPC = NPC(modelStanding, 
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
-                                speed = 26,
+                                speed = 23,
                                 agentList = self.__globalAgentList,
                                 name = "Eve 1",
                                 collisionMask = BitMask32.bit(3),
@@ -317,7 +318,8 @@ class World(DirectObject):
                                 collisionHandler = self.physicsCollisionHandler,
                                 collisionTraverser = self.cTrav,
                                 waypoints = self.room1waypoints)
-        self.__room1NPC.setPos(20, -15, 10)
+        self.__room1NPC.setFluidPos(render, 0, 0, 10)
+        self.__room1NPC.setScale(render, 1)
         self.__room1NPC.setPlayer(self.__mainAgent)
         self.__room1NPC.reparentTo(render)
 
@@ -340,10 +342,10 @@ class World(DirectObject):
         self.__room2NPC = NPC(modelStanding,
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
-                                speed = 25,
+                                speed = 23,
                                 agentList = self.__globalAgentList,
                                 name = "Eve 2",#"das Osterhase",
-                                collisionMask = BitMask32.bit(3),
+                                collisionMask = BitMask32.bit(4),
                                 rangeFinderCount = 13,
                                 adjacencySensorThreshold = 5,
                                 radarSlices = 5,
@@ -363,10 +365,10 @@ class World(DirectObject):
         self.__room3NPC = NPC(modelStanding, 
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
-                                speed = 25,
+                                speed = 23,
                                 agentList = self.__globalAgentList,
                                 name = "Eve 3",#"der Hoppelhaschen",
-                                collisionMask = BitMask32.bit(3),
+                                collisionMask = BitMask32.bit(5),
                                 rangeFinderCount = 13,
                                 adjacencySensorThreshold = 5,
                                 radarSlices = 5,
@@ -375,7 +377,7 @@ class World(DirectObject):
                                 massKg = 35.0,
                                 collisionHandler = self.physicsCollisionHandler,
                                 collisionTraverser = self.cTrav,
-                                waypoints = self.room2waypoints)#TODO: Change this to room 3 once created!!!
+                                waypoints = self.room3waypoints)
         self.__room3NPC.setPos(210, 0, 10)
         self.__room3NPC.setPlayer(self.__mainAgent)
         self.__room3NPC.reparentTo(render)

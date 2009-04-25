@@ -90,36 +90,36 @@ class NPC(Agent, DirectObject):
             "up":False,
             "down":False}
         
-        # Set up the range finders                            
-        rangeFinderCollisionNode = CollisionNode("rangeFinders")
-        deviation = 180 / (self.rangeFinderCount-1)
-        angle = 0
-        for rangeFinder in self.rangeFinders:
-            rangeFinder.setOrigin(self.getX(), self.getY(), self.getZ() + 3.5)
-            
-            rangeFinder.setDirection(math.cos(math.radians(angle)),
-                                    -math.sin(math.radians(angle)),
-                                    0)
-            
-            rangeFinderCollisionNode.addSolid(rangeFinder)
-
-            # Set the Collision mask
-            rangeFinderCollisionNode.setFromCollideMask(self.collisionMask)
-            rangeFinderCollisionNode.setIntoCollideMask(BitMask32.allOff())
-            
-            angle += deviation
-            
-        rangeFinderCollisionNodePath = self.attachNewNode(rangeFinderCollisionNode)
-        # Uncomment the following line to show the collision rays
-        #rangeFinderCollisionNodePath.show()
-        
-        # Create the CollisionTraverser and the CollisionHandlerQueue
-        self.traverser = CollisionTraverser()
-        self.queue = CollisionHandlerQueue()
-        
-        self.traverser.addCollider(rangeFinderCollisionNodePath, self.queue)
-        # Uncomment the following line to show the collisions
-        #self.traverser.showCollisions(render)
+##        # Set up the range finders                            
+##        rangeFinderCollisionNode = CollisionNode("rangeFinders")
+##        deviation = 180 / (self.rangeFinderCount-1)
+##        angle = 0
+##        for rangeFinder in self.rangeFinders:
+##            rangeFinder.setOrigin(self.getX(), self.getY(), self.getZ() + 3.5)
+##            
+##            rangeFinder.setDirection(math.cos(math.radians(angle)),
+##                                    -math.sin(math.radians(angle)),
+##                                    0)
+##            
+##            rangeFinderCollisionNode.addSolid(rangeFinder)
+##
+##            # Set the Collision mask
+##            rangeFinderCollisionNode.setFromCollideMask(self.collisionMask)
+##            rangeFinderCollisionNode.setIntoCollideMask(BitMask32.allOff())
+##            
+##            angle += deviation
+##            
+##        rangeFinderCollisionNodePath = self.attachNewNode(rangeFinderCollisionNode)
+##        # Uncomment the following line to show the collision rays
+##        #rangeFinderCollisionNodePath.show()
+##        
+##        # Create the CollisionTraverser and the CollisionHandlerQueue
+##        self.traverser = CollisionTraverser()
+##        self.queue = CollisionHandlerQueue()
+##        
+##        self.traverser.addCollider(rangeFinderCollisionNodePath, self.queue)
+##        # Uncomment the following line to show the collisions
+##        #self.traverser.showCollisions(render)
         
         self.adjacentAgents = []
 
@@ -166,8 +166,8 @@ class NPC(Agent, DirectObject):
         self.accept("targetTracker-into-Cube", self.setDistaneToWall)
 
     def sense(self, task):
-        self.rangeFinderSense()
-        self.adjacencySense()
+        #self.rangeFinderSense()
+        #self.adjacencySense()
         self.radarSense()
         self.castRayToNextTarget()
         return Task.cont
@@ -193,14 +193,14 @@ class NPC(Agent, DirectObject):
         #HACK!
         pushAmount = 0.2
         pushArea = 88 #Distance from center of room to begin pushing
-        if self.getX() > pushArea:
-            self.setFluidX(self.getX() - pushAmount)
-        if self.getX() < -pushArea:
-            self.setFluidX(self.getX() + pushAmount)
-        if self.getY() > pushArea:
-            self.setFluidY(self.getY() - pushAmount)
-        if self.getY() < -pushArea:
-            self.setFluidY(self.getY() + pushAmount)
+##        if self.getX() > pushArea:
+##            self.setFluidX(self.getX() - pushAmount)
+##        if self.getX() < -pushArea:
+##            self.setFluidX(self.getX() + pushAmount)
+##        if self.getY() > pushArea:
+##            self.setFluidY(self.getY() - pushAmount)
+##        if self.getY() < -pushArea:
+##            self.setFluidY(self.getY() + pushAmount)
             
         self.followPath()
         if self.npcState == "wander":
@@ -605,20 +605,33 @@ class NPC(Agent, DirectObject):
             self.currentTarget = self.bestPath[0]
             #if the next waypoint is reached
             if PathFinder.distance(self, self.currentTarget) < 2: #This number must be greater than distance in seek()
+                
+                print("path returned from AStar = " + str(self.bestPath))
+                print("current position is: " + str(self.getPos(render)))
+                print("current target name and positon is: " + str(self.currentTarget) + " " + str(self.currentTarget.getPos(render)))
+                print("Distance between self and currentTarget is: " + str(PathFinder.distance(self, self.currentTarget)))
+                print("Another distance calculation is: " + str(math.hypot(self.getX(render) - self.currentTarget.getX(render), self.getY(render) - self.currentTarget.getY(render))))
+                if(len(self.bestPath) > 1):
+                    print("Next target name and position is: " + str(self.bestPath[1]) + " " + str(self.bestPath[1].getPos(render)))
+                    print("Distance between self and nextTarget is: " + str(PathFinder.distance(self, self.bestPath[1])))
+                    print("Another distance calculation is: " + str(math.hypot(self.getX(render) - self.bestPath[1].getX(render), self.getY(render) - self.bestPath[1].getY(render))))
+                
                 self.bestPath.pop(0)
-                #while PathFinder.distance(self, self.currentTarget) < 2: #If starting near the first node, skip it.
-                #   self.bestPath.pop(0)
+                while self.bestPath and PathFinder.distance(self, self.bestPath[0]) < 2: #If starting near the first node, skip it.
+                    print("Starting on top of waypoint, skipping it")
+                    self.bestPath.pop(0)
                 if len(self.bestPath) > 1:
-##                    print("Final place = " + str(self.waypoints[-1]))
-                    self.bestPath = PathFinder.AStar(self.currentTarget, self.bestPath[-1], self.waypoints)
+                    print("Final place = " + str(self.bestPath[-1]))
+                    self.bestPath = PathFinder.AStar(self.bestPath[0], self.bestPath[-1], self.waypoints)
                     #self.bestPath.pop(0)
-                    if self.bestPath != None:
+                    if self.bestPath != None:# and PathFinder.distance(self, self.bestPath[0]) < 2: #If starting near the first node, skip it.:
                         #self.drawBestPath()
-##                        print("path returned from AStar = " + str(self.bestPath))
+                        #print("path returned from AStar = " + str(self.bestPath))
                         #while PathFinder.distance(self, self.bestPath[0]) < 2: #If starting near the first node, skip it.
                         #    self.bestPath.pop(0)
-
+                        #Ignore the first waypoint, because you should already be there.
                         self.bestPath.pop(0)
+                print(" ")
         return Task.cont
 
     def seek(self, position):

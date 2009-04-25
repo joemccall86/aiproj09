@@ -91,16 +91,17 @@ class PathFinder():
 #            collisionTraverser.traverse(wallRayNP)
             collisionHandler.sortEntries()
             # Now that the collision handler's entries are sorted, the first one should be the collision closest to us
-            if collisionHandler.getNumEntries() <= 0:
-               print("There were no collisions detected! Something went wrong here...")
-            else:
-               print(collisionHandler.getEntry(0))
+##            if collisionHandler.getNumEntries() <= 0:
+##               print("There were no collisions detected! Something went wrong here...")
+##            else:
+##               print(collisionHandler.getEntry(0))
 
             
             #Compare "distance to thing" to "distance to wall" to decide if there is a wall in the way.
             if(distanceToTarget < distanceToWall):
                 return True
             else:
+                print("There is a wall in the way of nearest waypoint, ignore it and check next nearest")
                 return False
         
         def getClosestNodeTo(thing):
@@ -211,4 +212,5 @@ class PathFinder():
     
     @staticmethod
     def distance(source, target):
-        return source.getDistance(target)
+        return math.hypot(source.getX(render) - target.getX(render), source.getY(render) - target.getY(render))
+        #return source.getDistance(target)
