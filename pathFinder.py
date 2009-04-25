@@ -105,7 +105,7 @@ def AStar(source, target, waypoints):
     
     #AStar from wiki
     def reconstructPath(cameFrom, currentNode):            
-        pathToTarget = [currentNode]
+        pathToTarget = cameFrom.has_key(currentNode) and [currentNode] or []
         while cameFrom.has_key(currentNode):
             pathToTarget.append(cameFrom[currentNode])
             currentNode = cameFrom[currentNode]
@@ -120,7 +120,7 @@ def AStar(source, target, waypoints):
     
     infinity = 1E400
     cameFrom = {}
-    while len(openSet) > 0:
+    while openSet:
         lowestFScoreFound = infinity 
         nodeWithLowestFScoreFound = None #Node in openset having lowest fScore[] value
         for waypoint in openSet:
@@ -131,6 +131,7 @@ def AStar(source, target, waypoints):
         assert nodeWithLowestFScoreFound, "Something went horribly wrong, no node found with fScore < infinity"
             
         if nodeWithLowestFScoreFound == closestNodeToTarget: #If goal is found
+            assert cameFrom, "cameFrom should be defined before reconstructPath is called"
             returnValue = reconstructPath(cameFrom, closestNodeToTarget) #Be sure to define cameFrom
             return returnValue + [target]
         
