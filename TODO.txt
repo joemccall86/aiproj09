@@ -14,3 +14,7 @@ Aesthetic TODO's
 2) Place keys in upper right hand corner when grabbed.
 3) Map a key to toggle debug output
 4) Make map into a cube!
+5) Add sound effects
+6) Hook up wii-mote
+7) Make Ralph teeter (He has an off balance animation) when NPC takes his key.
+8) Make Eve teeter when ralph leaves room with key. (maybe, if Joe likes the idea.)
