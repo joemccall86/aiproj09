@@ -118,8 +118,6 @@ class World(DirectObject):
             someItem.setH(self.currentAngle)
             
     def __setupLevel(self):
-        
-        
         level1 = render.attachNewNode("level 1 node path")
         
         execfile("rooms/room1.py")
@@ -296,6 +294,10 @@ class World(DirectObject):
     __targets = []
     __agentToTargetMap = {}
     def __setupNPCs(self):
+        # This is to support the collisions for each node. See the paragraph comment
+        # above where we modify the npc's collision node
+        playerCollisionNP = self.__mainAgent.find("* collision node")
+
         modelStanding = "models/eve"
         modelRunning = "models/eve-run"
         modelWalking = "models/eve-walk"
@@ -318,7 +320,19 @@ class World(DirectObject):
         self.__room1NPC.setPos(20, -15, 10)
         self.__room1NPC.setPlayer(self.__mainAgent)
         self.__room1NPC.reparentTo(render)
-        
+
+
+        # So here's what I'm thinking. Currently, two collisions are happening when
+        # we collide with an NPC. Those are Player-->NPC and NPC-->Player. This is
+        # causing some jumpiness, which in tern causes some collisions to fail (e.g.,
+        # falling through the floor). In order to fix this, we need to ignore one of
+        # these collisions. Since the NPC should react to the Player, and not vice-versa,
+        # I'll ignore the Player-->NPC collision. To do this, we need to set Player's into
+        # collide mask to exclude NPC's from collide mask. Let's hope this doesn't break
+        # anything.
+        npcCollisionNP = self.__room1NPC.find("* collision node")
+        npcCollisionNP.node().setIntoCollideMask(npcCollisionNP.node().getIntoCollideMask() & 
+                                                ~playerCollisionNP.node().getIntoCollideMask())
         
 ##        modelStanding = "models/bunny/bunny"
 ##        modelRunning = "models/bunny/bunny"
@@ -342,6 +356,9 @@ class World(DirectObject):
         self.__room2NPC.setPos(-20, -210, 10)
         self.__room2NPC.setPlayer(self.__mainAgent)
         self.__room2NPC.reparentTo(render)
+        npcCollisionNP = self.__room2NPC.find("* collision node")
+        npcCollisionNP.node().setIntoCollideMask(npcCollisionNP.node().getIntoCollideMask() & 
+                                                ~playerCollisionNP.node().getIntoCollideMask())
 
         self.__room3NPC = NPC(modelStanding, 
                                 {"run":modelRunning, "walk":modelWalking},
@@ -362,6 +379,9 @@ class World(DirectObject):
         self.__room3NPC.setPos(210, 0, 10)
         self.__room3NPC.setPlayer(self.__mainAgent)
         self.__room3NPC.reparentTo(render)
+        npcCollisionNP = self.__room3NPC.find("* collision node")
+        npcCollisionNP.node().setIntoCollideMask(npcCollisionNP.node().getIntoCollideMask() & 
+                                                ~playerCollisionNP.node().getIntoCollideMask())
         
     def __setupRandomClutter(self):
 ##        self.ball1 = loader.loadModel("models/ball")
