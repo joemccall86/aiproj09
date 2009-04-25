@@ -8,9 +8,14 @@ from pandac.PandaModules import NodePath
 from pandac.PandaModules import Point3
 from pandac.PandaModules import Vec3
 
+import psyco
+psyco.full()
+
 import math
 from math import sqrt
 
+# So this is what I'm going to do. Since PathFinder does not need to be a 
+# class, I'm going to make it a simple module instead
 
 wallRayNP = NodePath(CollisionNode("wall ray collision node"))
 # THIS IS A HACK!!!! We should find out what this can point to.
@@ -22,195 +27,131 @@ wallRayDistance = 0
 
 collisionHandler = CollisionHandlerQueue()
 collisionTraverser = CollisionTraverser("pathfinder's collisionTraverser")
+collisionTraverser.setRespectPrevTransform(True)
 collisionTraverser.addCollider(wallRayNP, collisionHandler)
 
-class PathFinder():
+def AStar(source, target, waypoints):
+    infinity = 1E400
     
-##    def __init__(self, position, ID = -1):
-##        NodePath.__init__(self, "Waypoint")
-##        self.position = position
-##        self.texture = loader.loadTexture("textures/blue.jpg")
-##        self.costToThisNode = 0
-##        self.visited = False
-##        self.neighbors = []
-##        self.ID = ID
-##        self.previousWaypoint = None
-
-    @classmethod
-    def AStar(self, source, target, waypoints):
-##        print "AStar called"
-        infinity = 1E400
+    def waypointIsReachable(source, waypoint):
+        """
+        Determines whether the waypoint is reachable from NodePath source
         
-##  def castRayToNextTarget(self):
-##        if self.bestPath:
-##            if len(self.bestPath) > 1:
-##                worldPosition = self.getPos()
-##                worldTargetPosition = self.player.getPos()
-##                worldHeading = self.getH()
-##                worldHeading = worldHeading % 360
-##                worldYDirection = worldTargetPosition.getY() - worldPosition.getY()
-##                worldXDirection = worldTargetPosition.getX() - worldPosition.getX()
-##                worldDirectionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
-##                distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
-##                #print("distanceToTarget = " + str(distanceToTarget))
-##                angleToTarget = worldDirectionToTarget - worldHeading + 180
-##                angleToTarget = angleToTarget % 360
-##                
-##                self.targetTrackerCollisionNodePath.lookAt(self.bestPath[1])         
-# self.distanceToWall = entry.getSurfacePoint(self).length()
-        def waypointIsReachable(thing, waypoint):
-            #Calculate distance between waypoint and thing.
-##            thingPosition = thing.getPos()
-##            waypointPosition = waypoint.getPos()
-##            worldYDirection = waypointPosition.getY() - thingPosition.getY()
-##            worldXDirection = waypoint.getX() - thingPosition.getX()
-##            distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
-            distanceToTarget = thing.getDistance(waypoint)
-
-            
-            #Calculate direction from thing to waypoint
-            worldYDirection = waypoint.getY() - thing.getY()
-            worldXDirection = waypoint.getX() - thing.getX()
-            directionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
-            directionToTarget = directionToTarget % 360
-            
-            #Calculate distance to wall
-            distanceToWall = 1E400 #This represnts infinity... Replace with actual value once calculated.
-            
-            # We need to keep the ray not reparented to thing, because it uses a separate collision traverser.
-            wallRayNP.setPos(thing, 0, 0, 0)
-            wallRayNP.node().modifySolid(0).setOrigin(wallRayNP.getPos(render))
-            direction = Vec3(0, 0, 0)
-            direction.setX(waypoint.getX(render) - thing.getX(render))
-            direction.setY(waypoint.getY(render) - thing.getY(render))
-#            assert waypoint != thing, "the waypoint should not be thing"
-            assert direction != Vec3.zero(), "the direction vector should not be zero"
-            wallRayNP.node().modifySolid(0).setDirection(direction)
-            
-            # TODO uncomment this once Jim is satisfied with AStar
+        Currently this function does not work. Eventually it will cast a collision
+        ray to the waypoint, and check for collisions. If collisions happen before
+        it reaches the waypoint, then this function will return false. Otherwise it
+        will return true.
+        
+        For now it will always return true because it's not fully implemented yet.
+        """
+        
+        return True
+        
+        #Calculate direction from source to waypoint
+        worldYDirection = waypoint.getY() - source.getY()
+        worldXDirection = waypoint.getX() - source.getX()
+        directionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
+        directionToTarget %= 360
+        
+        #Calculate distance between waypoint and source.
+        distanceToTarget = distance(source, waypoint)
+        
+        #Calculate distance to wall
+        distanceToWall = 1E400 #This represnts infinity... Replace with actual value once calculated.
+        
+        # We need to keep the ray not reparented to source, because it uses a separate collision traverser.
+        wallRayNP.setPos(source, 0, 0, 0)
+        wallRayNP.node().modifySolid(0).setOrigin(wallRayNP.getPos(render))
+        direction = Vec3(worldXDirection, worldYDirection, 0)
+        assert direction != Vec3.zero(), "the direction vector should not be zero"
+        wallRayNP.node().modifySolid(0).setDirection(direction)
+        
+        # TODO uncomment this once Jim is satisfied with AStar
 #            collisionTraverser.traverse(wallRayNP)
-            collisionHandler.sortEntries()
-            # Now that the collision handler's entries are sorted, the first one should be the collision closest to us
+##        collisionHandler.sortEntries()
+        # Now that the collision handler's entries are sorted, the first one should be the collision closest to us
 ##            if collisionHandler.getNumEntries() <= 0:
 ##               print("There were no collisions detected! Something went wrong here...")
 ##            else:
 ##               print(collisionHandler.getEntry(0))
 
-            
-            #Compare "distance to thing" to "distance to wall" to decide if there is a wall in the way.
-            if(distanceToTarget < distanceToWall):
-                return True
-            else:
-                print("There is a wall in the way of nearest waypoint, ignore it and check next nearest")
-                return False
         
-        def getClosestNodeTo(thing):
-            #Make sure there is a direct path between thing and the nearestWaypoint.
-            possiblyReachableWaypoints = waypoints
-            
-            #Find closest Waypoint
-            shortestDistanceFound = infinity
-            closestNodeToSource = Waypoint(Vec3(0,0,5))
-            closestNodeIndex = 0
-            for i in range(len(waypoints)):
-                #print("distance = " + str(self.distance(self, self.waypoints[i])))
-                if self.distance(thing, possiblyReachableWaypoints[i]) < shortestDistanceFound \
-                                            and thing is not possiblyReachableWaypoints[i] \
-                                            and waypointIsReachable(thing, possiblyReachableWaypoints[i]):
-                    closestNodeToSource = possiblyReachableWaypoints[i]
-                    shortestDistanceFound = self.distance(thing, possiblyReachableWaypoints[i])
-            return closestNodeToSource
-        
-##        print("Got here")
-        closestNodeToSource = getClosestNodeTo(source)
-        
-##        print("Closest Node = " + str(closestNodeToSource.getNodeID()) + " at pos (" + str(closestNodeToSource.getX()) + ", " + str(closestNodeToSource.getY())) + ")"
-        closestNodeToSource.changeToYellow()
-        #print("Starting node = " + str(closestNodeToSelf.getNodeID()) + " exected to be B4 which is 14") 
-        closestNodeToTarget = getClosestNodeTo(target)
-        #print("End node = " + str(closestNodeToTarget.getNodeID()) + "expected to be A6 which is 6")
-        closestNodeToTarget.changeToGreen()
-        
-        
-        #AStar from wiki
-        def reconstructPath(cameFrom, currentNode):            
-            #print("Reconstructing path")
-            pathToTarget = [currentNode]
-            while cameFrom.has_key(currentNode):
-##                print("ID of currentNode = " + str(currentNode.getNodeID()))
-                pathToTarget.append(cameFrom[currentNode])
-                currentNode = cameFrom[currentNode]
-            pathToTarget.reverse()
-            return pathToTarget
-            
-##            print("Reconstructing path")
-##            pathToTarget = []
-##            if cameFrom.has_key(currentNode):
-##                print("Current Node ID = " + str(currentNode.getNodeID()))
-##                returnValue = reconstructPath(cameFrom,cameFrom[currentNode])
-##                if returnValue != None:
-##                    pathToTarget = returnValue
-##                    print("Returning something != None")
-##                return pathToTarget.append(currentNode)
-##            else:
-##                ##print("reconstuct path returning none")
-##                return None
-
-        closedSet = []
-        openSet = [closestNodeToSource]
-        gScore = {closestNodeToSource: 0} # Distance from start along optimal path.
-        hScore = {closestNodeToSource: self.distance(closestNodeToSource, closestNodeToTarget)}
-        fScore = {closestNodeToSource: hScore[closestNodeToSource]} #Estimated total distance from start to goal
-        
-        infinity = 1E400
-        cameFrom = {}
-        while len(openSet) > 0:
-            #print("size of openSet = " + str(len(openSet)))
-            lowestFScoreFound = infinity 
-            nodeWithLowestFScoreFound = None #Node in openset having lowest fScore[] value
-            for waypoint in openSet:
-                if fScore[waypoint] < lowestFScoreFound:
-                    lowestFScoreFound = fScore[waypoint]
-                    nodeWithLowestFScoreFound = waypoint
-            #Make sure that something was found
-            if(nodeWithLowestFScoreFound == None):
-                print("Something went horribly wrong, no node found with fScore < infinity")
-                
-            if nodeWithLowestFScoreFound == closestNodeToTarget: #If goal is found
-                returnValue = reconstructPath(cameFrom, closestNodeToTarget) #Be sure to define cameFrom
-##                if returnValue == None:
-##                    print("A* returning None")
-##                else:
-##                    print("A* is NOT returning None")
-                return returnValue + [target]
-            
-            openSet.remove(nodeWithLowestFScoreFound)
-            closedSet.append(nodeWithLowestFScoreFound)
-            #print("Current node has " + str(len(nodeWithLowestFScoreFound.getNeighbors())) + " neighbors")
-            for neighbor in nodeWithLowestFScoreFound.getNeighbors():
-                #print("Checking neighbor " + str(neighbor.getNodeID()))
-                if neighbor in closedSet:
-                    continue
-                neighborGScore = gScore[nodeWithLowestFScoreFound] + self.distance(nodeWithLowestFScoreFound, neighbor)
-##                print("neighborGScore = " + str(neighborGScore))
-                #print("gScore[neighbor] = " + str(gScore[neighbor]))
-                #Assume that neighbor is not better than what we have
-                neighborIsBetter = False
-                if neighbor not in openSet:
-                    openSet.append(neighbor)
-                    hScore[neighbor] = self.distance(neighbor, closestNodeToTarget)
-                    neighborIsBetter = True
-                elif neighborGScore < gScore[neighbor]:
-                    neighborIsBetter = True
-                if neighborIsBetter:
-                    cameFrom[neighbor] = nodeWithLowestFScoreFound
-                    ##print("cameFrom is type " + str(type(cameFrom)))
-                    gScore[neighbor] = neighborGScore
-                    fScore[neighbor] = gScore[neighbor] + hScore[neighbor]
-##        print("Returning NONE from A*")
-        return None
+        #Compare "distance to source" to "distance to wall" to decide if there is a wall in the way.
+        if(distanceToTarget < distanceToWall):
+            return True
+        else:
+            print("There is a wall in the way of nearest waypoint, ignore it and check next nearest")
+            return False
     
-    @staticmethod
-    def distance(source, target):
-        return math.hypot(source.getX(render) - target.getX(render), source.getY(render) - target.getY(render))
-        #return source.getDistance(target)
+    def getClosestWaypointTo(thing):
+        #Make sure there is a direct path between thing and the nearestWaypoint.
+        possiblyReachableWaypoints = waypoints
+        
+        #Find closest Waypoint
+        shortest = infinity
+        closest = None
+        for waypoint in possiblyReachableWaypoints:
+            dist = distance(thing, waypoint)
+            if thing is not waypoint and dist < shortest and \
+                    waypointIsReachable(thing, waypoint):
+                closest = waypoint
+                shortest = dist
+        return closest
+    
+    closestNodeToSource = getClosestWaypointTo(source)
+    closestNodeToSource.changeToYellow()
+    closestNodeToTarget = getClosestWaypointTo(target)
+    closestNodeToTarget.changeToGreen()
+    
+    #AStar from wiki
+    def reconstructPath(cameFrom, currentNode):            
+        pathToTarget = [currentNode]
+        while cameFrom.has_key(currentNode):
+            pathToTarget.append(cameFrom[currentNode])
+            currentNode = cameFrom[currentNode]
+        pathToTarget.reverse()
+        return pathToTarget
+
+    closedSet = set([])
+    openSet = set([closestNodeToSource])
+    gScore = {closestNodeToSource: 0} # Distance from start along optimal path.
+    hScore = {closestNodeToSource: distance(closestNodeToSource, closestNodeToTarget)}
+    fScore = {closestNodeToSource: hScore[closestNodeToSource]} #Estimated total distance from start to goal
+    
+    infinity = 1E400
+    cameFrom = {}
+    while len(openSet) > 0:
+        lowestFScoreFound = infinity 
+        nodeWithLowestFScoreFound = None #Node in openset having lowest fScore[] value
+        for waypoint in openSet:
+            if fScore[waypoint] < lowestFScoreFound:
+                lowestFScoreFound = fScore[waypoint]
+                nodeWithLowestFScoreFound = waypoint
+        #Make sure that something was found
+        assert nodeWithLowestFScoreFound, "Something went horribly wrong, no node found with fScore < infinity"
+            
+        if nodeWithLowestFScoreFound == closestNodeToTarget: #If goal is found
+            returnValue = reconstructPath(cameFrom, closestNodeToTarget) #Be sure to define cameFrom
+            return returnValue + [target]
+        
+        openSet.discard(nodeWithLowestFScoreFound)
+        closedSet.add(nodeWithLowestFScoreFound)
+        for neighbor in nodeWithLowestFScoreFound.getNeighbors():
+            if neighbor in closedSet:
+                continue
+            neighborGScore = gScore[nodeWithLowestFScoreFound] + distance(nodeWithLowestFScoreFound, neighbor)
+            neighborIsBetter = False
+            if neighbor not in openSet:
+                openSet.add(neighbor)
+                hScore[neighbor] = distance(neighbor, closestNodeToTarget)
+                neighborIsBetter = True
+            elif neighborGScore < gScore[neighbor]:
+                neighborIsBetter = True
+            if neighborIsBetter:
+                cameFrom[neighbor] = nodeWithLowestFScoreFound
+                gScore[neighbor] = neighborGScore
+                fScore[neighbor] = gScore[neighbor] + hScore[neighbor]
+    return None
+
+def distance(source, target):
+    return math.hypot(source.getX(render) - target.getX(render), source.getY(render) - target.getY(render))

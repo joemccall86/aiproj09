@@ -27,7 +27,7 @@ from direct.task import Task
 from direct.gui.OnscreenText import OnscreenText
 ##from neural_network import NeuralNetwork
 from waypoint import Waypoint
-from pathFinder import PathFinder
+import pathFinder as PathFinder
 from tasktimer import taskTimer
 from direct.gui.DirectEntry import DirectEntry
 import random
@@ -58,6 +58,7 @@ class World(DirectObject):
         
     def __setupCollisions(self):
         self.cTrav = CollisionTraverser("traverser")
+        self.cTrav.setRespectPrevTransform(True)
         base.cTrav = self.cTrav
         
         self.physicsCollisionHandler = PhysicsCollisionHandler()
