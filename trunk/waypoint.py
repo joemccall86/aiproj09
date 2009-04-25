@@ -69,7 +69,7 @@ class Waypoint(NodePath):
         torus.setTexture(self.texture, 1)
         torus.reparentTo(render)
         torus.setPos(render, self.getPos())
-        self.drawLineToNeighbors()
+        #self.drawLineToNeighbors()
         
     def drawLineToNeighbors(self):
         ls = LineSegs()

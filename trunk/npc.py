@@ -600,8 +600,8 @@ class NPC(Agent, DirectObject):
         #print("Attempting to follow path")
         if self.bestPath:
             #Comment out next two lines to disable path smoothening.
-            if(len(self.bestPath) > 1 and self.distanceToWall > PathFinder.distance(self, self.bestPath[1])):
-                self.bestPath.pop(0)
+            #if(len(self.bestPath) > 1 and self.distanceToWall > PathFinder.distance(self, self.bestPath[1])):
+            #   self.bestPath.pop(0)
             self.currentTarget = self.bestPath[0]
             #if the next waypoint is reached
             if PathFinder.distance(self, self.currentTarget) < 2: #This number must be greater than distance in seek()
