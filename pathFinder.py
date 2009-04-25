@@ -1,8 +1,28 @@
 from waypoint import Waypoint
+from pandac.PandaModules import BitMask32
+from pandac.PandaModules import CollisionNode
+from pandac.PandaModules import CollisionRay
+from pandac.PandaModules import CollisionHandlerQueue
+from pandac.PandaModules import CollisionTraverser
+from pandac.PandaModules import NodePath
+from pandac.PandaModules import Point3
 from pandac.PandaModules import Vec3
 
 import math
 from math import sqrt
+
+
+wallRayNP = NodePath(CollisionNode("wall ray collision node"))
+# THIS IS A HACK!!!! We should find out what this can point to.
+wallRayNP.node().addSolid(CollisionRay(0,0,0,0,0,1))
+#wallRayNP.node().setIntoCollideMask(BitMask32.allOff())
+#wallRayNP.node().setFromCollideMask(BitMask32.allOn())
+wallRayNP.show()
+wallRayDistance = 0
+
+collisionHandler = CollisionHandlerQueue()
+collisionTraverser = CollisionTraverser("pathfinder's collisionTraverser")
+collisionTraverser.addCollider(wallRayNP, collisionHandler)
 
 class PathFinder():
     
@@ -57,6 +77,25 @@ class PathFinder():
             #Calculate distance to wall
             distanceToWall = 1E400 #This represnts infinity... Replace with actual value once calculated.
             
+            # We need to keep the ray not reparented to thing, because it uses a separate collision traverser.
+            wallRayNP.setPos(thing, 0, 0, 0)
+            wallRayNP.node().modifySolid(0).setOrigin(wallRayNP.getPos(render))
+            direction = Vec3(0, 0, 0)
+            direction.setX(waypoint.getX(render) - thing.getX(render))
+            direction.setY(waypoint.getY(render) - thing.getY(render))
+#            assert waypoint != thing, "the waypoint should not be thing"
+            assert direction != Vec3.zero(), "the direction vector should not be zero"
+            wallRayNP.node().modifySolid(0).setDirection(direction)
+            
+            # TODO uncomment this once Jim is satisfied with AStar
+#            collisionTraverser.traverse(wallRayNP)
+            collisionHandler.sortEntries()
+            # Now that the collision handler's entries are sorted, the first one should be the collision closest to us
+            if collisionHandler.getNumEntries() <= 0:
+               print("There were no collisions detected! Something went wrong here...")
+            else:
+               print(collisionHandler.getEntry(0))
+
             
             #Compare "distance to thing" to "distance to wall" to decide if there is a wall in the way.
             if(distanceToTarget < distanceToWall):
@@ -75,6 +114,7 @@ class PathFinder():
             for i in range(len(waypoints)):
                 #print("distance = " + str(self.distance(self, self.waypoints[i])))
                 if self.distance(thing, possiblyReachableWaypoints[i]) < shortestDistanceFound \
+                                            and thing is not possiblyReachableWaypoints[i] \
                                             and waypointIsReachable(thing, possiblyReachableWaypoints[i]):
                     closestNodeToSource = possiblyReachableWaypoints[i]
                     shortestDistanceFound = self.distance(thing, possiblyReachableWaypoints[i])
