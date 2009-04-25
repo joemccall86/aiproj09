@@ -6,7 +6,7 @@ class Waypoint(NodePath):
     
     def __init__(self, position, ID = -1):
         NodePath.__init__(self, "Waypoint " + str(ID))
-        self.setPos(position)
+        self.setPos(render, position)
         self.texture = loader.loadTexture("textures/blue.jpg")
         self.costToThisNode = 0
         self.visited = False
