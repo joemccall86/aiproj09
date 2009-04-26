@@ -65,7 +65,7 @@ class PathFinder():
 ##            worldYDirection = waypointPosition.getY() - thingPosition.getY()
 ##            worldXDirection = waypoint.getX() - thingPosition.getX()
 ##            distanceToTarget = math.sqrt(worldYDirection * worldYDirection + worldXDirection * worldXDirection)
-            distanceToTarget = thing.getDistance(waypoint)
+            distanceToTarget = self.distance(thing, waypoint)
 
             
             #Calculate direction from thing to waypoint
@@ -110,15 +110,18 @@ class PathFinder():
             
             #Find closest Waypoint
             shortestDistanceFound = infinity
-            closestNodeToSource = Waypoint(Vec3(0,0,5))
+            closestNodeToSource = None
             closestNodeIndex = 0
-            for i in range(len(waypoints)):
-                #print("distance = " + str(self.distance(self, self.waypoints[i])))
-                if self.distance(thing, possiblyReachableWaypoints[i]) < shortestDistanceFound \
-                                            and thing is not possiblyReachableWaypoints[i] \
-                                            and waypointIsReachable(thing, possiblyReachableWaypoints[i]):
-                    closestNodeToSource = possiblyReachableWaypoints[i]
-                    shortestDistanceFound = self.distance(thing, possiblyReachableWaypoints[i])
+            if thing in waypoints:
+                closestNodeToSource = thing
+            else:
+                for i in range(len(waypoints)):
+                    #print("distance = " + str(self.distance(self, self.waypoints[i])))
+                    if self.distance(thing, possiblyReachableWaypoints[i]) < shortestDistanceFound \
+                                                and thing is not possiblyReachableWaypoints[i] \
+                                                and waypointIsReachable(thing, possiblyReachableWaypoints[i]):
+                        closestNodeToSource = possiblyReachableWaypoints[i]
+                        shortestDistanceFound = self.distance(thing, possiblyReachableWaypoints[i])
             return closestNodeToSource
         
 ##        print("Got here")
