@@ -109,7 +109,25 @@ class World(DirectObject):
         if(not self.__mainAgent.hasKey(self.room3Key) and not self.__room3NPC.hasKey()):
             self.rotate(self.room3Key)
         return Task.cont
-            
+
+    def checkGameState(self, task, message = None):
+        goodEndingText = OnscreenText(text="", style=1, fg=(0,0,1,0.01),
+                            pos=(0,.4), align=TextNode.ACenter, scale = .25, mayChange = True)
+        BaadEndingText = OnscreenText(text="", style=1, fg=(1,0,0,0.01),
+                            pos=(0,.4), align=TextNode.ACenter, scale = .25, mayChange = True)
+        if(self.__mainAgent.hasKey(self.room1Key) and self.__mainAgent.hasKey(self.room2Key) and self.__mainAgent.hasKey(self.room3Key)):
+            goodEndingText.setText("You have all 3 keys!")
+        if(PathFinder.distance(self.__mainAgent, self.__room1NPC) < 5 and self.__room1NPC.getState() != "returnKey"):
+            if(not self.__mainAgent.hasKey(self.room1Key)):
+                BaadEndingText.setText("Killed by Eve clone Alpha")
+        if(PathFinder.distance(self.__mainAgent, self.__room2NPC) < 5 and self.__room1NPC.getState() != "returnKey"):
+            if(not self.__mainAgent.hasKey(self.room2Key)):
+                BaadEndingText.setText("Killed by Eve clone Beta")
+        if(PathFinder.distance(self.__mainAgent, self.__room3NPC) < 5 and self.__room1NPC.getState() != "returnKey"):
+            if(not self.__mainAgent.hasKey(self.room3Key)):
+                BaadEndingText.setText("Killed by Eve clone Gamma")
+        return Task.cont
+    
     currentAngle = 0
     def rotate(self, someItem):
         if someItem != None:
@@ -205,7 +223,8 @@ class World(DirectObject):
         
         self.keyNest3 = self.room3.attachNewNode("room 3 keynest") 
         keyNest.instanceTo(self.keyNest3)
-        self.keyNest3.setPos(0, 0, 0.05)
+        #self.keyNest3.setPos(0, 0, 0.05)
+        self.keyNest3.setPos(3, 0, 0.05)
         
 ##        self.keyNest3 = room3.attachNewNode("key nest 3")
 ##        keyNest.instanceTo(self.keyNest3)
@@ -250,6 +269,8 @@ class World(DirectObject):
         self.physicsCollisionHandler.addInPattern("%fn-into-%in")
         self.physicsCollisionHandler.addOutPattern("%fn-out-%in")
         
+    
+        
         def orderNPC(parameters, entry):
             
             if(parameters == "ralph has entered room 1"):
@@ -264,16 +285,29 @@ class World(DirectObject):
                 self.__room3NPC.handleTransition("playerEnteredRoom")
             elif(parameters == "ralph has left room 3"):
                 self.__room3NPC.handleTransition("playerLeftRoom")
+            
+            elif(parameters == "NPC1 bumped into wall"):
+                self.__room1NPC.handleTransition("bumpedIntoWall")
+            elif(parameters == "NPC2 bumped into wall"):
+                self.__room2NPC.handleTransition("bumpedIntoWall")
+            elif(parameters == "NPC3 bumped into wall"):
+                self.__room3NPC.handleTransition("bumpedIntoWall")
                 
-
+        
         self.accept("ralph collision node-into-room1Floor", orderNPC, ["ralph has entered room 1"])
         self.accept("ralph collision node-out-room1Floor", orderNPC, ["ralph has left room 1"])
         self.accept("ralph collision node-into-room2Floor", orderNPC, ["ralph has entered room 2"])
         self.accept("ralph collision node-out-room2Floor", orderNPC, ["ralph has left room 2"])
         self.accept("ralph collision node-into-room3Floor", orderNPC, ["ralph has entered room 3"])
         self.accept("ralph collision node-out-room3Floor", orderNPC, ["ralph has left room 3"])
+        self.accept("Eve 1 collision node-into-Cube1", orderNPC, ["NPC1 bumped into wall"])
+        self.accept("Eve 2 collision node-into-Cube2", orderNPC, ["NPC2 bumped into wall"])
+        self.accept("Eve 3 collision node-into-Cube3", orderNPC, ["NPC3 bumped into wall"])
+##        self.accept("Eve 1 collision node-into-ralph", checkGameState, ["NPC1 bumped into Ralph"])
+##        self.accept("Eve 2 collision node-into-ralph", checkGameState, ["NPC2 bumped into Ralph"])
+##        self.accept("Eve 3 collision node-into-ralph", checkGameState, ["NPC3 bumped into Ralph"])
         
-        
+        #messenger.toggleVerbose()
         self.gate = gate
         
 
@@ -400,6 +434,8 @@ class World(DirectObject):
 ##        self.ball1.setPos(0,0,0)
 ##        self.ball1.reparentTo(render)
         pass
+        
+
     
     def __setupTasks(self):
         """
@@ -434,16 +470,27 @@ class World(DirectObject):
         taskMgr.add(self.__room1NPC.act, "actTask")
         taskMgr.add(self.__room2NPC.act, "actTask")
         taskMgr.add(self.__room3NPC.act, "actTask")
+        taskMgr.add(self.checkGameState, "gameStateTask")
         taskMgr.add(self.animateItems, "animateItemsTask")
 
         # This is for path finding
         #taskMgr.add(self.__room1NPC.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
 
     def __setupCamera(self):
+        #This camera position shows the whole level
         base.camera.setPos(100,-100, 795) #This is debug camera position.
         base.camera.lookAt(100,-100,0)
-##        base.oobeCull()
-##        base.oobe()
+        #This camera position shows room1
+        base.camera.setPos(0,0, 375) #This is debug camera position.
+        base.camera.lookAt(0,0,0)
+        #This camera position shows room2
+        base.camera.setPos(0,-200, 375) #This is debug camera position.
+        base.camera.lookAt(0,-200,0)    
+        #This camera position shows room3
+        ##base.camera.setPos(200,0, 375) #This is debug camera position.
+        ##base.camera.lookAt(200,0,0)    
+        #base.oobeCull()
+        #base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.__mainAgent.actor)
         base.camera.setPos(0, 60, 60)
@@ -483,9 +530,11 @@ class World(DirectObject):
             for agent, brain in zip(agentList, newBrains):
                 agent.brain = brain
                 agent.setPos(self.startingPositions[agent])
-                
+
         return Task.cont
         
+
+            
 ##    def setWaypoints(self, file):
 ##        execfile("rooms/room1.py")
 ##        execfile("rooms/room2.py")
