@@ -87,7 +87,8 @@ def AStar(source, target, waypoints):
         #Make sure there is a direct path between thing and the nearestWaypoint.
         possiblyReachableWaypoints = waypoints
         
-##        assert thing not in waypoints, "'thing' should never be a waypoint"
+        if thing in waypoints:
+            return thing
         
         #Find closest Waypoint
         shortest = infinity

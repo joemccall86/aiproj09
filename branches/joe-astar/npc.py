@@ -623,7 +623,7 @@ class NPC(Agent, DirectObject):
             if self.bestPath:
                 self.currentTarget = self.bestPath[0]
             if len(self.bestPath) > 1:
-                self.bestPath = PathFinder.AStar(self.currentTarget, self.bestPath[-1], self.waypoints)
+                self.bestPath = PathFinder.AStar(self.bestPath[0], self.bestPath[-1], self.waypoints)
 
     def seek(self, position):
         #print("Seeking position " + str(position.getX()) + ", " + str(position.getY()))
