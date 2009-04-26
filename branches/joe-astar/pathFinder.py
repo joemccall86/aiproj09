@@ -87,12 +87,14 @@ def AStar(source, target, waypoints):
         #Make sure there is a direct path between thing and the nearestWaypoint.
         possiblyReachableWaypoints = waypoints
         
+##        assert thing not in waypoints, "'thing' should never be a waypoint"
+        
         #Find closest Waypoint
         shortest = infinity
         closest = None
         for waypoint in possiblyReachableWaypoints:
             dist = distance(thing, waypoint)
-            if thing is not waypoint and dist < shortest and \
+            if dist < shortest and \
                     waypointIsReachable(thing, waypoint):
                 closest = waypoint
                 shortest = dist
@@ -131,7 +133,7 @@ def AStar(source, target, waypoints):
         assert nodeWithLowestFScoreFound, "Something went horribly wrong, no node found with fScore < infinity"
             
         if nodeWithLowestFScoreFound == closestNodeToTarget: #If goal is found
-            assert cameFrom, "cameFrom should be defined before reconstructPath is called"
+##            assert cameFrom, "cameFrom should be defined before reconstructPath is called"
             returnValue = reconstructPath(cameFrom, closestNodeToTarget) #Be sure to define cameFrom
             return returnValue + [target]
         

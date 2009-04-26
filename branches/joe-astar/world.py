@@ -101,6 +101,7 @@ class World(DirectObject):
 #        skyBox = loader.loadModel("models/SunnySky/sunny")
 #        skyBox.setScale(10)
 #        skyBox.reparentTo(render)
+
         
     def animateItems(self, task):
         if(not (self.__mainAgent.hasKey(self.room1Key) or self.__room1NPC.hasKey())):
@@ -201,7 +202,7 @@ class World(DirectObject):
         
         self.keyNest3 = self.room3.attachNewNode("room 3 keynest") 
         keyNest.instanceTo(self.keyNest3)
-        self.keyNest3.setPos(0, 0, 0.05)
+        self.keyNest3.setPos(0, -5, 0.05)
         
 ##        self.keyNest3 = room3.attachNewNode("key nest 3")
 ##        keyNest.instanceTo(self.keyNest3)
@@ -267,7 +268,6 @@ class World(DirectObject):
         self.accept("ralph collision node-into-room3Floor", orderNPC, ["ralph has entered room 3"])
         self.accept("ralph collision node-out-room3Floor", orderNPC, ["ralph has left room 3"])
         
-        
         self.gate = gate
         
 
@@ -309,7 +309,7 @@ class World(DirectObject):
                                 speed = 23,
                                 agentList = self.__globalAgentList,
                                 name = "Eve 1",
-                                collisionMask = BitMask32.bit(3),
+                                collisionMask = BitMask32.bit(2),
                                 rangeFinderCount = 13,
                                 adjacencySensorThreshold = 5,
                                 radarSlices = 5,
@@ -323,7 +323,6 @@ class World(DirectObject):
         self.__room1NPC.setScale(render, 1)
         self.__room1NPC.setPlayer(self.__mainAgent)
         self.__room1NPC.reparentTo(render)
-
 
         # So here's what I'm thinking. Currently, two collisions are happening when
         # we collide with an NPC. Those are Player-->NPC and NPC-->Player. This is
@@ -369,7 +368,7 @@ class World(DirectObject):
                                 speed = 23,
                                 agentList = self.__globalAgentList,
                                 name = "Eve 3",#"der Hoppelhaschen",
-                                collisionMask = BitMask32.bit(5),
+                                collisionMask = BitMask32.bit(4),
                                 rangeFinderCount = 13,
                                 adjacencySensorThreshold = 5,
                                 radarSlices = 5,
@@ -378,7 +377,7 @@ class World(DirectObject):
                                 massKg = 35.0,
                                 collisionHandler = self.physicsCollisionHandler,
                                 collisionTraverser = self.cTrav,
-                                waypoints = self.room3waypoints)
+                                waypoints = self.room3waypoints)#TODO: Change this to room 3 once created!!!
         self.__room3NPC.setPos(210, 0, 10)
         self.__room3NPC.setPlayer(self.__mainAgent)
         self.__room3NPC.reparentTo(render)
@@ -435,9 +434,11 @@ class World(DirectObject):
 
     def __setupCamera(self):
         base.camera.setPos(100,-100, 795) #This is debug camera position.
-        base.camera.lookAt(100,-100,0)
+        base.camera.lookAt(100,-100,0)        
+        base.camera.setPos(0, 0, 400) #This is debug camera position.
+        base.camera.lookAt(0, 0, -1)
 ##        base.oobeCull()
-##        base.oobe()
+        base.oobe()
         base.disableMouse()
         base.camera.reparentTo(self.__mainAgent.actor)
         base.camera.setPos(0, 60, 60)
