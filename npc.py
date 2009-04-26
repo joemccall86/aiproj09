@@ -601,10 +601,7 @@ class NPC(Agent, DirectObject):
         
         Basically, it checks the currentTarget to determine if we're already seeking to the correct waypoint.
         When we finally reach the currentTarget, we pop it off the bestPath list and set the currentTarget
-        to the next waypoint in bestPath. 
-        
-        We also have a check against nodes that we're really close to. In this special case, we just skip
-        them. We only store off the current target after this step is completed.
+        to the next waypoint in bestPath.
         
         At this point, we also need to re-run AStar from our new currentTarget to the destination, which is
         bestPath[-1]. We store as our new bestPath and continue from there.
@@ -622,9 +619,9 @@ class NPC(Agent, DirectObject):
         # have we reached our currentTarget?
         if PathFinder.distance(self, self.currentTarget) < 2: #This number must be greater than distance in seek()
             assert self.currentTarget == self.bestPath.pop(0), "We've reached our currentTarget, but it's not in our bestPath"
-            while PathFinder.distance(self, self.bestPath[0]) < 2:
-                self.bestPath.pop(0)
-            self.currentTarget = self.bestPath[0]
+            # Are there any waypoints left to follow?
+            if self.bestPath:
+                self.currentTarget = self.bestPath[0]
             if len(self.bestPath) > 1:
                 self.bestPath = PathFinder.AStar(self.currentTarget, self.bestPath[-1], self.waypoints)
 
