@@ -202,7 +202,8 @@ class NPC(Agent, DirectObject):
 ##        if self.getY() < -pushArea:
 ##            self.setFluidY(self.getY() + pushAmount)
             
-        self.followPath()
+        if self.bestPath:
+            self.followBestPath()
         if self.npcState == "wander":
             self.wander()
             if self.player != None:
@@ -595,44 +596,36 @@ class NPC(Agent, DirectObject):
         self.keyNest = keyNest
         self.key = key
     
-    def followPath(self):
-        #If there are any waypoints in the path
-        #print("Attempting to follow path")
-        if self.bestPath:
-            #Comment out next two lines to disable path smoothening.
-            #if(len(self.bestPath) > 1 and self.distanceToWall > PathFinder.distance(self, self.bestPath[1])):
-            #   self.bestPath.pop(0)
+    def followBestPath(self):
+        """ 
+        This function tells the NPC to continue following the best path 
+        
+        Basically, it checks the currentTarget to determine if we're already seeking to the correct waypoint.
+        When we finally reach the currentTarget, we pop it off the bestPath list and set the currentTarget
+        to the next waypoint in bestPath.
+        
+        At this point, we also need to re-run AStar from our new currentTarget to the destination, which is
+        bestPath[-1]. We store as our new bestPath and continue from there.
+        """
+
+        assert self.bestPath, "self.bestPath must be valid before calling followBestPath"
+        
+        if self.currentTarget is not self.bestPath[0]:
             self.currentTarget = self.bestPath[0]
-            #if the next waypoint is reached
-            if PathFinder.distance(self, self.currentTarget) < 2: #This number must be greater than distance in seek()
-                
-                print("path returned from AStar = " + str(self.bestPath))
-                print("current position is: " + str(self.getPos(render)))
-                print("current target name and positon is: " + str(self.currentTarget) + " " + str(self.currentTarget.getPos(render)))
-                print("Distance between self and currentTarget is: " + str(PathFinder.distance(self, self.currentTarget)))
-                print("Another distance calculation is: " + str(math.hypot(self.getX(render) - self.currentTarget.getX(render), self.getY(render) - self.currentTarget.getY(render))))
-                if(len(self.bestPath) > 1):
-                    print("Next target name and position is: " + str(self.bestPath[1]) + " " + str(self.bestPath[1].getPos(render)))
-                    print("Distance between self and nextTarget is: " + str(PathFinder.distance(self, self.bestPath[1])))
-                    print("Another distance calculation is: " + str(math.hypot(self.getX(render) - self.bestPath[1].getX(render), self.getY(render) - self.bestPath[1].getY(render))))
-                
-                self.bestPath.pop(0)
-                while self.bestPath and PathFinder.distance(self, self.bestPath[0]) < 2: #If starting near the first node, skip it.
-                    print("Starting on top of waypoint, skipping it")
-                    self.bestPath.pop(0)
-                if len(self.bestPath) > 1:
-                    print("Final place = " + str(self.bestPath[-1]))
-                    self.bestPath = PathFinder.AStar(self.bestPath[0], self.bestPath[-1], self.waypoints)
-                    #self.bestPath.pop(0)
-                    if self.bestPath != None:# and PathFinder.distance(self, self.bestPath[0]) < 2: #If starting near the first node, skip it.:
-                        #self.drawBestPath()
-                        #print("path returned from AStar = " + str(self.bestPath))
-                        #while PathFinder.distance(self, self.bestPath[0]) < 2: #If starting near the first node, skip it.
-                        #    self.bestPath.pop(0)
-                        #Ignore the first waypoint, because you should already be there.
-                        self.bestPath.pop(0)
-                print(" ")
-        return Task.cont
+        
+        #Comment out next two lines to disable path smoothening.
+        #if(len(self.bestPath) > 1 and self.distanceToWall > PathFinder.distance(self, self.bestPath[1])):
+        #   self.bestPath.pop(0)
+        
+        # have we reached our currentTarget?
+        if PathFinder.distance(self, self.currentTarget) < 2: #This number must be greater than distance in seek()
+            assert self.currentTarget == self.bestPath.pop(0), "We've reached our currentTarget, but it's not in our bestPath"
+            # Are there any waypoints left to follow?
+            if self.bestPath:
+                self.currentTarget = self.bestPath[0]
+            if len(self.bestPath) > 1:
+                self.bestPath = PathFinder.AStar(self.bestPath[0], self.bestPath[-1], self.waypoints)
+
 
     def seek(self, position):
         #print("Seeking position " + str(position.getX()) + ", " + str(position.getY()))
