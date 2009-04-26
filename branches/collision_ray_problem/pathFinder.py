@@ -13,11 +13,11 @@ from pandac.PandaModules import Vec3
 import math
 from math import sqrt
 
-
 wallRayNP = render.attachNewNode(CollisionNode("wall ray collision node"))
 wallRayNP.node().addSolid(CollisionRay(0,0,0,0,1,0))
 wallRayNP.node().setIntoCollideMask(BitMask32.allOff())
 wallRayNP.node().setFromCollideMask(BitMask32.allOn() & ~GeomNode.getDefaultCollideMask())
+wallRayNP.node().setFromCollideMask(wallRayNP.node().getFromCollideMask() & ~BitMask32.bit(1))
 wallRayNP.show()
 
 collisionHandler = CollisionHandlerQueue()
@@ -76,22 +76,24 @@ class PathFinder():
             collisionTraverser.traverse(render)
             collisionHandler.sortEntries()
 
-            entry = collisionHandler.getEntry(0)
-            ls = LineSegs()
-            ls.moveTo(entry.getFromNodePath().getPos(render))
-            ls.drawTo(entry.getSurfacePoint(render))
-            distanceToWall = (entry.getFromNodePath().getPos(render) - entry.getSurfacePoint(render)).length()
-            if distanceToWall < distanceToTarget:
-               ls.setColor(255, 0, 0)
-            render.attachNewNode(ls.create())
+            # We check the tags to make sure that we're colliding into a room
+            for i in xrange(collisionHandler.getNumEntries()):
+               entry = collisionHandler.getEntry(i)
+               intoNP = entry.getIntoNodePath()
+               if intoNP.getTag("Room"):
+                  distanceToWall = (entry.getFromNodePath().getPos(render) - entry.getSurfacePoint(render)).length()
+#                  if distanceToWall < distanceToTarget:
+#                     ls = LineSegs()
+#                     ls.setColor(255, 0, 0)
+#                     ls.moveTo(entry.getFromNodePath().getPos(render))
+#                     ls.drawTo(entry.getSurfacePoint(render))
+#                     render.attachNewNode(ls.create())
+                  break
 
-            if distanceToWall < 0.000001:
-               print entry
 
-            return True
 
             #Compare "distance to thing" to "distance to wall" to decide if there is a wall in the way.
-            if(distanceToTarget < distanceToWall):
+            if(distanceToTarget <= distanceToWall):
                 return True
             else:
                 print("There is a wall in the way of nearest waypoint, ignore it and check next nearest")
