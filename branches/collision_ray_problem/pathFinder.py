@@ -15,7 +15,6 @@ from math import sqrt
 
 
 wallRayNP = render.attachNewNode(CollisionNode("wall ray collision node"))
-# THIS IS A HACK!!!! We should find out what this can point to.
 wallRayNP.node().addSolid(CollisionRay(0,0,0,0,1,0))
 wallRayNP.node().setIntoCollideMask(BitMask32.allOff())
 wallRayNP.node().setFromCollideMask(BitMask32.allOn() & ~GeomNode.getDefaultCollideMask())
@@ -68,38 +67,29 @@ class PathFinder():
             worldXDirection = waypoint.getX(render) - thing.getX(render)
             
             # We need to keep the ray not reparented to thing, because it uses a separate collision traverser.
-            wallRayNP.setPos(thing.getPos(render))
-            origin = Point3(wallRayNP.getX(render), wallRayNP.getY(render), 3.5)
-            direction = Vec3(worldXDirection, worldYDirection, 0)
-            assert direction != Vec3.zero(), "the direction vector should not be zero"
-            wallRayNP.node().modifySolid(0).setOrigin(origin)
-            wallRayNP.node().modifySolid(0).setDirection(direction)
-
+            origin = Point3(thing.getX(render), thing.getY(render), 3.5)
+            wallRayNP.setPos(render, origin)
+            lookPt = Point3(waypoint.getX(render), waypoint.getY(render), 3.5)
+            wallRayNP.lookAt(lookPt)
+            wallRayNP.show()
             
             collisionTraverser.traverse(render)
             collisionHandler.sortEntries()
 
-            if collisionHandler.getNumEntries() == 0:
-               ls = LineSegs()
-               ls.setColor(255, 0, 0)
-               ls.moveTo(origin)
-               ls.drawTo(waypoint.getPos(render) + Point3(0, 0, 3.5))
-               render.attachNewNode(ls.create())
-               return False
-            else:
-#               print "Number of collisions", collisionHandler.getNumEntries()
-#               for i in range(collisionHandler.getNumEntries()):
-#                  print collisionHandler.getEntry(i)
-               ls = LineSegs()
-               ls.moveTo(origin)
-               ls.drawTo(waypoint.getPos(render) + Point3(0, 0, 3.5))
-               render.attachNewNode(ls.create())
             entry = collisionHandler.getEntry(0)
-            distanceToWall = (origin - entry.getSurfacePoint(render)).length()
+            ls = LineSegs()
+            ls.moveTo(entry.getFromNodePath().getPos(render))
+            ls.drawTo(entry.getSurfacePoint(render))
+            distanceToWall = (entry.getFromNodePath().getPos(render) - entry.getSurfacePoint(render)).length()
+            if distanceToWall < distanceToTarget:
+               ls.setColor(255, 0, 0)
+            render.attachNewNode(ls.create())
 
-            # Now that the collision handler's entries are sorted, the first one should be the collision closest to us
-            # Since there should be a collision everywhere (except straingt up), assert the collision
-            
+            if distanceToWall < 0.000001:
+               print entry
+
+            return True
+
             #Compare "distance to thing" to "distance to wall" to decide if there is a wall in the way.
             if(distanceToTarget < distanceToWall):
                 return True
