@@ -18,7 +18,7 @@
   <Scalar> magfilter { LINEAR }
   <Scalar> wrap { REPEAT }
 }
-<Group> Cube1 {
+<Group> Cube {
   <Collide> wall_collide { Polyset keep descend }
   <Transform> {
     <Matrix4> {

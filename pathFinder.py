@@ -4,6 +4,7 @@ from pandac.PandaModules import CollisionNode
 from pandac.PandaModules import CollisionRay
 from pandac.PandaModules import CollisionHandlerQueue
 from pandac.PandaModules import CollisionTraverser
+from pandac.PandaModules import GeomNode
 from pandac.PandaModules import LineSegs
 from pandac.PandaModules import NodePath
 from pandac.PandaModules import Point3
@@ -17,11 +18,13 @@ wallRayNP = render.attachNewNode(CollisionNode("wall ray collision node"))
 # THIS IS A HACK!!!! We should find out what this can point to.
 wallRayNP.node().addSolid(CollisionRay(0,0,0,0,1,0))
 wallRayNP.node().setIntoCollideMask(BitMask32.allOff())
-wallRayNP.node().setFromCollideMask(BitMask32.allOn())
+wallRayNP.node().setFromCollideMask(BitMask32.allOn() & ~GeomNode.getDefaultCollideMask())
+wallRayNP.show()
 
 collisionHandler = CollisionHandlerQueue()
 collisionTraverser = CollisionTraverser("pathfinder's collisionTraverser")
 collisionTraverser.addCollider(wallRayNP, collisionHandler)
+collisionTraverser.setRespectPrevTransform(True)
 
 class PathFinder():
     
@@ -71,20 +74,28 @@ class PathFinder():
             assert direction != Vec3.zero(), "the direction vector should not be zero"
             wallRayNP.node().modifySolid(0).setOrigin(origin)
             wallRayNP.node().modifySolid(0).setDirection(direction)
+
             
             collisionTraverser.traverse(render)
             collisionHandler.sortEntries()
 
-            # TODO Jim wants to know why these are not parallel to the ground.
             if collisionHandler.getNumEntries() == 0:
+               ls = LineSegs()
+               ls.setColor(255, 0, 0)
+               ls.moveTo(origin)
+               ls.drawTo(waypoint.getPos(render) + Point3(0, 0, 3.5))
+               render.attachNewNode(ls.create())
                return False
             else:
+#               print "Number of collisions", collisionHandler.getNumEntries()
+#               for i in range(collisionHandler.getNumEntries()):
+#                  print collisionHandler.getEntry(i)
                ls = LineSegs()
                ls.moveTo(origin)
                ls.drawTo(waypoint.getPos(render) + Point3(0, 0, 3.5))
                render.attachNewNode(ls.create())
             entry = collisionHandler.getEntry(0)
-            distanceToWall = self.distance(entry.getFromNodePath(), entry.getIntoNodePath())
+            distanceToWall = (origin - entry.getSurfacePoint(render)).length()
 
             # Now that the collision handler's entries are sorted, the first one should be the collision closest to us
             # Since there should be a collision everywhere (except straingt up), assert the collision
