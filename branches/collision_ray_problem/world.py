@@ -151,7 +151,7 @@ class World(DirectObject):
         self.room1.setScale(10)
         self.room1.setTexScale(TextureStage.getDefault(), 10)
         self.room1.reparentTo(render)
-        self.room1.find("**/Cube;+h").setTag("Room", "1")
+        self.room1.find("**/Cube*;+h").setTag("Room", "1")
 
         keyNest = loader.loadModel("models/nest")
         keyNest.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
@@ -182,7 +182,7 @@ class World(DirectObject):
         self.room2.setTexScale(TextureStage.getDefault(), 10)
         self.room2.reparentTo(level1)
         self.room2.setY(self.room1, -20)
-        self.room2.find("**/Cube;+h").setTag("Room", "2")
+        self.room2.find("**/Cube*;+h").setTag("Room", "2")
         
         self.keyNest2 = self.room2.attachNewNode("key nest 2")
         keyNest.instanceTo(self.keyNest2)
@@ -212,7 +212,7 @@ class World(DirectObject):
         self.room3.setTexScale(TextureStage.getDefault(), 10)
         self.room3.reparentTo(level1)
         self.room3.setX(self.room1, 20)
-        self.room3.find("**/Cube;+h").setTag("Room", "3")
+        self.room3.find("**/Cube*;+h").setTag("Room", "3")
         
 ##        self.keyNest2 = loader.loadModel("models/nest")
 ##        self.keyNest2.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
@@ -223,8 +223,7 @@ class World(DirectObject):
         
         self.keyNest3 = self.room3.attachNewNode("room 3 keynest") 
         keyNest.instanceTo(self.keyNest3)
-        #self.keyNest3.setPos(0, 0, 0.05)
-        self.keyNest3.setPos(3, 0, 0.05)
+        self.keyNest3.setPos(0, 0, 0.05)
         
 ##        self.keyNest3 = room3.attachNewNode("key nest 3")
 ##        keyNest.instanceTo(self.keyNest3)
