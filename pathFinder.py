@@ -77,7 +77,7 @@ class PathFinder():
 
             # TODO Jim wants to know why these are not parallel to the ground.
             if collisionHandler.getNumEntries() == 0:
-               return False
+               return True
             else:
                ls = LineSegs()
                ls.moveTo(origin)
@@ -96,7 +96,7 @@ class PathFinder():
                 print("There is a wall in the way of nearest waypoint, ignore it and check next nearest")
                 print("distanceToTarget", distanceToTarget)
                 print("distanceToWall", distanceToWall)
-                return False
+                return True
         
         def getClosestNodeTo(thing):
             #Make sure there is a direct path between thing and the nearestWaypoint.
