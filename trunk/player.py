@@ -19,8 +19,17 @@ class Player(Agent, DirectObject):
                 collisionHandler = None,
                 collisionTraverser = None):
         Agent.__init__(self, modelStanding, modelAnimationDict, turnRate, speed, agentList, massKg, collisionMask, name, collisionHandler, collisionTraverser)
+        self.rightHand = self.actor.exposeJoint(None, 'modelRoot', 'RightHand')
+        self.currentKey = None
             
     playerKeys = []
+    
+    def setCurrentKey(self, key):
+        if self.currentKey:
+            self.currentKey.detachNode()
+        if key:
+            key.reparentTo(self.rightHand)
+        self.currentKey = key
     
     def addKey(self, key):
         self.playerKeys.append(key)

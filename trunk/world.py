@@ -328,19 +328,30 @@ class World(DirectObject):
             if(parameters == "ralph has entered room 1"):
                 self.__room1NPC.handleTransition("playerEnteredRoom")
                 self.reComputeHUD(self.room1)
+                if self.__mainAgent.hasKey(self.room1Key):
+                    self.__mainAgent.setCurrentKey(self.room1Key)
             elif(parameters == "ralph has left room 1"):
                 self.__room1NPC.handleTransition("playerLeftRoom")
+                if self.__mainAgent.hasKey(self.room1Key):
+                    self.__mainAgent.setCurrentKey(None)
             elif(parameters == "ralph has entered room 2"):
                 self.__room2NPC.handleTransition("playerEnteredRoom")
                 self.reComputeHUD(self.room2)
+                if self.__mainAgent.hasKey(self.room2Key):
+                    self.__mainAgent.setCurrentKey(self.room2Key)
             elif(parameters == "ralph has left room 2"):
                 self.__room2NPC.handleTransition("playerLeftRoom")
+                if self.__mainAgent.hasKey(self.room2Key):
+                    self.__mainAgent.setCurrentKey(None)
             elif(parameters == "ralph has entered room 3"):
                 self.__room3NPC.handleTransition("playerEnteredRoom")
+                if self.__mainAgent.hasKey(self.room3Key):
+                    self.__mainAgent.setCurrentKey(self.room3Key)
                 self.reComputeHUD(self.room3)
             elif(parameters == "ralph has left room 3"):
                 self.__room3NPC.handleTransition("playerLeftRoom")
-            
+                if self.__mainAgent.hasKey(self.room3Key):
+                    self.__mainAgent.setCurrentKey(None)
             elif(parameters == "NPC1 bumped into wall"):
                 self.__room1NPC.handleTransition("bumpedIntoWall")
             elif(parameters == "NPC2 bumped into wall"):
