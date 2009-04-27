@@ -1,5 +1,8 @@
 # from the file character.py, import the class character
 #include character.py
+#from pandac.PandaModules import loadPrcFileData
+#loadPrcFileData("", "fullscreen 1")
+#loadPrcFileData("", "win-size 1024 768")
 import direct.directbase.DirectStart
 from direct.gui.OnscreenImage import OnscreenImage
 from direct.showbase.DirectObject import DirectObject
@@ -69,10 +72,15 @@ class World(DirectObject):
               self.room2Key:"models/blueKeyHUD.png",
               self.room3Key:"models/greenKeyHUD.png" }
 
-        self.redKeyImage = None
-        self.blueKeyImage = None
-        self.greenKeyImage = None
-
+        self.redKeyImage = OnscreenImage(image = self.keyImages[self.room1Key], pos = (0.9, 0, 0.9), scale = (0.0451, 0, 0.1))
+        self.redKeyImage.setTransparency(TransparencyAttrib.MAlpha)
+        self.redKeyImage.hide()
+        self.blueKeyImage = OnscreenImage(image = self.keyImages[self.room2Key], pos = (0.7, 0, 0.9), scale = (0.0451, 0, 0.1))
+        self.blueKeyImage.setTransparency(TransparencyAttrib.MAlpha)
+        self.blueKeyImage.hide()
+        self.greenKeyImage = OnscreenImage(image = self.keyImages[self.room3Key], pos = (0.5, 0, 0.9), scale = (0.0451, 0, 0.1))
+        self.greenKeyImage.setTransparency(TransparencyAttrib.MAlpha)
+        self.greenKeyImage.hide()
 
         
 
@@ -82,26 +90,21 @@ class World(DirectObject):
        The HUD shows the images of the keys that the player has in his backpack,
        but not the key to the current room.
        """
-       if self.__mainAgent.hasKey(self.room1Key) and not self.redKeyImage:
-          self.redKeyImage = OnscreenImage(image = self.keyImages[self.room1Key], pos = (0.9, 0, 0.9), scale = 0.1)
-          self.redKeyImage.setTransparency(TransparencyAttrib.MAlpha)
-       elif self.redKeyImage:
-          self.redKeyImage.destroy()
-          self.redKeyImage = None
+##       assert False, "add the hack to make sure she doesn't fall through the ground"
+       if self.__mainAgent.hasKey(self.room1Key) and room is not self.room1:
+          self.redKeyImage.show()
+       else:
+          self.redKeyImage.hide()
 
-       if self.__mainAgent.hasKey(self.room2Key) and not self.blueKeyImage:
-          self.blueKeyImage = OnscreenImage(image = self.keyImages[self.room2Key], pos = (0.7, 0, 0.9), scale = 0.1)
-          self.blueKeyImage.setTransparency(TransparencyAttrib.MAlpha)
-       elif self.blueKeyImage:
-          self.blueKeyImage.destroy()
-          self.blueKeyImage = None
+       if self.__mainAgent.hasKey(self.room2Key) and room is not self.room2:
+          self.blueKeyImage.show()
+       elif (self.blueKeyImage != None):
+          self.blueKeyImage.hide()
 
-       if self.__mainAgent.hasKey(self.room3Key) and not self.greenKeyImage:
-          self.greenKeyImage = OnscreenImage(image = self.keyImages[self.room3Key], pos = (0.5, 0, 0.9), scale = 0.1)
-          self.greenKeyImage.setTransparency(TransparencyAttrib.MAlpha)
-       elif self.greenKeyImage:
-          self.greenKeyImage.destroy()
-          self.greenKeyImage = None
+       if self.__mainAgent.hasKey(self.room3Key) and room is not self.room3:
+          self.greenKeyImage.show()
+       elif (self.greenKeyImage != None):
+          self.greenKeyImage.hide()
 
     def __setupCollisions(self):
         self.cTrav = CollisionTraverser("traverser")
@@ -117,7 +120,7 @@ class World(DirectObject):
         
         gravityFN=ForceNode('world-forces')
         gravityFNP=render.attachNewNode(gravityFN)
-        gravityForce=LinearVectorForce(0,0,-32.18) #gravity acceleration ft/s^2
+        gravityForce=LinearVectorForce(0,0,-6) #gravity acceleration ft/s^2
         gravityFN.addForce(gravityForce)
         
 

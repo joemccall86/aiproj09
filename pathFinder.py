@@ -190,7 +190,6 @@ class PathFinder():
         wallRayNP.setPos(render, origin)
         lookPt = Point3(waypoint.getX(render), waypoint.getY(render), 3.5)
         wallRayNP.lookAt(lookPt)
-        wallRayNP.show()
         
         collisionTraverser.traverse(render)
         collisionHandler.sortEntries()
