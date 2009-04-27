@@ -77,13 +77,14 @@ class Waypoint(NodePath):
         ls.setThickness(1.0)
         for neighbor in self.neighbors:
             ls.setColor(1,1,1,1)
-            ls.moveTo(self.getPos())
-            ls.drawTo(neighbor.getPos())
-            np = NodePath(ls.create("aoeu"))
-            np.reparentTo(render)
+            ls.moveTo(self.getPos(render))
+            ls.drawTo(neighbor.getPos(render))
+        self.np = NodePath(ls.create("Neighbor Line Segment"))
+        self.np.reparentTo(render)
             
     def erase(self):
         self.torus.hide()
+        self.np.hide()
         
     #def hideLineToNeighbors(self):
         
