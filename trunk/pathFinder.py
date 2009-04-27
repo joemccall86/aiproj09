@@ -4,6 +4,7 @@ from pandac.PandaModules import CollisionNode
 from pandac.PandaModules import CollisionRay
 from pandac.PandaModules import CollisionHandlerQueue
 from pandac.PandaModules import CollisionTraverser
+from pandac.PandaModules import GeomNode
 from pandac.PandaModules import LineSegs
 from pandac.PandaModules import NodePath
 from pandac.PandaModules import Point3
@@ -12,16 +13,17 @@ from pandac.PandaModules import Vec3
 import math
 from math import sqrt
 
-
 wallRayNP = render.attachNewNode(CollisionNode("wall ray collision node"))
-# THIS IS A HACK!!!! We should find out what this can point to.
 wallRayNP.node().addSolid(CollisionRay(0,0,0,0,1,0))
 wallRayNP.node().setIntoCollideMask(BitMask32.allOff())
-wallRayNP.node().setFromCollideMask(BitMask32.allOn())
+wallRayNP.node().setFromCollideMask(BitMask32.allOn() & ~GeomNode.getDefaultCollideMask())
+wallRayNP.node().setFromCollideMask(wallRayNP.node().getFromCollideMask() & ~BitMask32.bit(1))
+wallRayNP.show()
 
 collisionHandler = CollisionHandlerQueue()
 collisionTraverser = CollisionTraverser("pathfinder's collisionTraverser")
 collisionTraverser.addCollider(wallRayNP, collisionHandler)
+collisionTraverser.setRespectPrevTransform(True)
 
 class PathFinder():
     
@@ -65,38 +67,34 @@ class PathFinder():
             worldXDirection = waypoint.getX(render) - thing.getX(render)
             
             # We need to keep the ray not reparented to thing, because it uses a separate collision traverser.
-            wallRayNP.setPos(thing.getPos(render))
-            origin = Point3(wallRayNP.getX(render), wallRayNP.getY(render), 3.5)
-            direction = Vec3(worldXDirection, worldYDirection, 0)
-            assert direction != Vec3.zero(), "the direction vector should not be zero"
-            wallRayNP.node().modifySolid(0).setOrigin(origin)
-            wallRayNP.node().modifySolid(0).setDirection(direction)
+            origin = Point3(thing.getX(render), thing.getY(render), 3.5)
+            wallRayNP.setPos(render, origin)
+            lookPt = Point3(waypoint.getX(render), waypoint.getY(render), 3.5)
+            wallRayNP.lookAt(lookPt)
+            wallRayNP.show()
             
             collisionTraverser.traverse(render)
             collisionHandler.sortEntries()
 
-            # TODO Jim wants to know why these are not parallel to the ground.
-            if collisionHandler.getNumEntries() == 0:
-               return True
-            else:
-               ls = LineSegs()
-               ls.moveTo(origin)
-               ls.drawTo(waypoint.getPos(render) + Point3(0, 0, 3.5))
-               render.attachNewNode(ls.create())
-            entry = collisionHandler.getEntry(0)
-            distanceToWall = self.distance(entry.getFromNodePath(), entry.getIntoNodePath())
+            #TODO This should never be this after the following code is executed
+            distanceToWall = distanceToTarget
 
-            # Now that the collision handler's entries are sorted, the first one should be the collision closest to us
-            # Since there should be a collision everywhere (except straingt up), assert the collision
-            
+            # We check the tags to make sure that we're colliding into a room
+            for i in xrange(collisionHandler.getNumEntries()):
+               entry = collisionHandler.getEntry(i)
+               intoNP = entry.getIntoNodePath()
+               if intoNP.getTag("Room"):
+                  distanceToWall = (entry.getFromNodePath().getPos(render) - entry.getSurfacePoint(render)).length()
+                  break
+
             #Compare "distance to thing" to "distance to wall" to decide if there is a wall in the way.
-            if(distanceToTarget < distanceToWall):
+            if(distanceToTarget <= distanceToWall):
                 return True
             else:
-                print("There is a wall in the way of nearest waypoint, ignore it and check next nearest")
-                print("distanceToTarget", distanceToTarget)
-                print("distanceToWall", distanceToWall)
-                return True
+                print "Waypoint is not reachable"
+                print "distanceToTarget = " + str(distanceToTarget)
+                print "distanceToWall = " + str(distanceToWall)
+                return False
         
         def getClosestNodeTo(thing):
             #Make sure there is a direct path between thing and the nearestWaypoint.
@@ -208,5 +206,6 @@ class PathFinder():
     
     @staticmethod
     def distance(source, target):
-        return math.hypot(source.getX(render) - target.getX(render), source.getY(render) - target.getY(render))
+       return (source.getPos(render) - target.getPos(render)).length()
+#        return math.hypot(source.getX(render) - target.getX(render), source.getY(render) - target.getY(render))
         #return source.getDistance(target)

@@ -155,6 +155,10 @@ class World(DirectObject):
             someItem.setH(self.currentAngle)
             
     def __setupLevel(self):
+        """
+        Some notes and caveats: Each time you add a room, make sure that you tag it with key "Room" and value "<room number>".
+        This is so our A* algorithm can do clear path detection on only the rooms, not anything else.
+        """
         level1 = render.attachNewNode("level 1 node path")
         
         execfile("rooms/room1.py")
@@ -164,6 +168,7 @@ class World(DirectObject):
         self.room1.setScale(10)
         self.room1.setTexScale(TextureStage.getDefault(), 10)
         self.room1.reparentTo(render)
+        self.room1.find("**/Cube*;+h").setTag("Room", "1")
 
         keyNest = loader.loadModel("models/nest")
         keyNest.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
@@ -191,6 +196,7 @@ class World(DirectObject):
         self.room2.setTexScale(TextureStage.getDefault(), 10)
         self.room2.reparentTo(level1)
         self.room2.setY(self.room1, -20)
+        self.room2.find("**/Cube*;+h").setTag("Room", "2")
         
         self.keyNest2 = self.room2.attachNewNode("key nest 2")
         keyNest.instanceTo(self.keyNest2)
@@ -206,8 +212,6 @@ class World(DirectObject):
         # he also thinks that the above comment is very useful
         # TODO: fix this hack by re-creating room3 in blender
         
-        #self.setWaypoints("room3")
-        
         execfile("rooms/room3.py")
         for w in self.room3waypoints:
             w.draw()
@@ -222,12 +226,12 @@ class World(DirectObject):
         self.room3.setTexScale(TextureStage.getDefault(), 10)
         self.room3.reparentTo(level1)
         self.room3.setX(self.room1, 20)
+        self.room3.find("**/Cube*;+h").setTag("Room", "3")
         
         
         self.keyNest3 = self.room3.attachNewNode("room 3 keynest") 
         keyNest.instanceTo(self.keyNest3)
-        #self.keyNest3.setPos(0, 0, 0.05)
-        self.keyNest3.setPos(3, 0, 0.05)
+        self.keyNest3.setPos(0, 0, 0.05)
         
         
         self.room3Key = loader.loadModel("models/greenKey")
@@ -260,11 +264,13 @@ class World(DirectObject):
         gate.instanceTo(gateTo2)
         gateTo2.setPos(8, -10, 0)
         gateTo2.hide()
+        gateTo2.find("**/Cube;+h").setTag("Room", "1-2")
         
         gateTo3 = self.room1.attachNewNode("gateTo3")
         gate.instanceTo(gateTo3)
         gateTo3.setPos(10, 8, 0)
         gateTo3.hide()
+        gateTo3.find("**/Cube;+h").setTag("Room", "1-3")
         
         self.physicsCollisionHandler.addInPattern("%fn-into-%in")
         self.physicsCollisionHandler.addOutPattern("%fn-out-%in")
@@ -480,11 +486,11 @@ class World(DirectObject):
         base.camera.setPos(100,-100, 795) #This is debug camera position.
         base.camera.lookAt(100,-100,0)
         #This camera position shows room1
-        base.camera.setPos(0,0, 375) #This is debug camera position.
-        base.camera.lookAt(0,0,0)
+        #base.camera.setPos(0,0, 375) #This is debug camera position.
+        #base.camera.lookAt(0,0,0)
         #This camera position shows room2
-        base.camera.setPos(0,-200, 375) #This is debug camera position.
-        base.camera.lookAt(0,-200,0)    
+        #base.camera.setPos(0,-200, 375) #This is debug camera position.
+        #base.camera.lookAt(0,-200,0)    
         #This camera position shows room3
         ##base.camera.setPos(200,0, 375) #This is debug camera position.
         ##base.camera.lookAt(200,0,0)    
