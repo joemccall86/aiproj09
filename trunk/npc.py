@@ -72,17 +72,18 @@ class NPC(Agent, DirectObject):
 ##                self.brain.add_hidden_nodes(Config.hidden_nodes)
         
         self.setScale(self.scale)
-        self.rangeFinderCount = rangeFinderCount
-        self.rangeFinders = [CollisionRay() for i in range(self.rangeFinderCount)]
-        self.persistentRangeFinderData = {}
+##        self.rangeFinderCount = rangeFinderCount
+##        self.rangeFinders = [CollisionRay() for i in range(self.rangeFinderCount)]
+##        self.persistentRangeFinderData = {}
         self.currentTarget = None
         self.player = None
         self.bestPath = None
         self.key = None
         self.keyInHand = False
-        for rangeFinder in self.rangeFinders:
-            self.persistentRangeFinderData[rangeFinder] = 0
-            
+##        for rangeFinder in self.rangeFinders:
+##            self.persistentRangeFinderData[rangeFinder] = 0
+        #self.showWaypoints = False
+        self.pathSmoothening = False
                     
         self.annMovementRequests = {
             "left":False,
@@ -190,7 +191,20 @@ class NPC(Agent, DirectObject):
     def getState(self):
         return self.npcState
 
-    
+##    def toggleShowWaypoints(self, value = None):
+##        if(value):
+##            self.showWaypoints = value
+##        else:
+##            self.showWaypoints = not self.showWaypoints
+            
+    def togglePathSmoothening(self, value = None):
+        if(value == True):
+            self.pathSmoothening = value
+        elif(value == False):
+            self.pathSmoothening = value
+        else:#Welcome to Quantum Computing!! LOL!
+            self.pathSmoothening = not self.pathSmoothening
+            
     isMoving = False
     def act(self, task):
         #HACK!
@@ -627,6 +641,8 @@ class NPC(Agent, DirectObject):
             self.currentTarget = self.bestPath[0]
         
         #Comment out next two lines to disable path smoothening.
+        if(self.pathSmoothening):
+            pass
         #if(len(self.bestPath) > 1 and self.distanceToWall > PathFinder.distance(self, self.bestPath[1])):
         #   self.bestPath.pop(0)
         

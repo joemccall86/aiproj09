@@ -35,7 +35,11 @@ import random
 class World(DirectObject):     
     def __init__(self):
         DirectObject.__init__(self)
-
+        
+        self.pathSmoothening = True
+        self.showWaypoints = False
+        self.showCollisions = False
+        
         self.accept("escape", sys.exit)
         
         self.__setupEnvironment()
@@ -54,6 +58,8 @@ class World(DirectObject):
         self.__room3NPC.setKeyAndNestReference(self.keyNest3, self.room3Key)
         #self.__room3NPC.handleTransition("playerLeftRoom")
         self.__setupTasks()
+        
+        self.setKeymap()
 
         
     def __setupCollisions(self):
@@ -73,8 +79,7 @@ class World(DirectObject):
         gravityForce=LinearVectorForce(0,0,-32.18) #gravity acceleration ft/s^2
         gravityFN.addForce(gravityForce)
         
-        #Jim's favorite line to uncoment!
-        #base.cTrav.showCollisions(render)
+
 
         base.physicsMgr.addLinearForce(gravityForce)
 
@@ -110,22 +115,35 @@ class World(DirectObject):
             self.rotate(self.room3Key)
         return Task.cont
 
+    hasAllKeys = False
+    playerWasKilledByNPC1 = False
+    playerWasKilledByNPC2 = False
+    playerWasKilledByNPC3 = False
     def checkGameState(self, task, message = None):
         goodEndingText = OnscreenText(text="", style=1, fg=(0,0,1,0.01),
                             pos=(0,.4), align=TextNode.ACenter, scale = .25, mayChange = True)
         BaadEndingText = OnscreenText(text="", style=1, fg=(1,0,0,0.01),
                             pos=(0,.4), align=TextNode.ACenter, scale = .25, mayChange = True)
         if(self.__mainAgent.hasKey(self.room1Key) and self.__mainAgent.hasKey(self.room2Key) and self.__mainAgent.hasKey(self.room3Key)):
+            self.hasAllKeys = True
+            #goodEndingText.setText("You have all 3 keys!")
+        if(self.hasAllKeys):
             goodEndingText.setText("You have all 3 keys!")
         if(PathFinder.distance(self.__mainAgent, self.__room1NPC) < 5 and self.__room1NPC.getState() != "returnKey"):
             if(not self.__mainAgent.hasKey(self.room1Key)):
-                BaadEndingText.setText("Killed by Eve clone Alpha")
+                self.playerWasKilledByNPC1 = True
+        if(self.playerWasKilledByNPC1):
+            BaadEndingText.setText("Killed by Eve clone Alpha")
         if(PathFinder.distance(self.__mainAgent, self.__room2NPC) < 5 and self.__room1NPC.getState() != "returnKey"):
             if(not self.__mainAgent.hasKey(self.room2Key)):
-                BaadEndingText.setText("Killed by Eve clone Beta")
+                self.playerWasKilledByNPC2 = True
+        if(self.playerWasKilledByNPC2):
+            BaadEndingText.setText("Killed by Eve clone Beta")
         if(PathFinder.distance(self.__mainAgent, self.__room3NPC) < 5 and self.__room1NPC.getState() != "returnKey"):
             if(not self.__mainAgent.hasKey(self.room3Key)):
-                BaadEndingText.setText("Killed by Eve clone Gamma")
+                self.playerWasKilledByNPC3 = True
+        if(self.playerWasKilledByNPC3):
+            BaadEndingText.setText("Killed by Eve clone Gamma")
         return Task.cont
     
     currentAngle = 0
@@ -140,8 +158,7 @@ class World(DirectObject):
         level1 = render.attachNewNode("level 1 node path")
         
         execfile("rooms/room1.py")
-        for w in self.room1waypoints:
-            w.draw()
+
         self.room1 = loader.loadModel("rooms/room1")
         self.room1.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         self.room1.setScale(10)
@@ -167,10 +184,7 @@ class World(DirectObject):
         #self.setWaypoints("room2")
         self.room2waypoints = None
         execfile("rooms/room2.py")
-#        print(len(self.room2waypoints))
-        for w in self.room2waypoints:
-            w.draw()
-            #print(w.getPos())
+
         self.room2 = loader.loadModel("rooms/room2")
         self.room2.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         self.room2.setScale(10)
@@ -209,21 +223,12 @@ class World(DirectObject):
         self.room3.reparentTo(level1)
         self.room3.setX(self.room1, 20)
         
-##        self.keyNest2 = loader.loadModel("models/nest")
-##        self.keyNest2.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
-##        self.keyNest2.setScale(10)
-##        self.keyNest2.setTexScale(TextureStage.getDefault(), 0.1)
-##        self.keyNest2.setPos(0, -150, 0.05)
-##        self.keyNest2.reparentTo(render)
         
         self.keyNest3 = self.room3.attachNewNode("room 3 keynest") 
         keyNest.instanceTo(self.keyNest3)
         #self.keyNest3.setPos(0, 0, 0.05)
         self.keyNest3.setPos(3, 0, 0.05)
         
-##        self.keyNest3 = room3.attachNewNode("key nest 3")
-##        keyNest.instanceTo(self.keyNest3)
-##        self.keyNest3.setPos(0,0,0.05)
         
         self.room3Key = loader.loadModel("models/greenKey")
         self.room3Key.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
@@ -246,6 +251,8 @@ class World(DirectObject):
         room3Floor = self.room3.attachNewNode(CollisionNode("room3Floor"))
         room3Floor.node().addSolid(CollisionPolygon(Point3(9,-9,0), Point3(9,9,0),
                                                 Point3(-9,9,0), Point3(-9,-9,0)))
+                                                
+
         
         gate = loader.loadModel("models/box")
         
@@ -296,9 +303,6 @@ class World(DirectObject):
         self.accept("Eve 1 collision node-into-Cube1", orderNPC, ["NPC1 bumped into wall"])
         self.accept("Eve 2 collision node-into-Cube2", orderNPC, ["NPC2 bumped into wall"])
         self.accept("Eve 3 collision node-into-Cube3", orderNPC, ["NPC3 bumped into wall"])
-##        self.accept("Eve 1 collision node-into-ralph", checkGameState, ["NPC1 bumped into Ralph"])
-##        self.accept("Eve 2 collision node-into-ralph", checkGameState, ["NPC2 bumped into Ralph"])
-##        self.accept("Eve 3 collision node-into-ralph", checkGameState, ["NPC3 bumped into Ralph"])
         
         #messenger.toggleVerbose()
         self.gate = gate
@@ -438,7 +442,7 @@ class World(DirectObject):
         
         #for index, ralph in enumerate(self.__otherRalphs):
 
-            # uncomment this to make Jim happy
+
 ##            taskMgr.add(ralph.sense, "sense" + str(index))
 ##            taskMgr.add(ralph.think, "think" + str(index))
 ##            taskMgr.add(ralph.act,   "act"   + str(index))
@@ -453,7 +457,8 @@ class World(DirectObject):
         
         self.__mainAgent.setKeymap()
         taskMgr.add(self.__mainAgent.processKey, "processKeyTask")
-##        taskMgr.add(self.__mainAgent.handleCollisionTask, "handleCollisionTask")
+
+          #  taskMgr.add(self.__mainAgent.handleCollisionTask, "handleCollisionTask")
 ##        taskMgr.add(self.ralph.wanderTask, "wander")
         
         taskMgr.add(self.__room1NPC.sense, "senseTask")
@@ -465,6 +470,7 @@ class World(DirectObject):
         taskMgr.add(self.__room3NPC.act, "actTask")
         taskMgr.add(self.checkGameState, "gameStateTask")
         taskMgr.add(self.animateItems, "animateItemsTask")
+        #taskMgr.add(self.processKey, "processKeyTask")
 
         # This is for path finding
         #taskMgr.add(self.__room1NPC.followPath, "followPathTask", extraArgs = [self.bestPath], appendTask = True)
@@ -525,15 +531,48 @@ class World(DirectObject):
                 agent.setPos(self.startingPositions[agent])
 
         return Task.cont
-        
+    
+    __keyMap = {"enablePathSmoothening":False,
+        "showWaypoints":False}
 
+    def setKeymap(self):
+        def toggleWaypoints(key):
+            self.showWaypoints = not self.showWaypoints
+            if(self.showWaypoints):
+                print("Showing waypoints")
+                for w in self.room1waypoints:
+                    w.draw()
+                for w in self.room2waypoints:
+                    w.draw()
+                for w in self.room3waypoints:
+                    w.draw()
+            else:
+                print("Hiding waypoints")
+                for w in self.room1waypoints:
+                    w.erase()
+                for w in self.room2waypoints:
+                    w.erase()
+                for w in self.room3waypoints:
+                    w.erase()
+        
+        def togglePathSmoothening(key):
+            self.__room1NPC.togglePathSmoothening()
+            self.__room2NPC.togglePathSmoothening()
+            self.__room3NPC.togglePathSmoothening()
             
-##    def setWaypoints(self, file):
-##        execfile("rooms/room1.py")
-##        execfile("rooms/room2.py")
-##        #for w in self.waypoints:
-##        #    w.draw()
+        def toggleCollisions(key):
+            if(self.showCollisions):
+                base.cTrav.showCollisions(render)
+            else:
+                base.cTrav.hideCollisions()
+
+            self.showCollisions = not self.showCollisions
+            print("showCollisions = " + str(self.showCollisions))
             
+        self.accept("p",              togglePathSmoothening, ["togglePathSmoothening"])
+        self.accept("w",              toggleWaypoints, ["toggleWaypoints"])
+        self.accept("c",              toggleCollisions, ["toggleCollisions"])
+        
     
 if __name__ == "__main__":
     w = World()
