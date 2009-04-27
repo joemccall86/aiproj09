@@ -37,10 +37,7 @@ class Player(Agent, DirectObject):
     __keyMap = {"left":False,
             "right":False,
             "up":False,
-            "down":False,
-            "keyTaken":False,
-            "gotKey":False,
-            "leftRoom":False}
+            "down":False}
     
     waypointPositions = []
     def setKeymap(self):
@@ -66,12 +63,7 @@ class Player(Agent, DirectObject):
         self.accept("arrow_up-up",    setKey, ["up", False])
         self.accept("arrow_down",     setKey, ["down", True])
         self.accept("arrow_down-up",  setKey, ["down", False])
-        self.accept("a",              setKey, ["keyTaken", True])
-        self.accept("a-up",           setKey, ["keyTaken", False])
-        self.accept("b",              setKey, ["gotKey", True])
-        self.accept("b-up",           setKey, ["gotKey", False])
-        self.accept("c",              setKey, ["leftRoom", True])
-        self.accept("c-up",           setKey, ["leftRoom", False])
+        
     
     def processKey(self, task):
         
@@ -88,12 +80,6 @@ class Player(Agent, DirectObject):
             self.moveForward(distance)
         if self.__keyMap["down"]:
             self.moveBackward(distance)
-        if self.__keyMap["keyTaken"]:
-            self.handleTransition("keyTaken")
-        if self.__keyMap["gotKey"]:
-            self.handleTransition("gotKey")
-        if self.__keyMap["leftRoom"]:
-            self.handleTransition("leftRoom")
         
             
         if self.__keyMap["left"] or \
