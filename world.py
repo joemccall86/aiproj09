@@ -1,6 +1,7 @@
 # from the file character.py, import the class character
 #include character.py
 import direct.directbase.DirectStart
+from direct.gui.OnscreenImage import OnscreenImage
 from direct.showbase.DirectObject import DirectObject
 from pandac.PandaModules import BitMask32
 from pandac.PandaModules import CardMaker
@@ -19,6 +20,7 @@ from pandac.PandaModules import TexGenAttrib
 from pandac.PandaModules import TextNode
 from pandac.PandaModules import Texture
 from pandac.PandaModules import TextureStage
+from pandac.PandaModules import TransparencyAttrib
 from pandac.PandaModules import Vec3
 from npc import NPC
 from player import Player
@@ -61,7 +63,46 @@ class World(DirectObject):
         
         self.setKeymap()
 
+        # This is for the HUD
+        self.keyImages = {
+              self.room1Key:"models/redKeyHUD.png",
+              self.room2Key:"models/blueKeyHUD.png",
+              self.room3Key:"models/greenKeyHUD.png" }
+
+        self.redKeyImage = None
+        self.blueKeyImage = None
+        self.greenKeyImage = None
+
+
         
+
+    def reComputeHUD(self, room):
+       """
+       reComputeHUD is called when the player leaves a room and enters another room.
+       The HUD shows the images of the keys that the player has in his backpack,
+       but not the key to the current room.
+       """
+       if self.__mainAgent.hasKey(self.room1Key) and not self.redKeyImage:
+          self.redKeyImage = OnscreenImage(image = self.keyImages[self.room1Key], pos = (0.9, 0, 0.9), scale = 0.1)
+          self.redKeyImage.setTransparency(TransparencyAttrib.MAlpha)
+       elif self.redKeyImage:
+          self.redKeyImage.destroy()
+          self.redKeyImage = None
+
+       if self.__mainAgent.hasKey(self.room2Key) and not self.blueKeyImage:
+          self.blueKeyImage = OnscreenImage(image = self.keyImages[self.room2Key], pos = (0.7, 0, 0.9), scale = 0.1)
+          self.blueKeyImage.setTransparency(TransparencyAttrib.MAlpha)
+       elif self.blueKeyImage:
+          self.blueKeyImage.destroy()
+          self.blueKeyImage = None
+
+       if self.__mainAgent.hasKey(self.room3Key) and not self.greenKeyImage:
+          self.greenKeyImage = OnscreenImage(image = self.keyImages[self.room3Key], pos = (0.5, 0, 0.9), scale = 0.1)
+          self.greenKeyImage.setTransparency(TransparencyAttrib.MAlpha)
+       elif self.greenKeyImage:
+          self.greenKeyImage.destroy()
+          self.greenKeyImage = None
+
     def __setupCollisions(self):
         self.cTrav = CollisionTraverser("traverser")
         base.cTrav = self.cTrav
@@ -277,14 +318,17 @@ class World(DirectObject):
             
             if(parameters == "ralph has entered room 1"):
                 self.__room1NPC.handleTransition("playerEnteredRoom")
+                self.reComputeHUD(self.room1)
             elif(parameters == "ralph has left room 1"):
                 self.__room1NPC.handleTransition("playerLeftRoom")
             elif(parameters == "ralph has entered room 2"):
                 self.__room2NPC.handleTransition("playerEnteredRoom")
+                self.reComputeHUD(self.room2)
             elif(parameters == "ralph has left room 2"):
                 self.__room2NPC.handleTransition("playerLeftRoom")
             elif(parameters == "ralph has entered room 3"):
                 self.__room3NPC.handleTransition("playerEnteredRoom")
+                self.reComputeHUD(self.room3)
             elif(parameters == "ralph has left room 3"):
                 self.__room3NPC.handleTransition("playerLeftRoom")
             
