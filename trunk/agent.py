@@ -7,6 +7,7 @@ from pandac.PandaModules import CollisionRay
 from pandac.PandaModules import CollisionNode
 from pandac.PandaModules import CollisionTraverser
 from pandac.PandaModules import CollisionHandlerPusher
+from pandac.PandaModules import GeomNode 
 from pandac.PandaModules import PhysicsCollisionHandler
 from pandac.PandaModules import BitMask32
 from pandac.PandaModules import ForceNode, LinearVectorForce
@@ -78,7 +79,7 @@ class Agent(NodePath):
         self.node().getPhysicsObject().setMass(self.massKg) 
         base.physicsMgr.attachPhysicalNode(self.node())
         fromObject = self.attachNewNode(CollisionNode(self.name + " collision node"))
-        fromObject.node().setIntoCollideMask(BitMask32.allOn())
+        fromObject.node().setIntoCollideMask(fromObject.node().getIntoCollideMask() & ~GeomNode.getDefaultCollideMask())
         fromObject.node().setFromCollideMask(self.collisionMask)
         fromObject.node().addSolid(CollisionSphere(0, 0, 2.5, 2.5))
         

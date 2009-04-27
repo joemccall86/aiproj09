@@ -150,8 +150,7 @@ class World(DirectObject):
     def rotate(self, someItem):
         if someItem != None:
             self.currentAngle = self.currentAngle + 250 * taskTimer.elapsedTime
-            if self.currentAngle >= 360:
-                self.currentAngle = self.currentAngle - 360
+            self.currentAngle %= 360
             someItem.setH(self.currentAngle)
             
     def __setupLevel(self):
@@ -264,13 +263,11 @@ class World(DirectObject):
         gate.instanceTo(gateTo2)
         gateTo2.setPos(8, -10, 0)
         gateTo2.hide()
-        gateTo2.find("**/Cube;+h").setTag("Room", "1-2")
         
         gateTo3 = self.room1.attachNewNode("gateTo3")
         gate.instanceTo(gateTo3)
         gateTo3.setPos(10, 8, 0)
         gateTo3.hide()
-        gateTo3.find("**/Cube;+h").setTag("Room", "1-3")
         
         self.physicsCollisionHandler.addInPattern("%fn-into-%in")
         self.physicsCollisionHandler.addOutPattern("%fn-out-%in")
