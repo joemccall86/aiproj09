@@ -179,13 +179,13 @@ class World(DirectObject):
             if(self.playerWasKilledByNPC1):
                 self.fadeCounter = self.fadeCounter - 1
                 BaadEndingText.setText("Killed by Eve clone Alpha")
-            if(PathFinder.distance(self.__mainAgent, self.__room2NPC) < 5 and self.__room1NPC.getState() != "returnKey"):
+            if(PathFinder.distance(self.__mainAgent, self.__room2NPC) < 5 and self.__room2NPC.getState() != "returnKey"):
                 if(not self.__mainAgent.hasKey(self.room2Key)):
                     self.playerWasKilledByNPC2 = True
             if(self.playerWasKilledByNPC2):
                 self.fadeCounter = self.fadeCounter - 1
                 BaadEndingText.setText("Killed by Eve clone Beta")
-            if(PathFinder.distance(self.__mainAgent, self.__room3NPC) < 5 and self.__room1NPC.getState() != "returnKey"):
+            if(PathFinder.distance(self.__mainAgent, self.__room3NPC) < 5 and self.__room3NPC.getState() != "returnKey"):
                 if(not self.__mainAgent.hasKey(self.room3Key)):
                     self.playerWasKilledByNPC3 = True
             if(self.playerWasKilledByNPC3):
