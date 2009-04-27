@@ -212,8 +212,7 @@ class World(DirectObject):
         # TODO: fix this hack by re-creating room3 in blender
         
         execfile("rooms/room3.py")
-        for w in self.room3waypoints:
-            w.draw()
+        
         room3Model = loader.loadModel("rooms/room3")
         room3Model.findTexture("*").setMinfilter(Texture.FTLinearMipmapLinear)
         room3Model.setH(90)
