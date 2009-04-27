@@ -18,7 +18,7 @@ wallRayNP.node().addSolid(CollisionRay(0,0,0,0,1,0))
 wallRayNP.node().setIntoCollideMask(BitMask32.allOff())
 wallRayNP.node().setFromCollideMask(BitMask32.allOn() & ~GeomNode.getDefaultCollideMask())
 wallRayNP.node().setFromCollideMask(wallRayNP.node().getFromCollideMask() & ~BitMask32.bit(1))
-wallRayNP.show()
+#wallRayNP.show()
 
 collisionHandler = CollisionHandlerQueue()
 collisionTraverser = CollisionTraverser("pathfinder's collisionTraverser")
