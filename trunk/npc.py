@@ -147,31 +147,13 @@ class NPC(Agent, DirectObject):
 ##            np = NodePath(ls.create())
 ##            np.reparentTo(self)        
         
-##        targetTracker = CollisionRay()
-##        targetTrackerCollisionNode = CollisionNode("targetTracker")
-##        targetTracker.setOrigin(0, 0, 3.5)
-##        targetTracker.setDirection(0,1,0)
-##        targetTrackerCollisionNode.addSolid(targetTracker)
-##        targetTrackerCollisionNode.setIntoCollideMask(BitMask32.allOff())
-##        targetTrackerCollisionNode.setFromCollideMask(BitMask32.allOn())
-##        self.targetTrackerCollisionNodePath = self.attachNewNode(targetTrackerCollisionNode)
-##        #collisionHandler.addCollider(fromObject, self)
-##        myCollisionHandler = CollisionHandlerEvent()
-##        myCollisionHandler.addInPattern("%fn-into-%in")
-##        myCollisionHandler.addOutPattern("%fn-out-%in")
-##        collisionTraverser.addCollider(self.targetTrackerCollisionNodePath, myCollisionHandler)
-##        
-##        
-##        # Uncomment the following line to show the collision rays
-##        # Lets keep the visual uncommented until it is fixed so we don't forget it's a problem.
-##        self.targetTrackerCollisionNodePath.show() 
-##        #self.accept("targetTracker-into-Cube", self.setDistaneToWall)
+
 
     def sense(self, task):
         #self.rangeFinderSense()
         #self.adjacencySense()
         self.radarSense()
-        #self.castRayToNextTarget()
+
         return Task.cont
     
     def think(self, task):
@@ -607,22 +589,7 @@ class NPC(Agent, DirectObject):
             self.pose("walk", frame = 5)
             self.isMoving = False
             
-    #I am 
-    def castRayToNextTarget(self):
-        if self.bestPath:
-            if len(self.bestPath) > 1:
-                worldPosition = self.getPos(render)
-                worldTargetPosition = self.player.getPos(render)
-                worldHeading = self.getH(render)
-                worldHeading = worldHeading % 360
-                worldYDirection = worldTargetPosition.getY() - worldPosition.getY()
-                worldXDirection = worldTargetPosition.getX() - worldPosition.getX()
-                worldDirectionToTarget = math.degrees(math.atan2(worldYDirection, worldXDirection))
-                angleToTarget = worldDirectionToTarget - worldHeading + 180
-                angleToTarget = angleToTarget % 360
-                
-                self.targetTrackerCollisionNodePath.lookAt(render, self.bestPath[1].getPos()) 
-                
+
                                
     def setKeyAndNestReference(self, keyNest, key):
         self.keyNest = keyNest
@@ -649,7 +616,7 @@ class NPC(Agent, DirectObject):
         if(self.pathSmoothening):
             #attempting to smoothen path
             #print("Checking if there is a clear path to next target")
-            if(len(self.bestPath) > 1 and PathFinder.waypointIsReachable(self, self.bestPath[1])):
+            while(len(self.bestPath) > 1 and PathFinder.waypointIsReachable(self, self.bestPath[1])):
                 #print("Next waypoint is reachable, skippint to next")
                 self.bestPath.pop(0)
                 self.currentTarget = self.bestPath[0]

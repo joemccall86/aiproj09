@@ -160,31 +160,37 @@ class World(DirectObject):
     playerWasKilledByNPC1 = False
     playerWasKilledByNPC2 = False
     playerWasKilledByNPC3 = False
+    #gameOver = False
+    fadeCounter = 200
     def checkGameState(self, task, message = None):
         goodEndingText = OnscreenText(text="", style=1, fg=(0,0,1,0.01),
                             pos=(0,.4), align=TextNode.ACenter, scale = .25, mayChange = True)
         BaadEndingText = OnscreenText(text="", style=1, fg=(1,0,0,0.01),
                             pos=(0,.4), align=TextNode.ACenter, scale = .25, mayChange = True)
-        if(self.__mainAgent.hasKey(self.room1Key) and self.__mainAgent.hasKey(self.room2Key) and self.__mainAgent.hasKey(self.room3Key)):
-            self.hasAllKeys = True
-            #goodEndingText.setText("You have all 3 keys!")
-        if(self.hasAllKeys):
-            goodEndingText.setText("You have all 3 keys!")
-        if(PathFinder.distance(self.__mainAgent, self.__room1NPC) < 5 and self.__room1NPC.getState() != "returnKey"):
-            if(not self.__mainAgent.hasKey(self.room1Key)):
-                self.playerWasKilledByNPC1 = True
-        if(self.playerWasKilledByNPC1):
-            BaadEndingText.setText("Killed by Eve clone Alpha")
-        if(PathFinder.distance(self.__mainAgent, self.__room2NPC) < 5 and self.__room1NPC.getState() != "returnKey"):
-            if(not self.__mainAgent.hasKey(self.room2Key)):
-                self.playerWasKilledByNPC2 = True
-        if(self.playerWasKilledByNPC2):
-            BaadEndingText.setText("Killed by Eve clone Beta")
-        if(PathFinder.distance(self.__mainAgent, self.__room3NPC) < 5 and self.__room1NPC.getState() != "returnKey"):
-            if(not self.__mainAgent.hasKey(self.room3Key)):
-                self.playerWasKilledByNPC3 = True
-        if(self.playerWasKilledByNPC3):
-            BaadEndingText.setText("Killed by Eve clone Gamma")
+        if(self.fadeCounter > 0):
+            if(self.__mainAgent.hasKey(self.room1Key) and self.__mainAgent.hasKey(self.room2Key) and self.__mainAgent.hasKey(self.room3Key)):
+                self.hasAllKeys = True
+                #goodEndingText.setText("You have all 3 keys!")
+            if(self.hasAllKeys):
+                goodEndingText.setText("You have all 3 keys!")
+            if(PathFinder.distance(self.__mainAgent, self.__room1NPC) < 5 and self.__room1NPC.getState() != "returnKey"):
+                if(not self.__mainAgent.hasKey(self.room1Key)):
+                    self.playerWasKilledByNPC1 = True
+            if(self.playerWasKilledByNPC1):
+                self.fadeCounter = self.fadeCounter - 1
+                BaadEndingText.setText("Killed by Eve clone Alpha")
+            if(PathFinder.distance(self.__mainAgent, self.__room2NPC) < 5 and self.__room1NPC.getState() != "returnKey"):
+                if(not self.__mainAgent.hasKey(self.room2Key)):
+                    self.playerWasKilledByNPC2 = True
+            if(self.playerWasKilledByNPC2):
+                self.fadeCounter = self.fadeCounter - 1
+                BaadEndingText.setText("Killed by Eve clone Beta")
+            if(PathFinder.distance(self.__mainAgent, self.__room3NPC) < 5 and self.__room1NPC.getState() != "returnKey"):
+                if(not self.__mainAgent.hasKey(self.room3Key)):
+                    self.playerWasKilledByNPC3 = True
+            if(self.playerWasKilledByNPC3):
+                self.fadeCounter = self.fadeCounter - 1
+                BaadEndingText.setText("Killed by Eve clone Gamma")
         return Task.cont
     
     currentAngle = 0
