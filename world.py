@@ -562,6 +562,30 @@ class World(DirectObject):
         base.camera.setPos(0, 60, 60)
         base.camera.lookAt(self.__mainAgent)
         base.camera.setP(base.camera.getP() + 10)
+    
+    def cameraRoom1Pos(self):
+        base.camera.reparentTo(render)
+        #This camera position shows room1
+        base.camera.setPos(0,0, 375) #This is debug camera position.
+        base.camera.lookAt(0,0,0)        
+        
+    def cameraRoom2Pos(self):
+        base.camera.reparentTo(render)
+        #This camera position shows room2
+        base.camera.setPos(0,-200, 375) #This is debug camera position.
+        base.camera.lookAt(0,-200,0)    
+        
+    def cameraRoom3Pos(self):
+        base.camera.reparentTo(render)
+        #This camera position shows room3
+        base.camera.setPos(200,0, 375) #This is debug camera position.
+        base.camera.lookAt(200,0,0)
+        
+    def cameraRegularPos(self):        
+        base.camera.reparentTo(self.__mainAgent.actor)
+        base.camera.setPos(0, 60, 60)
+        base.camera.lookAt(self.__mainAgent)
+        base.camera.setP(base.camera.getP() + 10)
         
     positionHeadingText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                    pos=(-1.3,-0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
@@ -639,6 +663,10 @@ class World(DirectObject):
         self.accept("p",              togglePathSmoothening, ["togglePathSmoothening"])
         self.accept("w",              toggleWaypoints, ["toggleWaypoints"])
         self.accept("c",              toggleCollisions, ["toggleCollisions"])
+        self.accept("1", self.cameraRoom1Pos)
+        self.accept("2", self.cameraRoom2Pos)
+        self.accept("3", self.cameraRoom3Pos)
+        self.accept("4", self.cameraRegularPos)
         
     
 if __name__ == "__main__":
