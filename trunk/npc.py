@@ -195,16 +195,49 @@ class NPC(Agent, DirectObject):
                 print(self.name + "Says: Aieee! I've fallen through the floor!! I'm at " + str(self.getPos()))
                 self.hasFallen = True
         #HACK!
-##        pushAmount = 0.4
-##        pushArea = 88 #Distance from center of room to begin pushing
-##        if self.getX() > pushArea:
-##            self.setFluidX(self.getX() - pushAmount)
-##        if self.getX() < -pushArea:
-##            self.setFluidX(self.getX() + pushAmount)
-##        if self.getY() > pushArea:
-##            self.setFluidY(self.getY() - pushAmount)
-##        if self.getY() < -pushArea:
-##            self.setFluidY(self.getY() + pushAmount)
+        if(self.getZ(render) < -0.5):
+            self.setZ(render, 0.1)
+        pushAmount = 0.4
+        pushArea = 88 #Distance from center of room to begin pushing
+        if(self.name == "Eve 1"):
+            if self.getX(render) > pushArea:
+                self.setX(render, pushArea)
+                #self.setFluidX(self.getX(render) - pushAmount)
+            if self.getX(render) < -pushArea:
+                self.setX(render, -pushArea)
+                #self.setFluidX(self.getX(render) + pushAmount)
+            if self.getY(render) > pushArea:
+                self.setY(render, pushArea)
+                #self.setFluidY(self.getY(render) - pushAmount)
+            if self.getY(render) < -pushArea:
+                self.setY(render, -pushArea)
+                #self.setFluidY(self.getY() + pushAmount)
+        elif(self.name == "Eve 2"):
+            if self.getX(render) > pushArea:
+                self.setX(render, pushArea)
+                #self.setFluidX(self.getX(render) - pushAmount)
+            if self.getX(render)< -pushArea:
+                self.setX(render, -pushArea)
+                #self.setFluidX(self.getX(render) + pushAmount)
+            if self.getY(render) > pushArea - 200:
+                self.setY(render, pushArea - 200)
+                #self.setFluidY(self.getY(render) - pushAmount)
+            if self.getY(render) < -pushArea - 200:
+                self.setY(render, -pushArea - 200)
+                #self.setFluidY(self.getY(render) + pushAmount)
+        elif(self.name == "Eve 3"):
+            if self.getX(render) > pushArea + 200:
+                self.setX(render, pushArea + 200)
+                #self.setFluidX(self.getX(render) - pushAmount)
+            if self.getX(render) < -pushArea + 200:
+                self.setX(render, -pushArea + 200)
+                #self.setFluidX(self.getX(render) + pushAmount)
+            if self.getY(render) > pushArea:
+                self.setY(render, pushArea)
+                #self.setFluidY(self.getY(render) - pushAmount)
+            if self.getY(render) < -pushArea:
+                self.setY(render, -pushArea)
+                #self.setFluidY(self.getY(render) + pushAmount)
             
         if self.bestPath:
             #print("bestPath = " + str(self.bestPath))
