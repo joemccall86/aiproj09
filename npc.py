@@ -80,10 +80,11 @@ class NPC(Agent, DirectObject):
         self.bestPath = None
         self.key = None
         self.keyInHand = False
+        self.hasFallen = False
 ##        for rangeFinder in self.rangeFinders:
 ##            self.persistentRangeFinderData[rangeFinder] = 0
         #self.showWaypoints = False
-        self.pathSmoothening = False
+        self.pathSmoothening = True
                     
         self.annMovementRequests = {
             "left":False,
@@ -164,7 +165,7 @@ class NPC(Agent, DirectObject):
         # Uncomment the following line to show the collision rays
         # Lets keep the visual uncommented until it is fixed so we don't forget it's a problem.
         self.targetTrackerCollisionNodePath.show() 
-        self.accept("targetTracker-into-Cube", self.setDistaneToWall)
+        #self.accept("targetTracker-into-Cube", self.setDistaneToWall)
 
     def sense(self, task):
         #self.rangeFinderSense()
@@ -181,8 +182,8 @@ class NPC(Agent, DirectObject):
         #self.drawBestPath()
         return Task.cont
     
-    def setDistaneToWall(self, entry):
-        self.distanceToWall = entry.getSurfacePoint(self).length()
+##    def setDistaneToWall(self, entry):
+##        self.distanceToWall = entry.getSurfacePoint(self).length()
         
 
     def hasKey(self):
@@ -207,9 +208,13 @@ class NPC(Agent, DirectObject):
             
     isMoving = False
     def act(self, task):
+        if(not self.hasFallen):
+            if(self.getZ() < -100):
+                print(self.name + "Says: Aieee! I've fallen through the floor!! I'm at " + str(self.getPos()))
+                self.hasFallen = True
         #HACK!
-        pushAmount = 0.2
-        pushArea = 88 #Distance from center of room to begin pushing
+##        pushAmount = 0.4
+##        pushArea = 88 #Distance from center of room to begin pushing
 ##        if self.getX() > pushArea:
 ##            self.setFluidX(self.getX() - pushAmount)
 ##        if self.getX() < -pushArea:
@@ -220,6 +225,7 @@ class NPC(Agent, DirectObject):
 ##            self.setFluidY(self.getY() + pushAmount)
             
         if self.bestPath:
+            #print("bestPath = " + str(self.bestPath))
             self.followBestPath()
         if self.npcState == "wander":
             self.wander()
@@ -259,8 +265,7 @@ class NPC(Agent, DirectObject):
         
     def handleTransition(self, transition, entry = None):
         #print(self.name + "Says: Recieved transition: " + transition)
-        if(self.getZ() < -100):
-            print(self.name + "Says: Aieee! I've fallen through the floor!! I'm at " + str(self.getPos()))
+
         if(self.npcState == "wander"):
             if(transition == "keyTaken"):
                 print(self.name + " Says: Changing from wander to retriveKey")
@@ -642,7 +647,13 @@ class NPC(Agent, DirectObject):
         
         #Comment out next two lines to disable path smoothening.
         if(self.pathSmoothening):
-            pass
+            #attempting to smoothen path
+            #print("Checking if there is a clear path to next target")
+            if(len(self.bestPath) > 1 and PathFinder.waypointIsReachable(self, self.bestPath[1])):
+                #print("Next waypoint is reachable, skippint to next")
+                self.bestPath.pop(0)
+                self.currentTarget = self.bestPath[0]
+            #pass
         #if(len(self.bestPath) > 1 and self.distanceToWall > PathFinder.distance(self, self.bestPath[1])):
         #   self.bestPath.pop(0)
         

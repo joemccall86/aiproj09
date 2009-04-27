@@ -59,42 +59,7 @@ class PathFinder():
 ##                
 ##                self.targetTrackerCollisionNodePath.lookAt(self.bestPath[1])         
 # self.distanceToWall = entry.getSurfacePoint(self).length()
-        def waypointIsReachable(thing, waypoint):
-            distanceToTarget = self.distance(thing, waypoint)
-            
-            #Calculate direction from thing to waypoint
-            worldYDirection = waypoint.getY(render) - thing.getY(render)
-            worldXDirection = waypoint.getX(render) - thing.getX(render)
-            
-            # We need to keep the ray not reparented to thing, because it uses a separate collision traverser.
-            origin = Point3(thing.getX(render), thing.getY(render), 3.5)
-            wallRayNP.setPos(render, origin)
-            lookPt = Point3(waypoint.getX(render), waypoint.getY(render), 3.5)
-            wallRayNP.lookAt(lookPt)
-            wallRayNP.show()
-            
-            collisionTraverser.traverse(render)
-            collisionHandler.sortEntries()
 
-            #TODO This should never be this after the following code is executed
-            distanceToWall = distanceToTarget
-
-            # We check the tags to make sure that we're colliding into a room
-            for i in xrange(collisionHandler.getNumEntries()):
-               entry = collisionHandler.getEntry(i)
-               intoNP = entry.getIntoNodePath()
-               if intoNP.getTag("Room"):
-                  distanceToWall = (entry.getFromNodePath().getPos(render) - entry.getSurfacePoint(render)).length()
-                  break
-
-            #Compare "distance to thing" to "distance to wall" to decide if there is a wall in the way.
-            if(distanceToTarget <= distanceToWall):
-                return True
-            else:
-                print "Waypoint is not reachable"
-                print "distanceToTarget = " + str(distanceToTarget)
-                print "distanceToWall = " + str(distanceToWall)
-                return False
         
         def getClosestNodeTo(thing):
             #Make sure there is a direct path between thing and the nearestWaypoint.
@@ -107,12 +72,14 @@ class PathFinder():
             if thing in waypoints:
                 closestNodeToSource = thing
             else:
+                #print("====================================")
                 for i in range(len(waypoints)):
                     #print("distance = " + str(self.distance(self, self.waypoints[i])))
                     if self.distance(thing, possiblyReachableWaypoints[i]) < shortestDistanceFound \
-                                                and waypointIsReachable(thing, possiblyReachableWaypoints[i]):
+                                                and self.waypointIsReachable(thing, possiblyReachableWaypoints[i]):
                         closestNodeToSource = possiblyReachableWaypoints[i]
                         shortestDistanceFound = self.distance(thing, possiblyReachableWaypoints[i])
+                #print("=====================================")
             return closestNodeToSource
         
 ##        print("Got here")
@@ -209,3 +176,41 @@ class PathFinder():
        return (source.getPos(render) - target.getPos(render)).length()
 #        return math.hypot(source.getX(render) - target.getX(render), source.getY(render) - target.getY(render))
         #return source.getDistance(target)
+        
+    @staticmethod
+    def waypointIsReachable(thing, waypoint):
+        distanceToTarget = PathFinder.distance(thing, waypoint)
+        
+        #Calculate direction from thing to waypoint
+        worldYDirection = waypoint.getY(render) - thing.getY(render)
+        worldXDirection = waypoint.getX(render) - thing.getX(render)
+        
+        # We need to keep the ray not reparented to thing, because it uses a separate collision traverser.
+        origin = Point3(thing.getX(render), thing.getY(render), 3.5)
+        wallRayNP.setPos(render, origin)
+        lookPt = Point3(waypoint.getX(render), waypoint.getY(render), 3.5)
+        wallRayNP.lookAt(lookPt)
+        wallRayNP.show()
+        
+        collisionTraverser.traverse(render)
+        collisionHandler.sortEntries()
+
+        #TODO This should never be this after the following code is executed
+        distanceToWall = distanceToTarget
+
+        # We check the tags to make sure that we're colliding into a room
+        for i in xrange(collisionHandler.getNumEntries()):
+           entry = collisionHandler.getEntry(i)
+           intoNP = entry.getIntoNodePath()
+           if intoNP.getTag("Room"):
+              distanceToWall = (entry.getFromNodePath().getPos(render) - entry.getSurfacePoint(render)).length()
+              break
+
+        #Compare "distance to thing" to "distance to wall" to decide if there is a wall in the way.
+        if(distanceToTarget <= distanceToWall):
+            return True
+        else:
+    ##                print(str(thing) + " is not reachable from " + str(waypoint))
+    ##                print "distanceToTarget = " + str(distanceToTarget)
+    ##                print "distanceToWall = " + str(distanceToWall)
+            return False

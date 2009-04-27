@@ -307,6 +307,7 @@ class World(DirectObject):
         self.accept("Eve 2 collision node-into-Cube2", orderNPC, ["NPC2 bumped into wall"])
         self.accept("Eve 3 collision node-into-Cube3", orderNPC, ["NPC3 bumped into wall"])
         
+
         #messenger.toggleVerbose()
         self.gate = gate
         
