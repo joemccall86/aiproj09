@@ -250,7 +250,7 @@ class NPC(Agent, DirectObject):
 
         if(self.npcState == "wander"):
             if(transition == "keyTaken"):
-                print(self.name + " Says: Changing from wander to retriveKey")
+                #print(self.name + " Says: Changing from wander to retriveKey")
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                 rightHand = self.player.actor.exposeJoint(None, 'modelRoot', 'RightHand')
                 self.key.reparentTo(rightHand)
@@ -265,21 +265,23 @@ class NPC(Agent, DirectObject):
 ##                print(self.player.hasKey(self.key))
                 self.npcState = "retriveKey"
             elif(transition == "withinRange"):
-                print(self.name + " Says: Changing from wander to Seek")
+                #print(self.name + " Says: Changing from wander to Seek")
                 self.bestPath = [self.player]
                 self.npcState = "seek"
             elif(transition == "playerLeftRoom"):
-                print(self.name + " Says: Changing from wander to playerAbsent")
+                #print(self.name + " Says: Changing from wander to playerAbsent")
                 self.npcState = "playerAbsent"
             elif(transition == "playerEnteredRoom"):
-                print(self.name + " Says: Player entered room while wandering... Do nothing")
+                #print(self.name + " Says: Player entered room while wandering... Do nothing")
+                pass
             elif(transition == "bumpedIntoWall"):
                 pass
             else:#Joe pleas don't comment out the else prints. I need to know any time this happens
                 print(transition + " is an undefined transition from " + self.npcState)
+                pass
         elif(self.npcState == "retriveKey"):
             if(transition == "gotKey"):
-                print(self.name + " Says: Changing from retriveKey to returnKey")
+                #print(self.name + " Says: Changing from retriveKey to returnKey")
                 rightHand = self.actor.exposeJoint(None, 'modelRoot', 'RightHand')
                 self.key.reparentTo(rightHand)
                 self.key.setPosHpr(.11,-1.99,.06, 0,-90,0)
@@ -296,23 +298,23 @@ class NPC(Agent, DirectObject):
                 self.keyInHand = True
                 self.npcState = "returnKey"
             elif(transition == "playerLeftRoom"):
-                print(self.name + " Says: Changing from retriveKey to playerAbsent")
+                #print(self.name + " Says: Changing from retriveKey to playerAbsent")
                 self.npcState = "playerAbsent"
             elif(transition == "bumpedIntoWall"):
-                print(self.name + " Says: Oops! Bumped into wall, recalculating A*")
+                #print(self.name + " Says: Oops! Bumped into wall, recalculating A*")
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                 
             else:#Joe pleas don't comment out the else prints. I need to know any time this happens
                 print(transition + " is an undefined transition from " + self.npcState)
         elif(self.npcState == "seek"):
             if(transition == "outOfRange"):
-                print(self.name + " Says: Changing from seek to wander")
+                #print(self.name + " Says: Changing from seek to wander")
                 self.npcState = "wander"
             elif(transition == "playerLeftRoom"):
-                print(self.name + " Says: Changing from seek to playerAbsent")
+                #print(self.name + " Says: Changing from seek to playerAbsent")
                 self.npcState = "playerAbsent"
             elif(transition  == "keyTaken"):
-                print(self.name + " Says: Changing from seek to retriveKey")
+                #print(self.name + " Says: Changing from seek to retriveKey")
                 self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                 #self.drawBestPath()
                 #print("AStar in seek from gotKey to returnKey = " + str(self.bestPath))                
@@ -327,7 +329,7 @@ class NPC(Agent, DirectObject):
 ##                print(self.player.hasKey(self.key))
                 self.npcState = "retriveKey"
             elif(transition == "playerLeftRoom"):
-                print("NPC " + self.name + " Says: Changing from seek to playerAbsent")
+                #print("NPC " + self.name + " Says: Changing from seek to playerAbsent")
                 self.npcState = "playerAbsent"
             elif(transition == "bumpedIntoWall"):
                 pass
@@ -335,9 +337,10 @@ class NPC(Agent, DirectObject):
                 #Jim, if they aren't supposed to happen, throw an exception. prints are too easy to ignore
                 #Joe, But I don't wanna!!!!!
                 print(transition + " is an undefined transition from " + self.npcState)
+                pass
         elif(self.npcState == "returnKey"):
             if(transition == "keyReturned"):
-                print(self.name + " Says: Changeing from returnKey to wander due to a keyReturn")
+                #print(self.name + " Says: Changeing from returnKey to wander due to a keyReturn")
                 self.key.setPosHpr(0,0,0,0,0,0)
                 self.key.setScale(render, 10)
                 self.key.reparentTo(self.keyNest)
@@ -350,15 +353,15 @@ class NPC(Agent, DirectObject):
         elif(self.npcState == "playerAbsent"):
             if(transition == "playerEnteredRoom"):
                 if self.player.hasKey(self.key):    ##Got the error NPC object has no attribute key... How?????
-                    print(self.name + " Says: Changing from PlayerAbsent to retriveKey")
+                    #print(self.name + " Says: Changing from PlayerAbsent to retriveKey")
                     self.bestPath = PathFinder.AStar(self, self.player, self.waypoints)
                     self.npcState = "retriveKey"
                 elif self.distanceToPlayer() < self.radarLength:
-                    print(self.name + " Says: Changing from playerAbsent to seek")
+                    #print(self.name + " Says: Changing from playerAbsent to seek")
                     self.currentTarget = self.player
                     self.npcState = "seek"
                 else:
-                    print(self.name + " Says: Changing from playerAbsent to wander")
+                    #print(self.name + " Says: Changing from playerAbsent to wander")
                     self.currentTarget = self.player
                     self.npcState = "wander"
         else:#Joe pleas don't comment out the else prints. I need to know any time this happens
