@@ -71,7 +71,7 @@ class World(DirectObject):
               self.room1Key:"models/redKeyHUD.png",
               self.room2Key:"models/blueKeyHUD.png",
               self.room3Key:"models/greenKeyHUD.png" }
-
+        self.room1KeyInHUD = False
         self.redKeyImage = OnscreenImage(image = self.keyImages[self.room1Key], pos = (0.9, 0, 0.9), scale = (0.0451, 0, 0.1))
         self.redKeyImage.setTransparency(TransparencyAttrib.MAlpha)
         self.redKeyImage.hide()
@@ -93,8 +93,15 @@ class World(DirectObject):
 ##       assert False, "add the hack to make sure she doesn't fall through the ground"
        if self.__mainAgent.hasKey(self.room1Key) and room is not self.room1:
           self.redKeyImage.show()
+          self.room1Key.reparentTo(base.cam)
+          self.room1Key.setScale(render, 1.25)
+          self.room1Key.setP(base.cam, 0)
+          self.room1Key.setPos(base.cam.getX(base.cam) + 2.1, base.cam.getY(base.cam) + 10, base.cam.getZ(base.cam) + 2.1)
+          self.room1KeyInHUD = True
+        
        else:
           self.redKeyImage.hide()
+          self.room1KeyInHUD = False
 
        if self.__mainAgent.hasKey(self.room2Key) and room is not self.room2:
           self.blueKeyImage.show()
@@ -151,7 +158,7 @@ class World(DirectObject):
 #        skyBox.reparentTo(render)
         
     def animateItems(self, task):
-        if(not (self.__mainAgent.hasKey(self.room1Key) or self.__room1NPC.hasKey())):
+        if(not (self.__mainAgent.hasKey(self.room1Key) or self.__room1NPC.hasKey()) or self.room1KeyInHUD):
             self.rotate(self.room1Key)
         if(not self.__mainAgent.hasKey(self.room2Key) and not self.__room2NPC.hasKey()):
             self.rotate(self.room2Key)
@@ -410,7 +417,7 @@ class World(DirectObject):
         self.__room1NPC = NPC(modelStanding, 
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
-                                speed = 23,
+                                speed = 15,
                                 agentList = self.__globalAgentList,
                                 name = "Eve 1",
                                 collisionMask = BitMask32.bit(3),
@@ -447,7 +454,7 @@ class World(DirectObject):
         self.__room2NPC = NPC(modelStanding,
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
-                                speed = 23,
+                                speed = 15,
                                 agentList = self.__globalAgentList,
                                 name = "Eve 2",#"das Osterhase",
                                 collisionMask = BitMask32.bit(4),
@@ -470,7 +477,7 @@ class World(DirectObject):
         self.__room3NPC = NPC(modelStanding, 
                                 {"run":modelRunning, "walk":modelWalking},
                                 turnRate = 150, 
-                                speed = 23,
+                                speed = 15,
                                 agentList = self.__globalAgentList,
                                 name = "Eve 3",#"der Hoppelhaschen",
                                 collisionMask = BitMask32.bit(5),
@@ -553,8 +560,8 @@ class World(DirectObject):
         #base.camera.setPos(0,-200, 375) #This is debug camera position.
         #base.camera.lookAt(0,-200,0)    
         #This camera position shows room3
-        ##base.camera.setPos(200,0, 375) #This is debug camera position.
-        ##base.camera.lookAt(200,0,0)    
+        #base.camera.setPos(200,0, 375) #This is debug camera position.
+        #base.camera.lookAt(200,0,0)    
         #base.oobeCull()
         #base.oobe()
         base.disableMouse()
