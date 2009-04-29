@@ -72,6 +72,8 @@ class World(DirectObject):
               self.room2Key:"models/blueKeyHUD.png",
               self.room3Key:"models/greenKeyHUD.png" }
         self.room1KeyInHUD = False
+        self.room2KeyInHUD = False
+        self.room3KeyInHUD = False
         self.redKeyImage = OnscreenImage(image = self.keyImages[self.room1Key], pos = (0.9, 0, 0.9), scale = (0.0451, 0, 0.1))
         self.redKeyImage.setTransparency(TransparencyAttrib.MAlpha)
         self.redKeyImage.hide()
@@ -92,24 +94,58 @@ class World(DirectObject):
        """
 ##       assert False, "add the hack to make sure she doesn't fall through the ground"
        if self.__mainAgent.hasKey(self.room1Key) and room is not self.room1:
-          self.redKeyImage.show()
+          #self.redKeyImage.show()
           self.room1Key.reparentTo(base.cam)
           self.room1Key.setScale(render, 1.25)
           self.room1Key.setP(base.cam, 0)
           self.room1Key.setPos(base.cam.getX(base.cam) + 2.1, base.cam.getY(base.cam) + 10, base.cam.getZ(base.cam) + 2.1)
           self.room1KeyInHUD = True
-        
+       elif self.__mainAgent.hasKey(self.room1Key) and room is self.room1:
+          rightHand = self.__mainAgent.actor.exposeJoint(None, 'modelRoot', 'RightHand')
+          self.room1Key.reparentTo(rightHand)
+          self.room1Key.setPosHpr(.11,-1.99,.06, 0,-90,0)
+          self.room1Key.setScale(render, 10)
+          self.room1Key.setTexScale(TextureStage.getDefault(), 1)
+          self.room1KeyInHUD = False
+          self.redKeyImage.hide()
        else:
           self.redKeyImage.hide()
           self.room1KeyInHUD = False
 
        if self.__mainAgent.hasKey(self.room2Key) and room is not self.room2:
-          self.blueKeyImage.show()
+          #self.blueKeyImage.show()
+          self.room2Key.reparentTo(base.cam)
+          self.room2Key.setScale(render, 1.25)
+          self.room2Key.setP(base.cam, 0)
+          self.room2Key.setPos(base.cam.getX(base.cam) + 2.5, base.cam.getY(base.cam) + 10, base.cam.getZ(base.cam) + 2.1)
+          self.room2KeyInHUD = True
+       elif self.__mainAgent.hasKey(self.room2Key) and room is self.room2:
+          rightHand = self.__mainAgent.actor.exposeJoint(None, 'modelRoot', 'RightHand')
+          self.room2Key.reparentTo(rightHand)
+          self.room2Key.setPosHpr(.11,-1.99,.06, 0,-90,0)
+          self.room2Key.setScale(render, 10)
+          self.room2Key.setTexScale(TextureStage.getDefault(), 1)
+          self.room2KeyInHUD = False
+          self.blueKeyImage.hide()
        elif (self.blueKeyImage != None):
           self.blueKeyImage.hide()
+          self.room2KeyInHUD = False
 
        if self.__mainAgent.hasKey(self.room3Key) and room is not self.room3:
-          self.greenKeyImage.show()
+          #self.greenKeyImage.show()
+          self.room3Key.reparentTo(base.cam)
+          self.room3Key.setScale(render, 1.25)
+          self.room3Key.setP(base.cam, 0)
+          self.room3Key.setPos(base.cam.getX(base.cam) + 3.0, base.cam.getY(base.cam) + 10, base.cam.getZ(base.cam) + 2.1)
+          self.room3KeyInHUD = True
+       elif self.__mainAgent.hasKey(self.room3Key) and room is self.room3:
+          rightHand = self.__mainAgent.actor.exposeJoint(None, 'modelRoot', 'RightHand')
+          self.room3Key.reparentTo(rightHand)
+          self.room3Key.setPosHpr(.11,-1.99,.06, 0,-90,0)
+          self.room3Key.setScale(render, 10)
+          self.room3Key.setTexScale(TextureStage.getDefault(), 1)
+          self.room3KeyInHUD = False
+          self.greenKeyImage.hide()
        elif (self.greenKeyImage != None):
           self.greenKeyImage.hide()
 
@@ -160,9 +196,9 @@ class World(DirectObject):
     def animateItems(self, task):
         if(not (self.__mainAgent.hasKey(self.room1Key) or self.__room1NPC.hasKey()) or self.room1KeyInHUD):
             self.rotate(self.room1Key)
-        if(not self.__mainAgent.hasKey(self.room2Key) and not self.__room2NPC.hasKey()):
+        if(not self.__mainAgent.hasKey(self.room2Key) and not self.__room2NPC.hasKey() or self.room2KeyInHUD):
             self.rotate(self.room2Key)
-        if(not self.__mainAgent.hasKey(self.room3Key) and not self.__room3NPC.hasKey()):
+        if(not self.__mainAgent.hasKey(self.room3Key) and not self.__room3NPC.hasKey() or self.room3KeyInHUD):
             self.rotate(self.room3Key)
         return Task.cont
 
