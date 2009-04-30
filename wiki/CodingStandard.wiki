@@ -1,0 +1,5 @@
+#summary Maybe we should follow the PEP 8 coding standard.
+
+= Details =
+
+In lieu of coming up with our own coding standard, I submit that we follow PEP 8, which seems to be the python coding standard. You can find the page [http://www.python.org/dev/peps/pep-0008/ here].
