@@ -43,10 +43,12 @@ class Player(Agent, DirectObject):
             self.playerKeys.remove(key)
     
     
-    __keyMap = {"left":False,
+    __inputMap = {"left":False,
             "right":False,
             "up":False,
-            "down":False}
+            "down":False,
+            "createBlock":False,
+            "deleteBlock":False}
     
     waypointPositions = []
     def setKeymap(self):
@@ -62,7 +64,7 @@ class Player(Agent, DirectObject):
         self.accept("space", dropWp)
         
         def setKey(key, value):
-            self.__keyMap[key] = value
+            self.__inputMap[key] = value
         
         self.accept("arrow_left",     setKey, ["left", True])
         self.accept("arrow_left-up",  setKey, ["left", False])
@@ -73,7 +75,13 @@ class Player(Agent, DirectObject):
         self.accept("arrow_down",     setKey, ["down", True])
         self.accept("arrow_down-up",  setKey, ["down", False])
         
-    
+        self.accept("mouse1",         setKey, ["createBlock", True])
+        self.accept("mouse1-up",      setKey, ["createBlock", False])
+        self.accept("mouse3",         setKey, ["deleteBlock", True])
+        self.accept("mouse3-up",      setKey, ["deleteBlock", False])
+        
+    lastMouse1State = False
+    lastMouse3State = False
     def processKey(self, task):
         
         turnAngle = self.turnRate * taskTimer.elapsedTime
@@ -81,20 +89,32 @@ class Player(Agent, DirectObject):
         
         self.previousPosition = self.getPos()
         
-        if self.__keyMap["left"]:
+        if self.__inputMap["left"]:
             self.turnLeft(turnAngle)
-        if self.__keyMap["right"]:
+        if self.__inputMap["right"]:
             self.turnRight(turnAngle)
-        if self.__keyMap["up"]:
+        if self.__inputMap["up"]:
             self.moveForward(distance)
-        if self.__keyMap["down"]:
+        if self.__inputMap["down"]:
             self.moveBackward(distance)
         
+        if self.__inputMap["createBlock"] and self.lastMouse1State == False:
+            self.createBlock(0,0,0);
+            self.lastMouse1State = True
+        elif not self.__inputMap["createBlock"]:
+            self.lastMouse1State = False
+
+        if self.__inputMap["deleteBlock"] and self.lastMouse3State == False:
+            self.deleteBlock(0,0,0)
+            self.lastMouse3State = True
+        elif not self.__inputMap["deleteBlock"]:
+            self.lastMouse3State = False
+        
             
-        if self.__keyMap["left"] or \
-            self.__keyMap["right"] or \
-            self.__keyMap["up"] or \
-            self.__keyMap["down"]:
+        if self.__inputMap["left"] or \
+            self.__inputMap["right"] or \
+            self.__inputMap["up"] or \
+            self.__inputMap["down"]:
             if not self.isMoving:
                 self.loop("run")
                 self.isMoving = True

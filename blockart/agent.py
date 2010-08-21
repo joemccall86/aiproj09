@@ -87,6 +87,12 @@ class Agent(NodePath):
         collisionHandler.addCollider(fromObject, self)
         collisionTraverser.addCollider(fromObject, collisionHandler)
 
+    def createBlock(self, xPos, yPos, zPos):
+        print("Create Block at (%d, %d, %d)" % (xPos, yPos, zPos))
+    
+    def deleteBlock(self, xPos, yPos, zPos):
+        print("Delete Block at (%d, %d, %d)" % (xPos, yPos, zPos))
+    
 if __name__ == "__main__":
     A = Agent("models/ralph", {"run":"models/ralph-run"}, turnRate = 300, speed = 5, agentList=[], massKg = 0.1, collisionMask = BitMask32.allOff())
     print(" compiled correctly")
