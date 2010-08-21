@@ -25,6 +25,7 @@ from pandac.PandaModules import Texture
 from pandac.PandaModules import TextureStage
 from pandac.PandaModules import TransparencyAttrib
 from pandac.PandaModules import Vec3
+import math
 from npc import NPC
 from player import Player
 import sys
@@ -44,7 +45,14 @@ class World(DirectObject):
         self.pathSmoothening = True
         self.showWaypoints = False
         self.showCollisions = False
-        
+
+        #variables for mouse controled camera
+        self.last = 0
+        self.heading = 180
+        self.pitch = 0
+        self.mousex = 0
+        self.mousey = 0
+
         self.accept("escape", sys.exit)
         
         self.__setupEnvironment()
@@ -163,7 +171,8 @@ class World(DirectObject):
         
         gravityFN=ForceNode('world-forces')
         gravityFNP=render.attachNewNode(gravityFN)
-        gravityForce=LinearVectorForce(0,0,-6) #gravity acceleration ft/s^2
+        # I seems to be constant... we should add an acceleration.
+        gravityForce=LinearVectorForce(0,0,-9.8) #gravity acceleration ft/s^2
         gravityFN.addForce(gravityForce)
         
 
@@ -436,7 +445,8 @@ class World(DirectObject):
                             collisionTraverser = self.cTrav)
         # Make it visible
         self.__mainAgent.reparentTo(render)
-        self.__mainAgent.setPos(31, 35, 50)
+        self.__mainAgent.setPos(31, 35, 5)
+
         self.gate.find("**/Cube;+h").setCollideMask(~self.__mainAgent.collisionMask)
         
     __targetCount = 0
@@ -580,6 +590,7 @@ class World(DirectObject):
         taskMgr.add(self.__room3NPC.act, "actTask")
         taskMgr.add(self.checkGameState, "gameStateTask")
         taskMgr.add(self.animateItems, "animateItemsTask")
+        taskMgr.add(self.cameraRegularPos,"cameraTask")
         #taskMgr.add(self.processKey, "processKeyTask")
 
         # This is for path finding
@@ -604,6 +615,10 @@ class World(DirectObject):
         base.camera.reparentTo(self.__mainAgent.actor)
         base.camera.setPos(0, 60, 60)
         base.camera.lookAt(self.__mainAgent)
+        self.pitch = self.__mainAgent.getZ() - base.camera.getZ()
+        headingX = self.__mainAgent.getX() - base.camera.getX()
+        headingY = self.__mainAgent.getY() - base.camera.getY()
+        math.degrees(math.atan2(headingY, headingX))
         base.camera.setP(base.camera.getP() + 10)
     
     def cameraRoom1Pos(self):
@@ -623,13 +638,45 @@ class World(DirectObject):
         #This camera position shows room3
         base.camera.setPos(200,0, 375) #This is debug camera position.
         base.camera.lookAt(200,0,0)
-        
-    def cameraRegularPos(self):        
+		
+		
+
+		
+		
+    def cameraRegularPos(self, task):        
         base.camera.reparentTo(self.__mainAgent.actor)
         base.camera.setPos(0, 60, 60)
-        base.camera.lookAt(self.__mainAgent)
-        base.camera.setP(base.camera.getP() + 10)
+        #base.camera.lookAt(self.__mainAgent)
+        #base.camera.setP(base.camera.getP() + 10)
         
+        # figure out how much the mouse has moved (in pixels)
+        md = base.win.getPointer(0)
+        x = md.getX()
+        y = md.getY()
+        if base.win.movePointer(0, 100, 100):
+            self.heading = self.heading - (x - 100) * 0.2
+            self.pitch = self.pitch - (y - 100) * 0.2
+        if (self.pitch < -90): self.pitch = -90
+        if (self.pitch >  45): self.pitch =  45
+        base.camera.setHpr(self.heading,self.pitch,0)
+        #dir = base.camera.getMat().getRow3(1)
+        elapsed = task.time - self.last
+        if (self.last == 0): elapsed = 0
+        #if (self.mousebtn[0]):
+        #    self.focus = self.focus + dir * elapsed*30
+        #if (self.mousebtn[1]) or (self.mousebtn[2]):
+        #    self.focus = self.focus - dir * elapsed*30
+        #base.camera.setPos(self.focus - (dir*5))
+        #if (base.camera.getX() < -59.0): base.camera.setX(-59)
+        #if (base.camera.getX() >  59.0): base.camera.setX( 59)
+        #if (base.camera.getY() < -59.0): base.camera.setY(-59)
+        #if (base.camera.getY() >  59.0): base.camera.setY( 59)
+        #if (base.camera.getZ() <   5.0): base.camera.setZ(  5)
+        #if (base.camera.getZ() >  45.0): base.camera.setZ( 45)
+        #self.focus = base.camera.getPos() + (dir*5)
+        self.last = task.time
+        return Task.cont
+
     positionHeadingText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                    pos=(-1.3,-0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
                 
@@ -666,7 +713,7 @@ class World(DirectObject):
 
         return Task.cont
     
-    __keyMap = {"enablePathSmoothening":False,
+    __inputMap = {"enablePathSmoothening":False,
         "showWaypoints":False}
 
     def setKeymap(self):
