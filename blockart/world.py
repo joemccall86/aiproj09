@@ -46,12 +46,7 @@ class World(DirectObject):
         self.showWaypoints = False
         self.showCollisions = False
 
-        #variables for mouse controled camera
-        self.last = 0
-        self.heading = 180
-        self.pitch = 0
-        self.mousex = 0
-        self.mousey = 0
+
 
         self.accept("escape", sys.exit)
         
@@ -577,7 +572,7 @@ class World(DirectObject):
         
         self.__mainAgent.setKeymap()
         taskMgr.add(self.__mainAgent.processKey, "processKeyTask")
-
+        taskMgr.add(self.__mainAgent.cameraPosition, "cameraTask")
           #  taskMgr.add(self.__mainAgent.handleCollisionTask, "handleCollisionTask")
 ##        taskMgr.add(self.ralph.wanderTask, "wander")
         
@@ -590,7 +585,7 @@ class World(DirectObject):
         taskMgr.add(self.__room3NPC.act, "actTask")
         taskMgr.add(self.checkGameState, "gameStateTask")
         taskMgr.add(self.animateItems, "animateItemsTask")
-        taskMgr.add(self.cameraRegularPos,"cameraTask")
+        #taskMgr.add(self.cameraRegularPos,"cameraTask")
         #taskMgr.add(self.processKey, "processKeyTask")
 
         # This is for path finding
@@ -640,42 +635,6 @@ class World(DirectObject):
         base.camera.lookAt(200,0,0)
 		
 		
-
-		
-		
-    def cameraRegularPos(self, task):        
-        base.camera.reparentTo(self.__mainAgent.actor)
-        base.camera.setPos(0, 60, 60)
-        #base.camera.lookAt(self.__mainAgent)
-        #base.camera.setP(base.camera.getP() + 10)
-        
-        # figure out how much the mouse has moved (in pixels)
-        md = base.win.getPointer(0)
-        x = md.getX()
-        y = md.getY()
-        if base.win.movePointer(0, 100, 100):
-            self.heading = self.heading - (x - 100) * 0.2
-            self.pitch = self.pitch - (y - 100) * 0.2
-        if (self.pitch < -90): self.pitch = -90
-        if (self.pitch >  45): self.pitch =  45
-        base.camera.setHpr(self.heading,self.pitch,0)
-        #dir = base.camera.getMat().getRow3(1)
-        elapsed = task.time - self.last
-        if (self.last == 0): elapsed = 0
-        #if (self.mousebtn[0]):
-        #    self.focus = self.focus + dir * elapsed*30
-        #if (self.mousebtn[1]) or (self.mousebtn[2]):
-        #    self.focus = self.focus - dir * elapsed*30
-        #base.camera.setPos(self.focus - (dir*5))
-        #if (base.camera.getX() < -59.0): base.camera.setX(-59)
-        #if (base.camera.getX() >  59.0): base.camera.setX( 59)
-        #if (base.camera.getY() < -59.0): base.camera.setY(-59)
-        #if (base.camera.getY() >  59.0): base.camera.setY( 59)
-        #if (base.camera.getZ() <   5.0): base.camera.setZ(  5)
-        #if (base.camera.getZ() >  45.0): base.camera.setZ( 45)
-        #self.focus = base.camera.getPos() + (dir*5)
-        self.last = task.time
-        return Task.cont
 
     positionHeadingText = OnscreenText(text="", style=1, fg=(1,1,1,1),
                    pos=(-1.3,-0.95), align=TextNode.ALeft, scale = .05, mayChange = True)
@@ -756,7 +715,6 @@ class World(DirectObject):
         self.accept("1", self.cameraRoom1Pos)
         self.accept("2", self.cameraRoom2Pos)
         self.accept("3", self.cameraRoom3Pos)
-        self.accept("4", self.cameraRegularPos)
         
     
 if __name__ == "__main__":
